@@ -25,23 +25,12 @@ subtitle'ları temizlemek gerekiyor!!!!
 from nltk.tokenize import sent_tokenize
 
 import json
+
 import os
 import sys
 
-raw_dir_path = "raw"
+
 tr_wiki_prefix = "trwiki-67"
-
-
-
-deneme = """Ömer Duran (d. 16 Temmuz 1972) Türk sinema ve dizi oyuncusudur.
-Kariyeri.
-İstanbul Üniversitesi Fransız Dili Ve Edebiyat Fakültesi mezunudur. Kartal Halk Eğitim Merkezinde ilk gerçek eğitimini aldı. Sonrasında birçok workshopa katıldı. Amatör gruplarla defalarca sahneye çıktı. Sadri Alışık Tiyatrosu ile 4 oyunda rol aldı. Selahattin Taşdöğen Tiyatrosunda sahne aldı. TV kariyerine 1994 yılında Kaygısızlar (dizi) isimli tv dizisinde başladı.Bu diziden sonra çeşitli dizilerde görev aldı. 2011 yılında vizyona giren "72.Koguş" filminde Kaya Ali rolünü canlandırdı, 2012 yılında Babalar ve Evlatlar adlı dizide Kambur Ziya rolü ile Star Tv'de yer alıyor.
-Duran bir dönem sahaflık yaptı. 19 Kasım 2018 tarihinde yayınlanan Kelime Oyunu yarışma programına katıldı. 2 kız çocuğu babasıdır"""
-
-import code; code.interact(local=locals())
-
-sys.exit()
-
 
 
 
@@ -79,49 +68,22 @@ def split_titles_and_docs(filename):
 
     return titles, docs
 
-# titles, docs = split_titles_and_docs("merged.raw")
-# 
-# print(f"number of titles: {len(titles)}")
-# print(f"number of docs: {len(docs)}")
-# 
-# import code; code.interact(local=locals())
-# 
-# print("exit...")
-# sys.exit()
-
-
-def merge_files(raw_files, merged_file):
-    if os.path.exists(merged_file):
-        print(f'[INFO] {merged_file} already exists. Skipping merge.')
-        return
-
-    with open(merged_file, 'w', encoding="utf-8") as merged:
-        for raw_file in raw_files:
-            with open(raw_file, "r", encoding="utf-8") as raw:
-                merged.write(raw.read())
-                merged.write("\n")
-
-    print(f'[INFO] Files {raw_file} have been merged into {merged_file}')
-
-files_to_merge = [ f'{raw_dir_path + "/" + tr_wiki_prefix}-train.raw',
-                   f'{raw_dir_path + "/" + tr_wiki_prefix}-val.raw', 
-                   f'{raw_dir_path + "/" + tr_wiki_prefix}-test.raw' ]
-
-merged_filename = 'merged.raw'
-
-merge_files(files_to_merge, merged_filename)
-
 def get_num_chars(docs):
     "docs: list[str, str, str, ...]"
-    pass
+    return len(''.join(docs))
+    
 def get_num_words(docs):
     "docs: list[str, str, str, ...]"
-    word_tokenize(docs, language="turkish", )
-    pass
+    import re
+
+    # Regular expression to match words (alphanumeric characters and apostrophes)
+    word_pattern = r'\b\w+\b'
+
+    return len(re.findall(word_pattern, ' '.join(docs)))
+
 def get_num_sents(docs):
     "docs: list[str, str, str, ...]"
-    pass
-
+    return len(sent_tokenize('. '.join(docs), language='turkish'))
 
 def get_stat(file):
     stat = {"num_sentences": 0, "num_words": 0, "num_chars": 0}
@@ -131,12 +93,24 @@ def get_stat(file):
         return
 
     if "merged" in file:
+
+        if os.path.exists(file.split(".")[0] + "_stat.json"):
+            print(f'[INFO] {file.split(".")[0] + "_stat.json"} already exists. Skipping stat tracking...')
+            return
+        
         titles, docs = split_titles_and_docs(file)
 
         stat["num_titles"] = len(titles)
+        print(f"[INFO] merged file stat: num_titles: {stat['num_titles']}")
+
         stat["num_sentences"] = get_num_sents(docs)
+        print(f"[INFO] merged file stat: num_sentences: {stat['num_sentences']}")
+
         stat["num_words"] = get_num_words(docs)
+        print(f"[INFO] merged file stat: num_words: {stat['num_words']}")
+        
         stat["num_chars"] = get_num_chars(docs)
+        print(f"[INFO] merged file stat: num_chars: {stat['num_chars']}")
 
         # Write stat dict to JSON file
         with open(file.split(".")[0] + "_stat.json", 'w') as json_file:
@@ -161,10 +135,33 @@ def get_stat(file):
     
     return
 
+def merge_files(raw_files, merged_file):
+    if os.path.exists(merged_file):
+        print(f'[INFO] {merged_file} already exists. Skipping merge.')
+        return
+
+    with open(merged_file, 'w', encoding="utf-8") as merged:
+        for raw_file in raw_files:
+            with open(raw_file, "r", encoding="utf-8") as raw:
+                merged.write(raw.read())
+                merged.write("\n")
+
+    print(f'[INFO] Files {raw_file} have been merged into {merged_file}')
 
 
 
 
+
+files_to_merge = [ f'{"raw" + "/" + tr_wiki_prefix}-train.raw',
+                   f'{"raw" + "/" + tr_wiki_prefix}-val.raw', 
+                   f'{"raw" + "/" + tr_wiki_prefix}-test.raw' ]
+
+merged_filename = 'merged.raw'
+
+merge_files(files_to_merge, merged_filename)
+
+# let's dump the stat of merged file
+get_stat(merged_filename)
 
 
 
