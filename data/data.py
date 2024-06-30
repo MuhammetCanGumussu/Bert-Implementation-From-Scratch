@@ -28,11 +28,13 @@ import json
 
 import os
 import sys
+import logging
 
 
 tr_wiki_prefix = "trwiki-67"
 
 
+# sys.exit()
 
 def split_titles_and_docs(filename):
     """Returns a list of titles and a list of documents from merged file"""
@@ -61,10 +63,11 @@ def split_titles_and_docs(filename):
             else:
                 # Continue accumulating lines for the current document
                 doc_lines.append(line)
-                pass
 
         # Append the last document
         docs.append("\n".join(doc_lines))
+
+    assert len(titles) == len(docs), "[ERROR] len(titles) and len(docs) are not same!..."
 
     return titles, docs
 
@@ -148,8 +151,99 @@ def merge_files(raw_files, merged_file):
 
     print(f'[INFO] Files {raw_file} have been merged into {merged_file}')
 
+def delete_if_empty_doc(titles, docs):
+    """if there is empty doc, it will be deleted with its title"""
+
+    print(f"[INFO] delete_if_empty_doc()...")
+
+    for i in range(len(docs)):
+        if docs[i] == "\n" or docs[i] == "":
+            print(f"[INFO] doc: {docs[i]}is empty. Deleting it with its title: {titles[i]}...")
+            titles.pop(i)
+            docs.pop(i)
+
+    # lets make sure that titles and docs are same size before returning
+    assert len(titles) == len(docs), "[ERROR] len(titles) and len(docs) are not same!..."
+
+    return titles, docs
+
+def preprocess_merged(merged_file):
+    """delete subtitles (if line has less than 4 words lets consider it as subtitle)"""
 
 
+
+    # Configure logging to output to a file
+    logging.basicConfig(level=logging.INFO, 
+                        format='%(asctime)s %(message)s', 
+                        datefmt='%Y-%m-%d %H:%M:%S', 
+                        handlers=[logging.FileHandler('merged_preprocessing.log', 'w', 'utf-8')])
+
+    titles, docs = split_titles_and_docs(merged_file)
+    titles, docs = delete_if_empty_doc(titles, docs) 
+
+    before_doc_len = len(docs)
+    before_tit_len = len(titles)
+    before_total_lines = len(" ".join(docs).splitlines())
+
+    logging.info(f"[INFO] Before preprocessing: num_docs: {before_doc_len:,}")
+    logging.info(f"[INFO] Before preprocessing: num_titles: {before_tit_len:,}")
+    logging.info(f"[INFO] Before preprocessing: total_lines: {before_total_lines:,}")
+
+    import re
+
+    # Regular expression to match words (alphanumeric characters and apostrophes)
+    word_pattern = r'\b\w+\b'
+
+    i = 0
+    while i < len(docs):
+        doc_lines = docs[i].split("\n")
+
+        # Calculate progress percentage
+        progress = (i / len(docs)) * 100
+        progress = round(progress, 2)  # Round to 2 decimal places
+    
+        # Print progress bar
+        print(f"Progress: [{int(progress)}%]", end='\r', flush=True)
+
+        j = 0
+        while j < len(doc_lines):
+
+            # print(j, len(doc_lines))
+            doc_line_len = len(re.findall(word_pattern, doc_lines[j]))
+
+            if doc_line_len < 4:
+                # just one line in the doc and it's less than 4 words, burn it!
+                if len(doc_lines) == 1:
+                    titles.pop(i)
+                    docs.pop(i)
+                    i -= 1
+                    break
+
+                doc_lines.pop(j)
+                j -= 1
+
+
+            j += 1
+
+        docs[i] = "\n".join(doc_lines)
+        i += 1  
+
+    after_total_lines = len(" ".join(docs).splitlines())
+
+    logging.info(f"[INFO] After preprocessing: num_docs: {len(docs):,}  diff: {(before_doc_len - len(docs)):,}")
+    logging.info(f"[INFO] After preprocessing: num_titles: {len(titles):,}  diff: {(before_tit_len - len(titles)):,}")
+    logging.info(f"[INFO] After preprocessing: total_lines: {after_total_lines:,}  diff: {(before_total_lines - after_total_lines):,}")
+
+    assert len(titles) == len(docs), "[ERROR] len(titles) and len(docs) are not same!..."
+
+    return titles, docs
+
+def save_preprocessed(titles, docs):
+    """takes preprocessed titles and docs, merges them and save them as new file"""
+
+
+
+    return
 
 
 files_to_merge = [ f'{"raw" + "/" + tr_wiki_prefix}-train.raw',
@@ -160,12 +254,16 @@ merged_filename = 'merged.raw'
 
 merge_files(files_to_merge, merged_filename)
 
+
+# preprocess_merged_file(merged_filename)
+
+
 # let's dump the stat of merged file
 get_stat(merged_filename)
 
+title_preprocessed, docs_preprocessed = preprocess_merged(merged_filename)
 
-
-
+save_preprocessed(title_preprocessed, docs_preprocessed)
 
 
 
