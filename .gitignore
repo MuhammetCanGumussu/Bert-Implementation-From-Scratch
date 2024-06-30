@@ -1,5 +1,6 @@
 # Ignore the data/raw
 data/raw
 data/merged.raw
+data/merged_preprocessed.raw
 
 # tüm data dir'i ignore edip sadece data.py'ı track etmeyi dene, beceremedim şimdilik

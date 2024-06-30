@@ -169,14 +169,18 @@ def delete_if_empty_doc(titles, docs):
 
 def preprocess_merged(merged_file):
     """delete subtitles (if line has less than 4 words lets consider it as subtitle)"""
-
-
+    
+    if os.path.exists("merged_preprocessed.raw"):
+        print(f'[INFO] merged_preprocessed.raw already exists. Skipping preprocessing...')
+        return None
+    
+    print(f"[INFO] preprocessing is started...")
 
     # Configure logging to output to a file
     logging.basicConfig(level=logging.INFO, 
                         format='%(asctime)s %(message)s', 
                         datefmt='%Y-%m-%d %H:%M:%S', 
-                        handlers=[logging.FileHandler('merged_preprocessing.log', 'w', 'utf-8')])
+                        handlers=[logging.FileHandler('preprocessing.log', 'w', 'utf-8')])
 
     titles, docs = split_titles_and_docs(merged_file)
     titles, docs = delete_if_empty_doc(titles, docs) 
@@ -188,6 +192,8 @@ def preprocess_merged(merged_file):
     logging.info(f"[INFO] Before preprocessing: num_docs: {before_doc_len:,}")
     logging.info(f"[INFO] Before preprocessing: num_titles: {before_tit_len:,}")
     logging.info(f"[INFO] Before preprocessing: total_lines: {before_total_lines:,}")
+
+    
 
     import re
 
@@ -236,12 +242,33 @@ def preprocess_merged(merged_file):
 
     assert len(titles) == len(docs), "[ERROR] len(titles) and len(docs) are not same!..."
 
-    return titles, docs
+    return (titles, docs)
 
 def save_preprocessed(titles, docs):
     """takes preprocessed titles and docs, merges them and save them as new file"""
+    
+    assert len(titles) == len(docs), "[ERROR] len(titles) and len(docs) are not same!..."
 
+    if os.path.exists("merged_preprocessed.raw"):
+        print(f'[INFO] merged_preprocessed.raw already exists. Skipping preprocessing...')
+        return
+    
+    print(f"[INFO] Saving preprocessed merged file...")
 
+    for i in range(len(titles)):
+        
+        # Calculate progress percentage
+        progress = (i / len(titles)) * 100
+        progress = round(progress, 2)  # Round to 2 decimal places
+    
+        # Print progress bar
+        print(f"Progress: [{int(progress)}%]", end='\r', flush=True)
+
+        with open("merged_preprocessed.raw", 'a', encoding='utf-8') as merged:
+            merged.write(titles[i])
+            merged.write("\n" + docs[i] + "\n\n")
+
+    print(f"[INFO] Preprocessed merged file saved as merged_preprocessed.raw...")
 
     return
 
@@ -261,9 +288,17 @@ merge_files(files_to_merge, merged_filename)
 # let's dump the stat of merged file
 get_stat(merged_filename)
 
-title_preprocessed, docs_preprocessed = preprocess_merged(merged_filename)
+# TODO dosya olup olmadığı vs burada yapmak daha okunaklı olabilir
+# if merged_preprocessed.raw already exists, we don't need to preprocess again, preprocess_merged() returns None
+# otherwise tuple of (title_preprocessed, docs_preprocessed)
+preprocessed_title_docs = preprocess_merged(merged_filename)
 
-save_preprocessed(title_preprocessed, docs_preprocessed)
+if preprocessed_title_docs is not None:
+    title_preprocessed, docs_preprocessed = preprocessed_title_docs
+    save_preprocessed(title_preprocessed, docs_preprocessed)
+
+
+
 
 
 
