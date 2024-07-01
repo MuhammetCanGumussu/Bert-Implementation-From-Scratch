@@ -2,5 +2,6 @@
 data/raw
 data/merged.raw
 data/merged_preprocessed.raw
+data/__pycache__
 
 # tüm data dir'i ignore edip sadece data.py'ı track etmeyi dene, beceremedim şimdilik

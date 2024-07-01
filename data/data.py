@@ -31,13 +31,16 @@ import json
 import os
 import sys
 import logging
+import multiprocessing as mp
+import time
 
 
 tr_wiki_prefix = "trwiki-67"
 
 
-# sys.exit()
-
+# global scope is also executed for all subprocesses induvidually
+print(f"proc id: Global scope Before main block: {os.getpid()}")
+  
 def split_titles_and_docs(filename):
     """Returns a list of titles and a list of documents from merged file"""
 
@@ -272,31 +275,46 @@ def save_preprocessed(titles, docs):
     return
 
 
-files_to_merge = [ f'{"raw" + "/" + tr_wiki_prefix}-train.raw',
+  
+
+if __name__ == '__main__':
+    
+
+    files_to_merge = [ f'{"raw" + "/" + tr_wiki_prefix}-train.raw',
                    f'{"raw" + "/" + tr_wiki_prefix}-val.raw', 
                    f'{"raw" + "/" + tr_wiki_prefix}-test.raw' ]
 
-merged_filename = 'merged.raw'
+    merged_filename = 'merged.raw'
 
-merge_files(files_to_merge, merged_filename)
-
-
-# let's dump the stat of merged file
-get_stat(merged_filename)
+    merge_files(files_to_merge, merged_filename)
 
 
-# if preprocessed merged file is not exists, then preprocess it and save it
-if not os.path.exists("merged_preprocessed.raw"):
-    print(f'[INFO] merged_preprocessed.raw is not exists. Preprocessing merged file...')
+    # let's dump the stat of merged file
+    get_stat(merged_filename)
 
-    titles, docs = preprocess_merged(merged_filename)
-    save_preprocessed(titles, docs)
 
-    # let's take stat of preprocessed merged file
-    get_stat("merged_preprocessed.raw")
+    # if preprocessed merged file is not exists, then preprocess it and save it
+    if not os.path.exists("merged_preprocessed.raw"):
+        print(f'[INFO] merged_preprocessed.raw is not exists. Preprocessing merged file...')
 
-else:
-    print(f"[INFO] merged_preprocessed.raw already exists. Skipping preprocessing...")
+        titles, docs = preprocess_merged(merged_filename)
+        save_preprocessed(titles, docs)
+
+        # let's take stat of preprocessed merged file
+        get_stat("merged_preprocessed.raw")
+
+    else:
+        print(f"[INFO] merged_preprocessed.raw already exists. Skipping preprocessing...")
+    
+    
+
+
+
+
+
+
+print(f"proc id: Global scope After main block: {os.getpid()}")
+
 
 
 #----------------------------------------------------------------------
@@ -308,21 +326,22 @@ else:
 
 
 
-sys.exit()
-
-deneme_string = """
-== Çizgili arı şahini == 
-
-Çizgili arı şahini ("Pernis celebensis"), atmacagiller (Accipitridae) familyasından yırtıcı bir kuş türü.
-Endonezya ve Filipinler'de bulunur. Doğal habitatları subtropikal veya tropikal nemli ova ormanları ve subtropikal veya tropikal nemli dağ ormanlarıdır
-
-== Marcia Trimble == 
-
-Marcia Trimble (1966 - 1975) 25 Şubat 1975 günü ailesinin Nashville,Tennessee,Amerika'daki evinden kaçtığında yalnızca 9 yaşındaydı.Marcia,komşularına Sincap Kız kurabiyeleri satıyordu.Kızın cesedi 33 gün sonra Paskalya Pazar'ında (30 Mart),evinden sadece 200 kilometre uzaklıktaki bir garajda bulundu.Otopsi sonucunda kıza cinsel tecavüz edildiği ve boğazlandığı öğrenildi.
-Çözülmemiş Cinayet Araştırması.
-Kızın nasıl kaçışı ve öldürülüşü bilinmemektedir.1979 yazında,cinayet işlendiği zaman 15 yaşında olan Jeffrey Womack,kızı öldürdüğü için hapse atıldı.Womack arkadaşlarına hep Trimble'ı öldürdüğünü böbürlenerek anlatıyordu.Bazı komşu çocuklarına göre,Marcia'nın evden kaçtığı gün yanında Womack de vardı.Womack bazı dedektiflere cinayet ile ilgili bazı ipuçları da söyledi.Womack iki tane yalan makinesi tarafından sorgulandı.1980 yılında Womack serbest bırakıldı
-"""
-
-for line in deneme_string.splitlines():
-    if line.startswith('== ') and line.endswith('== '):
-        print(line)
+# sys.exit()
+# 
+# deneme_string = """
+# == Çizgili arı şahini == 
+# 
+# Çizgili arı şahini ("Pernis celebensis"), atmacagiller (Accipitridae) familyasından yırtıcı bir kuş türü.
+# Endonezya ve Filipinler'de bulunur. Doğal habitatları subtropikal veya tropikal nemli ova ormanları ve subtropikal veya tropikal nemli dağ ormanlarıdır
+# 
+# == Marcia Trimble == 
+# 
+# Marcia Trimble (1966 - 1975) 25 Şubat 1975 günü ailesinin Nashville,Tennessee,Amerika'daki evinden kaçtığında yalnızca 9 yaşındaydı.Marcia,komşularına Sincap Kız kurabiyeleri satıyordu.Kızın cesedi 33 gün sonra Paskalya Pazar'ında (30 Mart),evinden sadece 200 kilometre uzaklıktaki bir garajda bulundu.Otopsi sonucunda kıza cinsel tecavüz edildiği ve boğazlandığı öğrenildi.
+# Çözülmemiş Cinayet Araştırması.
+# Kızın nasıl kaçışı ve öldürülüşü bilinmemektedir.1979 yazında,cinayet işlendiği zaman 15 yaşında olan Jeffrey Womack,kızı öldürdüğü için hapse atıldı.Womack arkadaşlarına hep Trimble'ı öldürdüğünü böbürlenerek anlatıyordu.Bazı komşu çocuklarına göre,Marcia'nın evden kaçtığı gün yanında Womack de vardı.Womack bazı dedektiflere cinayet ile ilgili bazı ipuçları da söyledi.Womack iki tane yalan makinesi tarafından sorgulandı.1980 yılında Womack serbest bırakıldı
+# """
+# 
+# for line in deneme_string.splitlines():
+#     if line.startswith('== ') and line.endswith('== '):
+#         print(line)
+# 
