@@ -8,7 +8,9 @@ başlık ve paragrafları birbirinden ayır
 paragrafları all_dataset_string dosyasına yaz
 
 toplam kaç tane example(paragraf/doc), kelime, sentence var onlara bak hatta kaydet bu bilgileri
-merged.raw dosyası için ayrı, ab.raw dosyası için ayrı istatistik tutulacak
+merged.raw dosyası için ayrı,
+preprocessed merged için ayrı,
+ab.raw dosyası için ayrı istatistik tutulacak
 
 AB_string dosyası oluştur (sliding olacak)
 
@@ -95,7 +97,8 @@ def get_stat(file):
         print(f'[INFO] {file} is not exists. Stat cannot be tracked...')
         return
 
-    if "merged" in file:
+    # merged.raw,  merged_preprocessed.raw
+    if "merged" in file :
 
         if os.path.exists(file.split(".")[0] + "_stat.json"):
             print(f'[INFO] {file.split(".")[0] + "_stat.json"} already exists. Skipping stat tracking...')
@@ -169,10 +172,6 @@ def delete_if_empty_doc(titles, docs):
 
 def preprocess_merged(merged_file):
     """delete subtitles (if line has less than 4 words lets consider it as subtitle)"""
-    
-    if os.path.exists("merged_preprocessed.raw"):
-        print(f'[INFO] merged_preprocessed.raw already exists. Skipping preprocessing...')
-        return None
     
     print(f"[INFO] preprocessing is started...")
 
@@ -282,22 +281,25 @@ merged_filename = 'merged.raw'
 merge_files(files_to_merge, merged_filename)
 
 
-# preprocess_merged_file(merged_filename)
-
-
 # let's dump the stat of merged file
 get_stat(merged_filename)
 
-# TODO dosya olup olmadığı vs burada yapmak daha okunaklı olabilir
-# if merged_preprocessed.raw already exists, we don't need to preprocess again, preprocess_merged() returns None
-# otherwise tuple of (title_preprocessed, docs_preprocessed)
-preprocessed_title_docs = preprocess_merged(merged_filename)
 
-if preprocessed_title_docs is not None:
-    title_preprocessed, docs_preprocessed = preprocessed_title_docs
-    save_preprocessed(title_preprocessed, docs_preprocessed)
+# if preprocessed merged file is not exists, then preprocess it and save it
+if not os.path.exists("merged_preprocessed.raw"):
+    print(f'[INFO] merged_preprocessed.raw is not exists. Preprocessing merged file...')
+
+    titles, docs = preprocess_merged(merged_filename)
+    save_preprocessed(titles, docs)
+
+    # let's take stat of preprocessed merged file
+    get_stat("merged_preprocessed.raw")
+
+else:
+    print(f"[INFO] merged_preprocessed.raw already exists. Skipping preprocessing...")
 
 
+#----------------------------------------------------------------------
 
 
 
