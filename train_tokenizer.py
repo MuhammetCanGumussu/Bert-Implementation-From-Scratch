@@ -1,5 +1,9 @@
 """trains wordpiece tokenizer from scratch on turkish language data (trwiki)"""
 
+# postproc vs ayarlamalar yapabilirim, son veri X,Y oluşumunda baya işten kurtarabilir (hemde hızlı olur)
+# tabi yaptıktan sonra çalışıp çalışmadığını dene, encode_batch'te dene!
+
+
 from data.data import split_titles_and_docs 
 import os
 

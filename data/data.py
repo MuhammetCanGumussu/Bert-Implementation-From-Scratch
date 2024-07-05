@@ -25,21 +25,27 @@ subtitle'ları temizlemek gerekiyor!!!!
 
 
 from nltk.tokenize import sent_tokenize
+import multiprocessing as mp
+# import pandas as pd
 
 import json
-
 import os
 import sys
 import logging
-import multiprocessing as mp
 import time
+import random
 
 
 tr_wiki_prefix = "trwiki-67"
+merged_filename = 'merged.raw'
+ab_string_path = "ab_string.txt"
 
+
+NUM_PROCESSES = os.cpu_count()
+print(f"[INFO] number of core available: {NUM_PROCESSES}")
 
 # global scope is also executed for all subprocesses induvidually
-print(f"proc id: Global scope Before main block: {os.getpid()}")
+# print(f"proc id: Global scope Before main block: {os.getpid()}")
   
 def split_titles_and_docs(filename):
     """Returns a list of titles and a list of documents from merged file"""
@@ -93,7 +99,7 @@ def get_num_sents(docs):
     "docs: list[str, str, str, ...]"
     return len(sent_tokenize('. '.join(docs), language='turkish'))
 
-def get_stat(file):
+def dump_stat(file):
     stat = {"num_sentences": 0, "num_words": 0, "num_chars": 0}
 
     if not os.path.exists(file):
@@ -274,6 +280,95 @@ def save_preprocessed(titles, docs):
 
     return
 
+def sliding_doc(doc):
+    """ str -> sent_tokenization -> if len(sentences)> 1 return list[str(A <---> B), ...] else return None
+        this is a function that will be used as "mapping" function
+    """
+    sentences = sent_tokenize(doc, language='turkish')
+
+    ab_for_spesific_doc = []
+
+    if len(sentences) > 1:
+        for i in range(len(sentences) - 1):
+            ab_for_spesific_doc.append(sentences[i] + " <---> " + sentences[i+1])
+
+        return ab_for_spesific_doc
+    else:
+        return None
+
+def get_random_sentence(ab_string):
+    """ returns random B sentence from ab_string """
+    random_index = random.randint(0, len(ab_string) - 1)
+
+    return ab_string[random_index].split(" <---> ")[1] 
+def shuffle_ab(ab_string):
+    """ if 0.5 prob occurs, select random sentence from sentence_list and change b of ab with that sentence
+        also append str with notNext
+        if 0.5 prob not occurs, do not touch ab and append str with isNext
+
+        this is a function that will be used as "mapping" function
+    """
+
+    if random.random() < 0.5:
+        random_sentence = get_random_sentence()
+        ab = ab_string.split(" <---> ")[0] + " <---> " + random_sentence + " <---> notNext"
+        return ab
+    else:
+        return ab + " <---> isNext"
+
+def load_ab_string(ab_string_path):
+    """returns ab_string list[str(A <---> B <---> isNext), ...] if file is already exists else it will create it and returns"""
+
+    if os.path.exists(ab_string_path):
+        print(f'[INFO] {ab_string_path} already exists. AB_string is loading...')
+        with open(ab_string_path, 'r') as f:
+            return f.read().splitlines()
+
+    print(f"[INFO] {ab_string_path} does not exist. AB_string is creating...")
+
+    _, docs = split_titles_and_docs("merged_preprocessed.raw")
+
+    # sliding window stage
+    # her bir doc sent tokenize edilecek 
+    # docs list[str] --> after mapping with sliding_doc --> list[list[str(A <---> B)], ...]
+    # sliding_doc takes str -> sent tokenizasyon yapar -> len(sen)>1 ise sentencelar üzerinde sliding yaparak ab return eder (eğer len(sen)==1 ise None return eder)
+
+    # Create a multiprocessing pool
+    with mp.Pool(processes=(NUM_PROCESSES - 1) if NUM_PROCESSES > 1 else 1) as pool:
+        # Apply the sliding_doc function to each doc_str using pool.map
+        ab_strings = pool.map(sliding_doc, docs)
+
+    # print number of None (number of docs that will be deleted bcs of len(sen)==1 (they can not be ab)) )
+    print(f"[INFO] number of docs that will be deleted bcs of len(sen)==1 (they can not be ab): {ab_strings.count(None)}")
+
+    # clean None's
+    ab_strings = list(filter(lambda x: x is not None, ab_strings))
+
+    # shuffling stage
+    # list unpack edilecek --> list[str(A <---> B), str(A <---> B), str(A <---> B), ...]
+    # list shuffle edilecek --> list[str(A <---> B <---> isNext), str(A <---> B <---> notNext), str(A <---> B <---> isNext), ...]
+    
+
+    # unpack ab_strings list[list[str]]--> list[str]
+    ab_strings = [ab for ab_list in ab_strings for ab in ab_list]
+
+
+    with mp.Pool(processes=(NUM_PROCESSES - 1) if NUM_PROCESSES > 1 else 1) as pool:
+        # Apply the sliding_doc function to each doc_str using pool.map
+        ab_strings = pool.map(shuffle_ab, ab_strings)
+
+    # number of isNext and notNext
+    print(f"[INFO] number of notNext: {ab_strings.count(' <---> notNext')}")
+
+    # elde edilen liste dosyaya yazılacak ve list return edilecek
+
+    with open(ab_string_path, 'w') as f:
+        f.write('\n'.join(ab_strings))
+        print(f"[INFO] {ab_string_path} has been created.")
+
+    print(f"[INFO] finally total number of ab example: {len(ab_strings)}.")
+
+    return ab_strings # list[str, str, ...]
 
   
 
@@ -284,13 +379,13 @@ if __name__ == '__main__':
                    f'{"raw" + "/" + tr_wiki_prefix}-val.raw', 
                    f'{"raw" + "/" + tr_wiki_prefix}-test.raw' ]
 
-    merged_filename = 'merged.raw'
+    
 
     merge_files(files_to_merge, merged_filename)
 
 
     # let's dump the stat of merged file
-    get_stat(merged_filename)
+    dump_stat(merged_filename)
 
 
     # if preprocessed merged file is not exists, then preprocess it and save it
@@ -301,19 +396,30 @@ if __name__ == '__main__':
         save_preprocessed(titles, docs)
 
         # let's take stat of preprocessed merged file
-        get_stat("merged_preprocessed.raw")
+        dump_stat("merged_preprocessed.raw")
 
     else:
         print(f"[INFO] merged_preprocessed.raw already exists. Skipping preprocessing...")
     
     
+    #---------------------- Data Preprocessing Pipeline -------------------------
+    # AB (sliding wind.) oluşturma componenti ile isNext/notNext shuffling componenti fuse'la text dosyası olarak kaydet (pandas df kullanılabilir, ayraç olarak bu <----> örüntü kullanılacak, text dosyası olarak kaydedilebilir)
+    # Oluşturulan AB dosyasının stat bilgilerini getir
+    # vocab'taki her token için token length bilgisi oluştur (daha sonra kullanılacak)
+    # 
+
+   
+
+    ab_string_list = load_ab_string(ab_string_path) # list[str, str, ...]
+
+    # dump_stat(ab_string_path) not implemented yet
 
 
 
 
 
 
-print(f"proc id: Global scope After main block: {os.getpid()}")
+#print(f"proc id: Global scope After main block: {os.getpid()}")
 
 
 
