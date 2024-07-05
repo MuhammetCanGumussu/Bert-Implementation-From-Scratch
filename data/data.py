@@ -26,6 +26,8 @@ subtitle'ları temizlemek gerekiyor!!!!
 
 from nltk.tokenize import sent_tokenize
 import multiprocessing as mp
+from tqdm.contrib.concurrent import process_map
+from functools import partial
 # import pandas as pd
 
 import json
@@ -34,19 +36,26 @@ import sys
 import logging
 import time
 import random
+import tqdm
 
 
 tr_wiki_prefix = "trwiki-67"
 merged_filename = 'merged.raw'
-ab_string_path = "ab_string.txt"
+ab_string_path = "ab_string.raw"
 
 
-NUM_PROCESSES = os.cpu_count()
-print(f"[INFO] number of core available: {NUM_PROCESSES}")
+if mp.current_process().name == 'MainProcess':
+    NUM_PROCESSES = (os.cpu_count() - 1) if os.cpu_count() > 1 else 1
+    print(f"[INFO] number of core available: {NUM_PROCESSES}")
+
+
+CHUNK_SIZE = 5000
 
 # global scope is also executed for all subprocesses induvidually
 # print(f"proc id: Global scope Before main block: {os.getpid()}")
   
+print(os.getpid())
+
 def split_titles_and_docs(filename):
     """Returns a list of titles and a list of documents from merged file"""
 
@@ -284,8 +293,8 @@ def sliding_doc(doc):
     """ str -> sent_tokenization -> if len(sentences)> 1 return list[str(A <---> B), ...] else return None
         this is a function that will be used as "mapping" function
     """
-    sentences = sent_tokenize(doc, language='turkish')
-
+    sentences = sent_tokenize(doc, language='turkish') # doclardaki ilk sentenceların başında 2 tane \n\n bulunuyor bunu temizlemeli
+                                                       # ya burda yada buraya gelmeden docs üzerinde bu characterleri temizlemeli
     ab_for_spesific_doc = []
 
     if len(sentences) > 1:
@@ -296,12 +305,17 @@ def sliding_doc(doc):
     else:
         return None
 
-def get_random_sentence(ab_string):
-    """ returns random B sentence from ab_string """
-    random_index = random.randint(0, len(ab_string) - 1)
 
-    return ab_string[random_index].split(" <---> ")[1] 
-def shuffle_ab(ab_string):
+
+def get_random_sentence(ab_strings):
+    """ returns random B sentence from ab_string """
+
+    random_index = random.randint(0, len(ab_strings) - 1)
+
+    return ab_strings[random_index].split(" <---> ")[1] 
+
+
+def shuffle_ab(ab_string, ab_strings=None):
     """ if 0.5 prob occurs, select random sentence from sentence_list and change b of ab with that sentence
         also append str with notNext
         if 0.5 prob not occurs, do not touch ab and append str with isNext
@@ -309,12 +323,19 @@ def shuffle_ab(ab_string):
         this is a function that will be used as "mapping" function
     """
 
-    if random.random() < 0.5:
-        random_sentence = get_random_sentence()
-        ab = ab_string.split(" <---> ")[0] + " <---> " + random_sentence + " <---> notNext"
-        return ab
-    else:
-        return ab + " <---> isNext"
+    # if random.random() < 0.5:
+    #     random_sentence = get_random_sentence(ab_strings)
+    #     ab = ab_string.split(" <---> ")[0] + " <---> " + random_sentence + " <---> notNext"
+    #     return ab
+    # else:
+    #     return ab_string + " <---> isNext"
+    return ab_string + " <---> isNext"
+
+    # if random.random() < 0.5:
+    #     ab = ab_string.split(" <---> ")[0] + " <---> " + "random_sentence" + " <---> notNext"
+    #     return ab
+    # else:
+    #     return ab_string + " <---> isNext"
 
 def load_ab_string(ab_string_path):
     """returns ab_string list[str(A <---> B <---> isNext), ...] if file is already exists else it will create it and returns"""
@@ -332,14 +353,19 @@ def load_ab_string(ab_string_path):
     # her bir doc sent tokenize edilecek 
     # docs list[str] --> after mapping with sliding_doc --> list[list[str(A <---> B)], ...]
     # sliding_doc takes str -> sent tokenizasyon yapar -> len(sen)>1 ise sentencelar üzerinde sliding yaparak ab return eder (eğer len(sen)==1 ise None return eder)
+    
+    # i dont want to use all of the cores, so -1  all avaliable core number
+
 
     # Create a multiprocessing pool
-    with mp.Pool(processes=(NUM_PROCESSES - 1) if NUM_PROCESSES > 1 else 1) as pool:
+    with mp.Pool(processes=NUM_PROCESSES) as pool:
         # Apply the sliding_doc function to each doc_str using pool.map
-        ab_strings = pool.map(sliding_doc, docs)
+        # ab_strings = pool.map(sliding_doc, docs)
+        # list constructure kullanma nedeni: imap iterable'den obje döndürüyor map'in aksine map işlemini iterate edildikçe çalıyor mp ile. (map de ise tüm mapping yapılıp sonuç döndürülüyor)
+        ab_strings = list(tqdm.tqdm(pool.imap(sliding_doc, docs, chunksize=CHUNK_SIZE // 2), total=len(docs), desc="Sliding window processing..."))
 
     # print number of None (number of docs that will be deleted bcs of len(sen)==1 (they can not be ab)) )
-    print(f"[INFO] number of docs that will be deleted bcs of len(sen)==1 (they can not be ab): {ab_strings.count(None)}")
+    print(f"[INFO] number of docs deleted bcs of len(sen)==1 (because they can not be ab): {ab_strings.count(None)}")
 
     # clean None's
     ab_strings = list(filter(lambda x: x is not None, ab_strings))
@@ -352,21 +378,29 @@ def load_ab_string(ab_string_path):
     # unpack ab_strings list[list[str]]--> list[str]
     ab_strings = [ab for ab_list in ab_strings for ab in ab_list]
 
+    # partial_shuffle_ab = partial(shuffle_ab, ab_strings=ab_strings)
+    # ab_strings = process_map(shuffle_ab, ab_strings, max_workers=NUM_PROCESSES, desc="Shuffling AB strings", chunksize=1000)
 
-    with mp.Pool(processes=(NUM_PROCESSES - 1) if NUM_PROCESSES > 1 else 1) as pool:
+    with mp.Pool(processes=NUM_PROCESSES) as pool:
+        # partial_shuffle_ab = partial(shuffle_ab, ab_strings=ab_strings)
         # Apply the sliding_doc function to each doc_str using pool.map
-        ab_strings = pool.map(shuffle_ab, ab_strings)
+        # ab_strings = pool.map(partial_shuffle_ab, ab_strings)
+        ab_strings = list(tqdm.tqdm(pool.imap(shuffle_ab, ab_strings, chunksize=CHUNK_SIZE*5), total=len(ab_strings), desc="Shuffling AB strings"))
+        
 
     # number of isNext and notNext
-    print(f"[INFO] number of notNext: {ab_strings.count(' <---> notNext')}")
+    print(f"[INFO] number of notNext: {ab_strings.count('notNext')}")
+
+    # ardışık \n\n'ları sil (doc başlangıcınlarından kaynaklı preprocess)
+    all_string = '\n'.join(ab_strings)
+    all_string = all_string.replace("\n\n", "") # yarın hallet yapamadın
 
     # elde edilen liste dosyaya yazılacak ve list return edilecek
-
-    with open(ab_string_path, 'w') as f:
-        f.write('\n'.join(ab_strings))
+    with open(ab_string_path, 'w', encoding="utf-8") as f:
+        f.write(all_string)
         print(f"[INFO] {ab_string_path} has been created.")
 
-    print(f"[INFO] finally total number of ab example: {len(ab_strings)}.")
+    print(f"[INFO] finally, total number of ab example: {len(ab_strings)}.")
 
     return ab_strings # list[str, str, ...]
 
