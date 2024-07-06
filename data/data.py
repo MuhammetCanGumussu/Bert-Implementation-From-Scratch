@@ -35,9 +35,10 @@ import os
 import sys
 import logging
 import time
-import random
 import tqdm
+import random
 
+random.seed(42) # reproducibility
 
 tr_wiki_prefix = "trwiki-67"
 merged_filename = 'merged.raw'
@@ -51,10 +52,6 @@ if mp.current_process().name == 'MainProcess':
 
 CHUNK_SIZE = 5000
 
-# global scope is also executed for all subprocesses induvidually
-# print(f"proc id: Global scope Before main block: {os.getpid()}")
-  
-print(os.getpid())
 
 def split_titles_and_docs(filename):
     """Returns a list of titles and a list of documents from merged file"""
@@ -306,36 +303,21 @@ def sliding_doc(doc):
         return None
 
 
-
-def get_random_sentence(ab_strings):
-    """ returns random B sentence from ab_string """
-
-    random_index = random.randint(0, len(ab_strings) - 1)
-
-    return ab_strings[random_index].split(" <---> ")[1] 
-
-
-def shuffle_ab(ab_string, ab_strings=None):
-    """ if 0.5 prob occurs, select random sentence from sentence_list and change b of ab with that sentence
+def shuffle_ab(ab_and_random_tuple_list):
+    """ if 0.5 prob occurs, b of ab will be replaced by random_sentence
         also append str with notNext
         if 0.5 prob not occurs, do not touch ab and append str with isNext
 
         this is a function that will be used as "mapping" function
     """
+    ab_string, random_sentence = ab_and_random_tuple_list
 
-    # if random.random() < 0.5:
-    #     random_sentence = get_random_sentence(ab_strings)
-    #     ab = ab_string.split(" <---> ")[0] + " <---> " + random_sentence + " <---> notNext"
-    #     return ab
-    # else:
-    #     return ab_string + " <---> isNext"
-    return ab_string + " <---> isNext"
-
-    # if random.random() < 0.5:
-    #     ab = ab_string.split(" <---> ")[0] + " <---> " + "random_sentence" + " <---> notNext"
-    #     return ab
-    # else:
-    #     return ab_string + " <---> isNext"
+    if random.random() < 0.5:
+        #                          A           <--->         Random_B        <---> notNext
+        ab = ab_string.split(" <---> ")[0] + " <---> " + random_sentence + " <---> notNext"
+        return ab
+    else:
+        return ab_string + " <---> isNext"
 
 def load_ab_string(ab_string_path):
     """returns ab_string list[str(A <---> B <---> isNext), ...] if file is already exists else it will create it and returns"""
@@ -349,51 +331,36 @@ def load_ab_string(ab_string_path):
 
     _, docs = split_titles_and_docs("merged_preprocessed.raw")
 
-    # sliding window stage
-    # her bir doc sent tokenize edilecek 
-    # docs list[str] --> after mapping with sliding_doc --> list[list[str(A <---> B)], ...]
-    # sliding_doc takes str -> sent tokenizasyon yapar -> len(sen)>1 ise sentencelar üzerinde sliding yaparak ab return eder (eğer len(sen)==1 ise None return eder)
-    
-    # i dont want to use all of the cores, so -1  all avaliable core number
-
 
     # Create a multiprocessing pool
     with mp.Pool(processes=NUM_PROCESSES) as pool:
-        # Apply the sliding_doc function to each doc_str using pool.map
-        # ab_strings = pool.map(sliding_doc, docs)
-        # list constructure kullanma nedeni: imap iterable'den obje döndürüyor map'in aksine map işlemini iterate edildikçe çalıyor mp ile. (map de ise tüm mapping yapılıp sonuç döndürülüyor)
         ab_strings = list(tqdm.tqdm(pool.imap(sliding_doc, docs, chunksize=CHUNK_SIZE // 2), total=len(docs), desc="Sliding window processing..."))
 
-    # print number of None (number of docs that will be deleted bcs of len(sen)==1 (they can not be ab)) )
     print(f"[INFO] number of docs deleted bcs of len(sen)==1 (because they can not be ab): {ab_strings.count(None)}")
 
     # clean None's
     ab_strings = list(filter(lambda x: x is not None, ab_strings))
 
-    # shuffling stage
-    # list unpack edilecek --> list[str(A <---> B), str(A <---> B), str(A <---> B), ...]
-    # list shuffle edilecek --> list[str(A <---> B <---> isNext), str(A <---> B <---> notNext), str(A <---> B <---> isNext), ...]
-    
 
     # unpack ab_strings list[list[str]]--> list[str]
     ab_strings = [ab for ab_list in ab_strings for ab in ab_list]
 
-    # partial_shuffle_ab = partial(shuffle_ab, ab_strings=ab_strings)
-    # ab_strings = process_map(shuffle_ab, ab_strings, max_workers=NUM_PROCESSES, desc="Shuffling AB strings", chunksize=1000)
 
+    random_sentences = [ab.split(" <---> ")[1] for ab in ab_strings]
+    ab_and_random_tuple_list = list(zip(random.sample(ab_strings, len(ab_strings)),
+                                        random.sample(random_sentences, len(ab_strings))))
+    
     with mp.Pool(processes=NUM_PROCESSES) as pool:
-        # partial_shuffle_ab = partial(shuffle_ab, ab_strings=ab_strings)
-        # Apply the sliding_doc function to each doc_str using pool.map
-        # ab_strings = pool.map(partial_shuffle_ab, ab_strings)
-        ab_strings = list(tqdm.tqdm(pool.imap(shuffle_ab, ab_strings, chunksize=CHUNK_SIZE*5), total=len(ab_strings), desc="Shuffling AB strings"))
-        
+        ab_strings = list(tqdm.tqdm(pool.imap(shuffle_ab, ab_and_random_tuple_list, chunksize=CHUNK_SIZE*5), total=len(ab_strings), desc="Shuffling AB strings"))
 
-    # number of isNext and notNext
-    print(f"[INFO] number of notNext: {ab_strings.count('notNext')}")
-
+    
+    print(f"[INFO] deleting consecutive newline characters...")
     # ardışık \n\n'ları sil (doc başlangıcınlarından kaynaklı preprocess)
     all_string = '\n'.join(ab_strings)
-    all_string = all_string.replace("\n\n", "") # yarın hallet yapamadın
+    all_string = all_string.replace("\n\n", "")
+
+    # number of isNext and notNext
+    print(f"[INFO] number of notNext: {all_string.count('notNext')}")
 
     # elde edilen liste dosyaya yazılacak ve list return edilecek
     with open(ab_string_path, 'w', encoding="utf-8") as f:
@@ -453,35 +420,5 @@ if __name__ == '__main__':
 
 
 
-#print(f"proc id: Global scope After main block: {os.getpid()}")
 
 
-
-#----------------------------------------------------------------------
-
-
-
-
-
-
-
-
-# sys.exit()
-# 
-# deneme_string = """
-# == Çizgili arı şahini == 
-# 
-# Çizgili arı şahini ("Pernis celebensis"), atmacagiller (Accipitridae) familyasından yırtıcı bir kuş türü.
-# Endonezya ve Filipinler'de bulunur. Doğal habitatları subtropikal veya tropikal nemli ova ormanları ve subtropikal veya tropikal nemli dağ ormanlarıdır
-# 
-# == Marcia Trimble == 
-# 
-# Marcia Trimble (1966 - 1975) 25 Şubat 1975 günü ailesinin Nashville,Tennessee,Amerika'daki evinden kaçtığında yalnızca 9 yaşındaydı.Marcia,komşularına Sincap Kız kurabiyeleri satıyordu.Kızın cesedi 33 gün sonra Paskalya Pazar'ında (30 Mart),evinden sadece 200 kilometre uzaklıktaki bir garajda bulundu.Otopsi sonucunda kıza cinsel tecavüz edildiği ve boğazlandığı öğrenildi.
-# Çözülmemiş Cinayet Araştırması.
-# Kızın nasıl kaçışı ve öldürülüşü bilinmemektedir.1979 yazında,cinayet işlendiği zaman 15 yaşında olan Jeffrey Womack,kızı öldürdüğü için hapse atıldı.Womack arkadaşlarına hep Trimble'ı öldürdüğünü böbürlenerek anlatıyordu.Bazı komşu çocuklarına göre,Marcia'nın evden kaçtığı gün yanında Womack de vardı.Womack bazı dedektiflere cinayet ile ilgili bazı ipuçları da söyledi.Womack iki tane yalan makinesi tarafından sorgulandı.1980 yılında Womack serbest bırakıldı
-# """
-# 
-# for line in deneme_string.splitlines():
-#     if line.startswith('== ') and line.endswith('== '):
-#         print(line)
-# 
