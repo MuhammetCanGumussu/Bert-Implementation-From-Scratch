@@ -324,7 +324,7 @@ def load_ab_string(ab_string_path):
 
     if os.path.exists(ab_string_path):
         print(f'[INFO] {ab_string_path} already exists. AB_string is loading...')
-        with open(ab_string_path, 'r') as f:
+        with open(ab_string_path, 'r', encoding='utf-8') as f:
             return f.read().splitlines()
 
     print(f"[INFO] {ab_string_path} does not exist. AB_string is creating...")
@@ -356,6 +356,7 @@ def load_ab_string(ab_string_path):
     
     print(f"[INFO] deleting consecutive newline characters...")
     # ardışık \n\n'ları sil (doc başlangıcınlarından kaynaklı preprocess)
+    # ab_strings ve all_string aynı mem'i şişiriyor gerekirse birinden biri atılabilir (tabi tekrar list[str, str] ops yapmak gerekicek)
     all_string = '\n'.join(ab_strings)
     all_string = all_string.replace("\n\n", "")
 
@@ -369,6 +370,7 @@ def load_ab_string(ab_string_path):
 
     print(f"[INFO] finally, total number of ab example: {len(ab_strings)}.")
 
+    
     return ab_strings # list[str, str, ...]
 
   
@@ -401,19 +403,21 @@ if __name__ == '__main__':
 
     else:
         print(f"[INFO] merged_preprocessed.raw already exists. Skipping preprocessing...")
-    
-    
-    #---------------------- Data Preprocessing Pipeline -------------------------
-    # AB (sliding wind.) oluşturma componenti ile isNext/notNext shuffling componenti fuse'la text dosyası olarak kaydet (pandas df kullanılabilir, ayraç olarak bu <----> örüntü kullanılacak, text dosyası olarak kaydedilebilir)
-    # Oluşturulan AB dosyasının stat bilgilerini getir
-    # vocab'taki her token için token length bilgisi oluştur (daha sonra kullanılacak)
-    # 
 
-   
 
-    ab_string_list = load_ab_string(ab_string_path) # list[str, str, ...]
+    ab_strings = load_ab_string(ab_string_path) # list[str, str, ...]
 
     # dump_stat(ab_string_path) not implemented yet
+
+
+
+    #-----------------------------------------------------------------------------------
+    # tüm metinde (ab_strings) ünik kelimelere bak, bu kelimeler kaç defa geçmiş, kelimelerin token_lengthlerine bak
+    # 
+
+    # just string
+    ab_strings_temp = "".join(ab_strings).replace(" <---> ", " ").replace(" notNext", "").replace(" isNext", "")
+
 
 
 
