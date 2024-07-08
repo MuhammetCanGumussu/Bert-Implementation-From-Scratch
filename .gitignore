@@ -4,5 +4,6 @@ data/merged.raw
 data/merged_preprocessed.raw
 data/__pycache__
 data/ab_string.raw
+data/random_words_set/random_words_set.json
 
 # tüm data dir'i ignore edip sadece data.py'ı track etmeyi dene, beceremedim şimdilik
