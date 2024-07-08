@@ -1,5 +1,7 @@
 # şimdilik main isminde sonradan düzenlemeler yapılacak
 
+# ŞU MERGED, AB VS DOSYALARI VS STAT DOSYALARINI DÜZENLE!!!
+
 """
 29.06.2024
 

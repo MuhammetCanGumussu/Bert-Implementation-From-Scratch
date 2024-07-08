@@ -11,8 +11,8 @@ from collections import Counter
 import pandas as pd
 import matplotlib.pyplot as plt
 
-
-SAVE_PATH = "tr_wordpiece_tokenizer_cased.json"
+RANDOM_WORDS_SET_DIR = "random_words_set"
+SAVE_PATH = "../tr_wordpiece_tokenizer_cased.json"
 
 
 def count_words(input_string):
@@ -38,10 +38,10 @@ if __name__ == '__main__':
     tokenizer = PreTrainedTokenizerFast(tokenizer_file=SAVE_PATH)
 
  
-    if not os.path.exists("unique_words.json"):
+    if not os.path.exists(RANDOM_WORDS_SET_DIR + "/unique_words.json"):
 
-        from data.data import load_ab_string
-        ab_strings = load_ab_string("data/ab_string.raw") # list[str, str, ...]
+        from data import load_ab_string
+        ab_strings = load_ab_string("ab_string.raw") # list[str, str, ...]
 
         print("[INFO] ab_string.raw is being processed for word count...")
         # just string
@@ -66,10 +66,10 @@ if __name__ == '__main__':
     else:
         print("[INFO] unique_words.json is already exists. loading dataframe...")
 
-        df_word_count = pd.read_json("unique_words.json", orient="records", lines=True)
+        df_word_count = pd.read_json(RANDOM_WORDS_SET_DIR + "/unique_words.json", orient="records", lines=True)
 
     # group by token length and then plot the stat
-    if not os.path.exists("data/random_words_set/token_len_stat.png"):
+    if not os.path.exists(RANDOM_WORDS_SET_DIR + "/token_len_stat.png"):
 
         print("[INFO] Plotting token length frequency...")
 
@@ -87,16 +87,15 @@ if __name__ == '__main__':
         plt.tight_layout()
   
         # Save plot to a file or display in console
-        plt.savefig('data/random_words_set/token_len_freq.png')  # Save plot as PNG file
+        plt.savefig(RANDOM_WORDS_SET_DIR + '/token_len_freq.png')  # Save plot as PNG file
         plt.show()  # Display plot in console
     
 
     # if token len of word is bigger than 5 (TRESH_TOKEN_LEN), 
     # this word will not be used by bert model training so we can remove it dataframe
     TRESH_TOKEN_LEN = 5
-    RANDOM_WORDS_SET_PATH = "data/random_words_set/random_words_set.json"
 
-    if not os.path.exists(RANDOM_WORDS_SET_PATH):
+    if not os.path.exists(RANDOM_WORDS_SET_DIR + "/random_words_set.json"):
 
         print("[INFO] Random words set is being created...")
 
@@ -117,12 +116,12 @@ if __name__ == '__main__':
 
         json_data = json.dumps(dict_to_save, indent=4) 
 
-        with open(RANDOM_WORDS_SET_PATH, 'w', encoding="utf-8") as json_file:
+        with open(RANDOM_WORDS_SET_DIR + "/random_words_set.json", 'w', encoding="utf-8") as json_file:
             json_file.write(json_data)
 
 
     # lets load random words set and check
-    with open(RANDOM_WORDS_SET_PATH, 'r', encoding="utf-8") as json_file:
+    with open(RANDOM_WORDS_SET_DIR + "/random_words_set.json", 'r', encoding="utf-8") as json_file:
         random_words_dict = json.load(json_file)
         
 
