@@ -41,9 +41,9 @@ if __name__ == '__main__':
     if not os.path.exists(RANDOM_WORDS_SET_DIR + "/unique_words.json"):
 
         from data import load_ab_string
-        ab_strings = load_ab_string("ab_string.raw") # list[str, str, ...]
+        ab_strings = load_ab_string("preprocess_and_stats/ab_string.raw") # list[str, str, ...]
 
-        print("[INFO] ab_string.raw is being processed for word count...")
+        print("[INFO] ab_string.raw is being processed for word frequency...")
         # just string
         all_text = "".join(ab_strings).replace(" <---> ", " ").replace(" notNext", "").replace(" isNext", "")
 
@@ -62,7 +62,7 @@ if __name__ == '__main__':
         print("[INFO] Saving word count dataframe to unique_words.json...")
 
         # save dataframe
-        df_word_count.to_json("unique_words.json", orient="records", lines=True)
+        df_word_count.to_json(RANDOM_WORDS_SET_DIR + "/unique_words.json", orient="records", lines=True)
     else:
         print("[INFO] unique_words.json is already exists. loading dataframe...")
 
@@ -71,7 +71,7 @@ if __name__ == '__main__':
     # group by token length and then plot the stat
     if not os.path.exists(RANDOM_WORDS_SET_DIR + "/token_len_stat.png"):
 
-        print("[INFO] Plotting token length frequency...")
+        print("[INFO] token_len_stat.png is not exists. Plotting token length frequency and saving...")
 
         token_len_stat = df_word_count.groupby("token_len")["count"].sum()
 
@@ -97,7 +97,7 @@ if __name__ == '__main__':
 
     if not os.path.exists(RANDOM_WORDS_SET_DIR + "/random_words_set.json"):
 
-        print("[INFO] Random words set is being created...")
+        print("[INFO] random_words_set.json is not exists. Random words set is going to be created...")
 
         df_word_count = df_word_count[df_word_count['token_len'] <= TRESH_TOKEN_LEN] 
         group_by_token_len = df_word_count.groupby("token_len")
@@ -120,26 +120,29 @@ if __name__ == '__main__':
             json_file.write(json_data)
 
 
-    # lets load random words set and check
-    with open(RANDOM_WORDS_SET_DIR + "/random_words_set.json", 'r', encoding="utf-8") as json_file:
-        random_words_dict = json.load(json_file)
-        
 
-    print(random_words_dict.keys())
-    print("\n-------------------------------\n")
-    print(random_words_dict["lengths_of_groups"].items())
-    print("\n-------------------------------\n")
-    print(random_words_dict["token_len_1"][0][:])
-    print(type(random_words_dict["token_len_1"]))
-    print(len(random_words_dict["token_len_1"]))
-    print("\n-------------------------------\n")
-    print(random_words_dict["token_len_2"][0][:])
-    print(type(random_words_dict["token_len_2"]))
-    print(len(random_words_dict["token_len_2"]))
-    print("\n-------------------------------\n")
-    print(random_words_dict["token_len_3"][0][:])
-    print(type(random_words_dict["token_len_3"]))
-    print(len(random_words_dict["token_len_3"]))
+#----------------------------lets load random words set and check------------------------------------
+
+
+    #with open(RANDOM_WORDS_SET_DIR + "/random_words_set.json", 'r', encoding="utf-8") as json_file:
+    #    random_words_dict = json.load(json_file)
+
+
+    #print(random_words_dict.keys())
+    #print("\n-------------------------------\n")
+    #print(random_words_dict["lengths_of_groups"].items())
+    #print("\n-------------------------------\n")
+    #print(random_words_dict["token_len_1"][0][:])
+    #print(type(random_words_dict["token_len_1"]))
+    #print(len(random_words_dict["token_len_1"]))
+    #print("\n-------------------------------\n")
+    #print(random_words_dict["token_len_2"][0][:])
+    #print(type(random_words_dict["token_len_2"]))
+    #print(len(random_words_dict["token_len_2"]))
+    #print("\n-------------------------------\n")
+    #print(random_words_dict["token_len_3"][0][:])
+    #print(type(random_words_dict["token_len_3"]))
+    #print(len(random_words_dict["token_len_3"]))
 
 
     

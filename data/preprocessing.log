@@ -1,6 +1,0 @@
-2024-07-01 00:03:32 [INFO] Before preprocessing: num_docs: 394,123
-2024-07-01 00:03:32 [INFO] Before preprocessing: num_titles: 394,123
-2024-07-01 00:03:32 [INFO] Before preprocessing: total_lines: 5,537,128
-2024-07-01 00:04:11 [INFO] After preprocessing: num_docs: 394,032  diff: 91
-2024-07-01 00:04:11 [INFO] After preprocessing: num_titles: 394,032  diff: 91
-2024-07-01 00:04:11 [INFO] After preprocessing: total_lines: 1,249,764  diff: 4,287,364

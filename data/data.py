@@ -1,6 +1,13 @@
 # şimdilik main isminde sonradan düzenlemeler yapılacak
 
+# TODOS:
 # ŞU MERGED, AB VS DOSYALARI VS STAT DOSYALARINI DÜZENLE!!!
+# LOG dosyasında hangi preprocess old belirtilmeli! + aslında log olarak tutmak iyi değil gibi neyse bak
+# PATH VAR'LARINI Düzenle
+# "preprocess" kelimesini çok fazla ve belirsiz şekilde kullanmışım (delete subtitle ile vs anlamlı isimlendirmelere çevir)
+# dump_stat baya modularize edilebilir/edilmeli
+# map fonksiyonların başına "_" koy
+# stat fonk'ları mp'lenebilir
 
 """
 29.06.2024
@@ -29,7 +36,6 @@ subtitle'ları temizlemek gerekiyor!!!!
 from nltk.tokenize import sent_tokenize
 import multiprocessing as mp
 from tqdm.contrib.concurrent import process_map
-from functools import partial
 # import pandas as pd
 
 import json
@@ -43,8 +49,14 @@ import random
 random.seed(42) # reproducibility
 
 tr_wiki_prefix = "trwiki-67"
-merged_filename = 'merged.raw'
-ab_string_path = "ab_string.raw"
+preprocess_and_stats_dir = "preprocess_and_stats"
+random_words_set_dir = "random_words_set"
+
+merged_filename = preprocess_and_stats_dir + "/merged.raw"
+ab_string_path = preprocess_and_stats_dir + "/ab_string.raw"
+merged_preprocess_path = preprocess_and_stats_dir + "/merged_preprocessed.raw"
+
+random_words_set_path = random_words_set_dir + "/random_words_set.json"
 
 
 if mp.current_process().name == 'MainProcess':
@@ -108,23 +120,29 @@ def get_num_sents(docs):
     return len(sent_tokenize('. '.join(docs), language='turkish'))
 
 def dump_stat(file):
+    """file: [preprocess_and_stats/merged.raw] or [preprocess_and_stats/merged_preprocessed.raw] or ..."""
     stat = {"num_sentences": 0, "num_words": 0, "num_chars": 0}
 
+    # en başta dosyanın kendisi olmayabilir
     if not os.path.exists(file):
         print(f'[INFO] {file} is not exists. Stat cannot be tracked...')
         return
 
-    # merged.raw,  merged_preprocessed.raw
     if "merged" in file :
 
-        if os.path.exists(file.split(".")[0] + "_stat.json"):
-            print(f'[INFO] {file.split(".")[0] + "_stat.json"} already exists. Skipping stat tracking...')
+        # [preprocess_and_stats/merged_stat.json] or [preprocess_and_stats/merged_preprocessed_stat.json]
+        file_with_stat = file.split(".")[0] + "_stat.json"
+
+        if os.path.exists(file_with_stat):
+            print(f'[INFO] {file_with_stat} already exists. Skipping stat tracking...')
             return
+        
+        print(f"[INFO] {file_with_stat} is not exists. Stat will be tracked...")
         
         titles, docs = split_titles_and_docs(file)
 
-        stat["num_titles"] = len(titles)
-        print(f"[INFO] merged file stat: num_titles: {stat['num_titles']}")
+        stat["num_titles_and_docs"] = len(titles)
+        print(f"[INFO] merged file stat: num_titles and docs: {stat['num_titles_and_docs']}")
 
         stat["num_sentences"] = get_num_sents(docs)
         print(f"[INFO] merged file stat: num_sentences: {stat['num_sentences']}")
@@ -136,16 +154,53 @@ def dump_stat(file):
         print(f"[INFO] merged file stat: num_chars: {stat['num_chars']}")
 
         # Write stat dict to JSON file
-        with open(file.split(".")[0] + "_stat.json", 'w') as json_file:
+        with open(file_with_stat, 'w') as json_file:
             json.dump(stat, json_file, indent=4)
 
-        print(f"[INFO] Stat has been written to 'merged_stat.json'...")
-
+        print(f"[INFO] Stat has been written to {file_with_stat} ...")
 
         return
     
-     # belirsiz muallak
+
     elif "ab_string" in file:
+        # file: preprocess_and_stats/ab_string.raw
+        # file_with_stat:preprocess_and_stats/ab_string_stat.json
+        file_with_stat = file.split(".")[0] + "_stat.json"
+
+        if os.path.exists(file_with_stat):
+            print(f'[INFO] {file_with_stat} already exists. Skipping stat tracking...')
+            return
+        
+        print(f"[INFO] {file_with_stat} is not exists. Stat will be tracked...")
+
+        # load ab_strings (file: preprocess_and_stats/ab_string.raw)
+        ab_strings = load_ab_string(file)
+
+        # Create a multiprocessing pool
+        with mp.Pool(processes=NUM_PROCESSES) as pool:
+            # ab_strings without seperator <---> and isNext/notNext
+            ab_strings = pool.map(_del_seperator_and_isNext, ab_strings)
+
+        stat["num_ab_string_row"] = len(ab_strings)
+        print(f"[INFO] {file} stat: num_ab_string_row: {stat['num_ab_string_row']}")
+
+        stat["num_sentences"] = get_num_sents(ab_strings)
+        print(f"[INFO] {file} stat: num_sentences: {stat['num_sentences']}")
+
+        stat["num_words"] = get_num_words(ab_strings)
+        print(f"[INFO] {file} stat: num_words: {stat['num_words']}")
+        
+        stat["num_chars"] = get_num_chars(ab_strings)
+        print(f"[INFO] {file} stat: num_chars: {stat['num_chars']}")
+
+        # Write stat dict to JSON file
+        with open(file_with_stat, 'w') as json_file:
+            json.dump(stat, json_file, indent=4)
+
+        print(f"[INFO] Stat has been written to {file_with_stat} ...")
+
+
+
         return
     
     # belirsiz muallak
@@ -187,8 +242,10 @@ def delete_if_empty_doc(titles, docs):
 
     return titles, docs
 
-def preprocess_merged(merged_file):
-    """delete subtitles (if line has less than 4 words lets consider it as subtitle)"""
+def delete_subtitles(merged_file):
+    """delete subtitles (if line has less than 4 words lets consider it as subtitle)
+       and also delete empty docs and related titles
+    """
     
     print(f"[INFO] preprocessing is started...")
 
@@ -196,7 +253,7 @@ def preprocess_merged(merged_file):
     logging.basicConfig(level=logging.INFO, 
                         format='%(asctime)s %(message)s', 
                         datefmt='%Y-%m-%d %H:%M:%S', 
-                        handlers=[logging.FileHandler('preprocessing.log', 'w', 'utf-8')])
+                        handlers=[logging.FileHandler(preprocess_and_stats_dir + '/preprocessing.log', 'w', 'utf-8')])
 
     titles, docs = split_titles_and_docs(merged_file)
     titles, docs = delete_if_empty_doc(titles, docs) 
@@ -205,9 +262,9 @@ def preprocess_merged(merged_file):
     before_tit_len = len(titles)
     before_total_lines = len(" ".join(docs).splitlines())
 
-    logging.info(f"[INFO] Before preprocessing: num_docs: {before_doc_len:,}")
-    logging.info(f"[INFO] Before preprocessing: num_titles: {before_tit_len:,}")
-    logging.info(f"[INFO] Before preprocessing: total_lines: {before_total_lines:,}")
+    logging.info(f"[INFO] Before delete_subtitles: num_docs: {before_doc_len:,}")
+    logging.info(f"[INFO] Before delete_subtitles: num_titles: {before_tit_len:,}")
+    logging.info(f"[INFO] Before delete_subtitles: total_lines: {before_total_lines:,}")
 
     
 
@@ -252,9 +309,9 @@ def preprocess_merged(merged_file):
 
     after_total_lines = len(" ".join(docs).splitlines())
 
-    logging.info(f"[INFO] After preprocessing: num_docs: {len(docs):,}  diff: {(before_doc_len - len(docs)):,}")
-    logging.info(f"[INFO] After preprocessing: num_titles: {len(titles):,}  diff: {(before_tit_len - len(titles)):,}")
-    logging.info(f"[INFO] After preprocessing: total_lines: {after_total_lines:,}  diff: {(before_total_lines - after_total_lines):,}")
+    logging.info(f"[INFO] After delete_subtitles: num_docs: {len(docs):,}  diff: {(before_doc_len - len(docs)):,}")
+    logging.info(f"[INFO] After delete_subtitles: num_titles: {len(titles):,}  diff: {(before_tit_len - len(titles)):,}")
+    logging.info(f"[INFO] After delete_subtitles: total_lines: {after_total_lines:,}  diff: {(before_total_lines - after_total_lines):,}")
 
     assert len(titles) == len(docs), "[ERROR] len(titles) and len(docs) are not same!..."
 
@@ -265,8 +322,8 @@ def save_preprocessed(titles, docs):
     
     assert len(titles) == len(docs), "[ERROR] len(titles) and len(docs) are not same!..."
 
-    if os.path.exists("merged_preprocessed.raw"):
-        print(f'[INFO] merged_preprocessed.raw already exists. Skipping preprocessing...')
+    if os.path.exists(merged_preprocess_path):
+        print(f'[INFO] {merged_preprocess_path} already exists. Skipping preprocessing...')
         return
     
     print(f"[INFO] Saving preprocessed merged file...")
@@ -280,11 +337,11 @@ def save_preprocessed(titles, docs):
         # Print progress bar
         print(f"Progress: [{int(progress)}%]", end='\r', flush=True)
 
-        with open("merged_preprocessed.raw", 'a', encoding='utf-8') as merged:
+        with open(merged_preprocess_path, 'a', encoding='utf-8') as merged:
             merged.write(titles[i])
             merged.write("\n" + docs[i] + "\n\n")
 
-    print(f"[INFO] Preprocessed merged file saved as merged_preprocessed.raw...")
+    print(f"[INFO] Preprocessed merged file saved as {merged_preprocess_path}...")
 
     return
 
@@ -321,7 +378,13 @@ def shuffle_ab(ab_and_random_tuple_list):
     else:
         return ab_string + " <---> isNext"
 
-def load_ab_string(ab_string_path):
+def _del_seperator_and_isNext(ab_string):
+    """ mapping function for list[str(A <---> B <---> isNext), ...] -> list[str(AB), ...]
+        takes one string (A <---> B <---> isNext) and returns AB
+    """
+    return "".join(ab_string).replace(" <---> ", " ").replace(" notNext", "").replace(" isNext", "")
+
+def load_ab_string(ab_string_path, with_seperator=True):
     """returns ab_string list[str(A <---> B <---> isNext), ...] if file is already exists else it will create it and returns"""
 
     if os.path.exists(ab_string_path):
@@ -331,7 +394,7 @@ def load_ab_string(ab_string_path):
 
     print(f"[INFO] {ab_string_path} does not exist. AB_string is creating...")
 
-    _, docs = split_titles_and_docs("merged_preprocessed.raw")
+    _, docs = split_titles_and_docs(merged_preprocess_path)
 
 
     # Create a multiprocessing pool
@@ -370,6 +433,7 @@ def load_ab_string(ab_string_path):
         f.write(all_string)
         print(f"[INFO] {ab_string_path} has been created.")
 
+
     print(f"[INFO] finally, total number of ab example: {len(ab_strings)}.")
 
     
@@ -384,47 +448,41 @@ if __name__ == '__main__':
                    f'{"raw" + "/" + tr_wiki_prefix}-val.raw', 
                    f'{"raw" + "/" + tr_wiki_prefix}-test.raw' ]
 
-    
 
     merge_files(files_to_merge, merged_filename)
 
 
-    # let's dump the stat of merged file
-    dump_stat(merged_filename)
-
-
     # if preprocessed merged file is not exists, then preprocess it and save it
-    if not os.path.exists("merged_preprocessed.raw"):
-        print(f'[INFO] merged_preprocessed.raw is not exists. Preprocessing merged file...')
+    if not os.path.exists(merged_preprocess_path):
+        print(f'[INFO] {merged_preprocess_path} is not exists. Preprocessing merged file (delete subtitles)...')
 
-        titles, docs = preprocess_merged(merged_filename)
+        titles, docs = delete_subtitles(merged_filename)
         save_preprocessed(titles, docs)
 
-        # let's take stat of preprocessed merged file
-        dump_stat("merged_preprocessed.raw")
-
     else:
-        print(f"[INFO] merged_preprocessed.raw already exists. Skipping preprocessing...")
+        print(f"[INFO] {merged_preprocess_path} already exists. Skipping preprocessing (delete subtitles)...")
 
 
     ab_strings = load_ab_string(ab_string_path) # list[str, str, ...]
 
-    # dump_stat(ab_string_path) not implemented yet
+    
+
+    if not os.path.exists(random_words_set_path):
+        print(f'[INFO] {random_words_set_path} is not exists. random_word_set.py gonna executed...')
+
+        import subprocess
+        subprocess.run(["python", "random_word_set.py"])
+
+    # lets load random words set (if it was not created already, random_word_set.py will create it above)
+    with open(random_words_set_path, 'r', encoding="utf-8") as json_file:
+        random_words_dict = json.load(json_file)
+        print(f'[INFO] {random_words_set_path} has been loaded.')
 
 
-
-    #-----------------------------------------------------------------------------------
-    # tüm metinde (ab_strings) ünik kelimelere bak, bu kelimeler kaç defa geçmiş, kelimelerin token_lengthlerine bak
-    # 
-
-    # just string
-    ab_strings_temp = "".join(ab_strings).replace(" <---> ", " ").replace(" notNext", "").replace(" isNext", "")
-
-
-
-
-
-
-
-
+    # let's dump the stat of merged file
+    dump_stat(merged_filename)
+    # let's take stat of preprocessed merged file
+    dump_stat(merged_preprocess_path)
+    # let's dump the stat of ab_string.raw
+    dump_stat(ab_string_path)
 
