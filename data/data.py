@@ -64,7 +64,7 @@ if mp.current_process().name == 'MainProcess':
     print(f"[INFO] number of core available: {NUM_PROCESSES}")
 
 
-CHUNK_SIZE = 5000
+CHUNK_SIZE = 16
 
 
 def split_titles_and_docs(filename):
@@ -485,4 +485,12 @@ if __name__ == '__main__':
     dump_stat(merged_preprocess_path)
     # let's dump the stat of ab_string.raw
     dump_stat(ab_string_path)
+
+
+    # ----------------------------------------------------------------------------------------
+    # batched map
+    # sharding
+    # tokenize ab
+    # block scheduling
+
 

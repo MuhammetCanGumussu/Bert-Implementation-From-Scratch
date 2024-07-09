@@ -1,6 +1,5 @@
 # Ignore the data/raw
 data/raw
-data/preprocess_and_stats
 data/merged.raw
 data/merged_preprocessed.raw
 data/__pycache__
@@ -8,6 +7,9 @@ data/ab_string.raw
 data/random_words_set/random_words_set.json
 
 # stat'ları ignore etme! 
+data/preprocess_and_stats/ab_string.raw
+data/preprocess_and_stats/merged_preprocessed.raw
+data/preprocess_and_stats/merged.raw
 
 
 # tüm data dir'i ignore edip sadece data.py'ı track etmeyi dene, beceremedim şimdilik

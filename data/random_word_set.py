@@ -1,4 +1,6 @@
-""" creates unique_words.json, random_word_set.json, token_len_stat.png"""
+""" creates unique_words.json, random_word_set.json, token_len_stat.png
+    can be executed by "python random_word_set.py", or data.py will execute automatically
+"""
 
 from transformers import PreTrainedTokenizerFast
 import pandas as pd
