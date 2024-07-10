@@ -47,7 +47,7 @@ if __name__ == '__main__':
 
         print("[INFO] ab_string.raw is being processed for word frequency...")
         # just string
-        all_text = "".join(ab_strings).replace(" <---> ", " ").replace(" notNext", "").replace(" isNext", "")
+        all_text = "".join(ab_strings).replace(" [SEP] ", " ").replace(" notNext", "").replace(" isNext", "")
 
         counter_words = count_words(all_text)
 

@@ -8,6 +8,7 @@
 # dump_stat baya modularize edilebilir/edilmeli
 # map fonksiyonların başına "_" koy
 # stat fonk'ları mp'lenebilir
+# shardinge aslında gerek yoktu, kendimi denemek için koydum
 
 """
 29.06.2024
@@ -178,7 +179,7 @@ def dump_stat(file):
 
         # Create a multiprocessing pool
         with mp.Pool(processes=NUM_PROCESSES) as pool:
-            # ab_strings without seperator <---> and isNext/notNext
+            # ab_strings without seperator [SEP] and isNext/notNext
             ab_strings = pool.map(_del_seperator_and_isNext, ab_strings)
 
         stat["num_ab_string_row"] = len(ab_strings)
@@ -346,7 +347,7 @@ def save_preprocessed(titles, docs):
     return
 
 def sliding_doc(doc):
-    """ str -> sent_tokenization -> if len(sentences)> 1 return list[str(A <---> B), ...] else return None
+    """ str -> sent_tokenization -> if len(sentences)> 1 return list[str(A [SEP] B), ...] else return None
         this is a function that will be used as "mapping" function
     """
     sentences = sent_tokenize(doc, language='turkish') # doclardaki ilk sentenceların başında 2 tane \n\n bulunuyor bunu temizlemeli
@@ -355,7 +356,7 @@ def sliding_doc(doc):
 
     if len(sentences) > 1:
         for i in range(len(sentences) - 1):
-            ab_for_spesific_doc.append(sentences[i] + " <---> " + sentences[i+1])
+            ab_for_spesific_doc.append(sentences[i] + " [SEP] " + sentences[i+1])
 
         return ab_for_spesific_doc
     else:
@@ -372,20 +373,20 @@ def shuffle_ab(ab_and_random_tuple_list):
     ab_string, random_sentence = ab_and_random_tuple_list
 
     if random.random() < 0.5:
-        #                          A           <--->         Random_B        <---> notNext
-        ab = ab_string.split(" <---> ")[0] + " <---> " + random_sentence + " <---> notNext"
+        #                          A           [SEP]         Random_B        [SEP] notNext
+        ab = ab_string.split(" [SEP] ")[0] + " [SEP] " + random_sentence + " [SEP] notNext"
         return ab
     else:
-        return ab_string + " <---> isNext"
+        return ab_string + " [SEP] isNext"
 
 def _del_seperator_and_isNext(ab_string):
-    """ mapping function for list[str(A <---> B <---> isNext), ...] -> list[str(AB), ...]
-        takes one string (A <---> B <---> isNext) and returns AB
+    """ mapping function for list[str(A [SEP] B [SEP] isNext), ...] -> list[str(AB), ...]
+        takes one string (A [SEP] B [SEP] isNext) and returns just plain ( AB ) 
     """
-    return "".join(ab_string).replace(" <---> ", " ").replace(" notNext", "").replace(" isNext", "")
+    return "".join(ab_string).replace(" [SEP] ", " ").replace(" notNext", "").replace(" isNext", "")
 
 def load_ab_string(ab_string_path, with_seperator=True):
-    """returns ab_string list[str(A <---> B <---> isNext), ...] if file is already exists else it will create it and returns"""
+    """returns ab_string list[str(A [SEP] B [SEP] isNext), ...] if file is already exists else it will create it and returns"""
 
     if os.path.exists(ab_string_path):
         print(f'[INFO] {ab_string_path} already exists. AB_string is loading...')
@@ -411,7 +412,7 @@ def load_ab_string(ab_string_path, with_seperator=True):
     ab_strings = [ab for ab_list in ab_strings for ab in ab_list]
 
 
-    random_sentences = [ab.split(" <---> ")[1] for ab in ab_strings]
+    random_sentences = [ab.split(" [SEP] ")[1] for ab in ab_strings]
     ab_and_random_tuple_list = list(zip(random.sample(ab_strings, len(ab_strings)),
                                         random.sample(random_sentences, len(ab_strings))))
     
@@ -489,8 +490,8 @@ if __name__ == '__main__':
 
     # ----------------------------------------------------------------------------------------
     # batched map
-    # sharding
+    # sharding (split yüzdeleri burada belirlenecek, shard numpy dosyaları isimleri için andreje bak)
     # tokenize ab
-    # block scheduling
+    # block scheduling (bl_size1 kırmızı, bl_size2 mavi, küme operasyonları)
 
 
