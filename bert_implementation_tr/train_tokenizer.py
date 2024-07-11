@@ -25,6 +25,9 @@ MIN_FREQUENCY = 2
 SAVE_PATH = "tr_wordpiece_tokenizer_cased.json"
 
 
+
+
+
 if os.path.exists(SAVE_PATH):
     print(f"[INFO] {SAVE_PATH} already exists. Skipping tokenizer training...")
     exit()
