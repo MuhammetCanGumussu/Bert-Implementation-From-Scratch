@@ -16,6 +16,7 @@
 # random vocab düzeltmeye değer mi?
 # şu script'deki if else statementlarını bir şekilde soyutla (artık fonk ile mi neyle idk) ALTTAKİ SATIRA BAK!
 # dir'leri hep el ile yaptım, ancak doğrusu os.makedir ile olmalı! (düzelt)
+# 500.satırda random word set'i fonk hale getir
 
 """
 29.06.2024
@@ -58,12 +59,12 @@ from nltk.tokenize import sent_tokenize
 # sys.path.insert(0, os.path.dirname(SCRIPT_DIR)) # bert_implementation_tr abs path appended to sys.path
 # print(sys.path)
 
-from transformers import PreTrainedTokenizerFast
-from data_aux import convert_ab2xy, visualize_xy
+
+from data_aux import create_xy_shards, get_fast_tokenizer
 import multiprocessing as mp
 
 
-
+# print("$$$$$$$$", os.getcwd())
 
 random.seed(42) # reproducibility
 
@@ -77,7 +78,6 @@ merged_preprocess_path = preprocess_and_stats_dir + "/merged_preprocessed.raw"
 
 random_words_set_path = random_words_set_dir + "/random_words_set.json"
 
-tokenizer_path = "../tr_wordpiece_tokenizer_cased.json"
 
 def split_text_to_words(text: str) -> List[str]:
     # isalnum() -> checks if all characters are alphanumeric (a-z, A-Z, 0-9)]
@@ -90,22 +90,6 @@ def split_text_to_words(text: str) -> List[str]:
     return ["[SEP]" if word == "SEP" else word for word in words]
 
 
-def get_fast_tokenizer():
-
-    if not os.path.exists(tokenizer_path):
-        print("[INFO] there is no tokenizer file to wrap with fast tokenizer, please train tokenizer first...")
-        return 
-
-    wrapped_tokenizer = PreTrainedTokenizerFast(
-        tokenizer_file = tokenizer_path, # You can load from the tokenizer file, alternatively
-        unk_token="[UNK]",
-        pad_token="[PAD]",
-        cls_token="[CLS]",
-        sep_token="[SEP]",
-        mask_token="[MASK]",
-    )
-
-    return wrapped_tokenizer
 
 
 
@@ -537,59 +521,11 @@ if __name__ == '__main__':
     dump_stat(ab_string_path)
 
    
-
-    convert_ab2xy(ab_string_path, random_words_dict)
-
-    visualize_xy() # default random      
+    # TODO hali hazırda var ise shardlar ellenemeyecek
+    print(f"[INFO] Creating x,y shards...")
+    create_xy_shards(random_words_dict)
+    
     
 
     
 
-
-
-
-
-# print("\n\n\n","**"*50,"\n\n\n")
-# 
-#     tokenizer_wrapped = get_fast_tokenizer()
-# 
-#     temp_text = """Etrafındaki herkesi, kendi tuttuğu ve kimliğini bilmediği kiralık katil sanmaktadır. [SEP] En sonunda Gaddar Kerim ve Ayı Abbas tarafından sıkıştırılan Mülayim tuhaf bir şekilde her ikisinin elinden de kurtulacaktır [SEP] isNext
-#     Alman Wehrmacht'ı kalan altyapının çoğunu harap ettikten sonra bölgeden kaçtı ve kasaba 25 Ekim 1944 tarihinde Kızıl Ordu tarafından devir alındı. [SEP] Marka, rahat giyim ve yüksek moda iki koleksiyondan oluşmakta, ayrıca donanım olarak da kulaklık gibi ürünler içermektedir. [SEP] notNext
-#     Rum Tum Tugger, kedilere Bay Mistoffelees’i bulmayı önerir. [SEP] 4 Temmuz günü yapılmasının nedeni; o günün cuma olması ve 3 günlük ‘Kurtuluş Günü’ tatili ile Amerikalı yetkililerin işbaşında olmayacakları, dolayısıyla Türkiye’den gelen tepki telefonlarının da cevapsız kalacak olmasıydı. [SEP] notNext
-#     İnşaat Mühendisleri Odası, odanın kuruluşundan itibaren 50 yıl içerisinde ülkede gerçekleştirilmiş 50 büyük inşaat projesini bir jüri tarafından saptayarak bu projeleri 50. [SEP] 2007-08 sezonu öncesinde Miroslav Klose'nin de Bayern Münih'e transfer olmasıyla sezonun başlarında ilk 11'de oynama şansını yakaladı. [SEP] notNext
-#     Tahminler Olimpik Oyunların biletlerinin %82'nin, Paralimpik Oyunların biletlerinin %63'ünün satılacağını göstermektedir. [SEP] Maraton, triatlon ve yol bisikleti gibi müsabakalar ücretisiz olacaktır. [SEP] isNext
-#     1955 yılında Konya Şeker Fabrikası çalışanları tarafından Konya Şekerspor adıyla kurulan kulüp, 2004-2005 sezonunda kadar sürekli amatör liglerde mücadele ederken, 2004-2005 sezonu sonunda 3. [SEP] Lig'e yükseldi. [SEP] isNext
-#     Metacritic'te "evrensel beğeni" gösteren, 19 incelemeye göre 100 üzerinden 90 puan almıştır. [SEP] "The New York Times"tan Nicolas Rapold filme olumlu bir eleştiri verdi ve "Bay Takahata'nın bir mangaya dayanan psikolojik olarak akut filmi, yetişkin Taeko'nun daha zengin bir anlayışa ulaşmasıyla birlikte etkisi de artıyor gibi görünüyor. [SEP] isNext"""
-# 
-# 
-#     #print("\n","--"*50,"\n")
-# 
-#     # print(temp_text.splitlines())
-# 
-#     # print("\n","--"*100,"\n")
-# 
-#     # with mp.Pool(processes=NUM_PROCESSES) as pool:
-#     #     words = pool.map(split_text_to_words, temp_text.splitlines()) # chunksize len, core sayısı vs dependent diyebiliriz dene bir sayı işte
-#     
-#     words = temp_text.splitlines() # list[str, str, ...]
-# 
-#     print(words) 
-# 
-#     print("\n","--"*50,"\n")  
-# 
-#     
-#     print(tokenizer_wrapped.model_input_names)
-#     print(tokenizer_wrapped.model_max_length)
-#     print(type(tokenizer_wrapped(words)))
-#     print(dir(tokenizer_wrapped(temp_text)))
-#     print("\n","--"*50,"\n")
-#     print(tokenizer_wrapped(words)["input_ids"])
-#     print("\n","--"*50,"\n")
-#     print(tokenizer_wrapped(words).tokens(1))
-#     print("\n","--"*50,"\n")
-#     print(tokenizer_wrapped(words).word_ids(1))
-#     # # print(type(tokenizer_wrapped.encode("\n".join(list_of_strings))))
-#     # # print("\n","--"*100,"\n")
-#     # # print(tokenizer_wrapped.encode("\n".join(list_of_strings)))
-# 
-#     sys.exit()
