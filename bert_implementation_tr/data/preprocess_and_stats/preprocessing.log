@@ -1,6 +1,0 @@
-2024-07-09 13:46:25 [INFO] Before delete_subtitles: num_docs: 394,123
-2024-07-09 13:46:25 [INFO] Before delete_subtitles: num_titles: 394,123
-2024-07-09 13:46:25 [INFO] Before delete_subtitles: total_lines: 5,537,128
-2024-07-09 13:47:03 [INFO] After delete_subtitles: num_docs: 394,032  diff: 91
-2024-07-09 13:47:03 [INFO] After delete_subtitles: num_titles: 394,032  diff: 91
-2024-07-09 13:47:03 [INFO] After delete_subtitles: total_lines: 1,249,764  diff: 4,287,364

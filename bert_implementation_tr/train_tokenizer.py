@@ -1,11 +1,9 @@
-"""trains wordpiece tokenizer from scratch on turkish language data (trwiki)"""
+"""trains wordpiece tokenizer from scratch on turkish data (trwiki)"""
 
-# postproc vs ayarlamalar yapabilirim, son veri X,Y oluşumunda baya işten kurtarabilir (hemde hızlı olur)
-# tabi yaptıktan sonra çalışıp çalışmadığını dene, encode_batch'te dene!
-
-
-from data.data import split_titles_and_docs 
 import os
+
+
+
 
 from tokenizers import (
     decoders,
@@ -16,21 +14,32 @@ from tokenizers import (
     Tokenizer,
 )
 
-_, docs_list = split_titles_and_docs("data/merged.raw")
+from data.data import get_merged_files
 
 
-VOCAB_SIZE = 32_000
+VOCAB_SIZE = 32_000   
 LIMIT_ALPHABET = 1_000
 MIN_FREQUENCY = 2
 SAVE_PATH = "tr_wordpiece_tokenizer_cased.json"
 
 
-
+ 
 
 
 if os.path.exists(SAVE_PATH):
     print(f"[INFO] {SAVE_PATH} already exists. Skipping tokenizer training...")
     exit()
+
+
+
+
+merged_file_content = get_merged_files()
+
+merged_file_content = merged_file_content.splitlines()
+
+
+
+
 
 tokenizer = Tokenizer(models.WordPiece(vocab={"[PAD]":0, "[UNK]":1}, unk_token="[UNK]"))
 
@@ -39,12 +48,14 @@ tokenizer.normalizer = normalizers.Sequence(
      normalizers.Lowercase()]
 )
 
+
+
 tokenizer.pre_tokenizer = pre_tokenizers.Sequence([pre_tokenizers.WhitespaceSplit(), 
                                            pre_tokenizers.Digits(individual_digits=True),
                                            pre_tokenizers.Punctuation()])
 
 
-special_tokens = ["[UNK]", "[PAD]", "[CLS]", "[SEP]", "[MASK]"]
+special_tokens = ["[PAD]", "[UNK]", "[CLS]", "[SEP]", "[MASK]"]
 
 trainer = trainers.WordPieceTrainer(vocab_size=VOCAB_SIZE, special_tokens=special_tokens, 
                                     min_frequency=MIN_FREQUENCY,
@@ -53,11 +64,16 @@ trainer = trainers.WordPieceTrainer(vocab_size=VOCAB_SIZE, special_tokens=specia
 
 print("[INFO] training is started...")
 
-tokenizer.train_from_iterator(docs_list, trainer=trainer, length=len(docs_list))
+
+
+tokenizer.train_from_iterator(iterator=merged_file_content, trainer=trainer, length=len(merged_file_content))
 
 tokenizer.decoder = decoders.WordPiece(prefix="##")
 
+tokenizer.add_tokens(["..."])
+
 print("[INFO] tokenizer will be saved...")
+
 
 
 tokenizer.save(SAVE_PATH, pretty=True)

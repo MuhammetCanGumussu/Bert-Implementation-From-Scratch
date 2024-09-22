@@ -1,72 +1,125 @@
-# şimdilik main isminde sonradan düzenlemeler yapılacak
+"""
+The purpose of this script is to create the data for the BERT training
 
-# TODOS: 
-# ŞU MERGED, AB VS DOSYALARI VS STAT DOSYALARINI DÜZENLE!!!
-# LOG dosyasında hangi preprocess old belirtilmeli! + aslında log olarak tutmak iyi değil gibi neyse bak
-# PATH VAR'LARINI Düzenle
-# "preprocess" kelimesini çok fazla ve belirsiz şekilde kullanmışım (delete subtitle ile vs anlamlı isimlendirmelere çevir)
-# dump_stat baya modularize edilebilir/edilmeli
-# map fonksiyonların başına "_" koy
-# stat fonk'ları mp'lenebilir
-# shardinge aslında gerek yoktu, kendimi denemek için koydum
-# bazı notları kod dosyalarına yorum olarak koymak hem doğru değil hem temiz değil (örn bu)
-# bert_implementation_tr dir yaptım, relative pathlerde problem olmayacaktır, abs path var ise problem olacak, en son tüm scriptlerin düzgün çalışıp çalışmadığını kontrol ederken göreceğiz
-# random_words_set tekrar güncellenmeli -> re expr türkçe word tokenizasyon için başarılı değil (türkçe karakterler vs içeren kelimeleri atıyor)
-# DİKKAT isNext/notNext abtokenized'da olmamalı sayılmamalı + map'te de chunksize var gpt'ye sor nedir ne değildir
-# random vocab düzeltmeye değer mi?
-# şu script'deki if else statementlarını bir şekilde soyutla (artık fonk ile mi neyle idk) ALTTAKİ SATIRA BAK!
-# dir'leri hep el ile yaptım, ancak doğrusu os.makedir ile olmalı! (düzelt)
-# 500.satırda random word set'i fonk hale getir
+NSP taski büyük veri setlerinde aslında avantajlı değil aksine model performansını düşürüyor (electra paper'i sanırsam buna bak)
+Ancak küçük veri setleri için kullanımı (ki benim durumum) genel model performansını olumlu yönde etkiler.
+NSP taskininde düzgün çalışabilmesi için A sonu, B başının gerçek cümlelerdeki gibi olması önemlidir.
+Diğer türlü A cümle ortası ile biter, B de cümle ortası ile başlarsa (A: Ali ata (bak) B: (Sevdiğim) şarkılar bunlar..., notNext)
+Model nsp taskinde bu tarz example'ları basit gramatik bilgiler ile (ki genelde modelin ilk öğreneceği şeylerdir) halledebilir, 
+complex ilişkilendirmelere gerek duymaz.
+
+görünüşe göre pad token'ına ihtiyacım olmayacak.
+
+(., !, ?, ...) cümleleri bu tokenlara göre split edeceğim.
+
+"kelime" açısından istenilen oranlar sağlansa da, span corruption yapıldığından "token" açısından
+istatistiği merak ediyorum yüzdesel olarak ne kadar artacak?
+
+toplam veri seti default overlap param ile yaklaşık 2 x artacak (overlap yarı old'dan 0,5 x gelecek, notNext old yani random sample
+olduğunda kernel/block hareketi/posizyonu esasında değişmeyecek bunu da havadan yeni bir example oluşturma gibi düşünebilirsin + 0,5 x
+daha toplamda yaklaşık olarak 2x artmış olur) 
+
+tokenların yaklaşık yarısı bir epoch'da 3 kere gözükecek (overlap + random sample sayesinde)
+kalan yarısı da 2 kere gözükecek (sadece overlap sayesinde) 
+
+random word set stage:
+    * bunu script şekilde yazdım. burada (data.py) eğer beklenen dosya yok ise bu exec edilsin
+    * word_count_per_token_len_group (örn 500 ise her token grubu için en fazla 500 tane kelime olacak )
+    * 
+    * 
+    *
+
+
+Her stage hali hazırda yapılmış ise atlansın
+Her stage kalınıldığı noktadan devam edebilmeli (shard index ile)
+1st Stage(documents):
+    * read trwiki-67 files and merge them (as a big one string object)
+    * split titles and docs (just keep docs btw, i will not use titles for training)(boş/null doc olmamalı)
+    * tüm docs list shuffle edilsin (raw dosya dizilimi random şekilde mi bilmiyorum, ondan her türlü bir shuffling yapalım)
+    * delete subtitles from docs (aproximately if line has less than 4 words) (list of docs)
+    * save this list of docs json in shards
+    * bu stage'in düzgün çalışıp çalışmadığını kontrol et
+    * free all resources
+
+Her stage hali hazırda yapılmış ise atlansın
+Her stage kalınıldığı noktadan devam edebilmeli (shard index ile)
+2nd Stage (ab_tokenized):
+    * 2.1 Stage (tokenization)
+        + load docs json file as pandas dataframe (fonk yaz belirtilen shard indexini yükleyen)
+        + en son kalınılan shard'tan devam edebilmeli
+        + her doc "string" tokenize edilecek yeni kolonlar türeyecek: token_ids, word_ids
+        + düz string kolonu dropla (list[str]) olan
+        + her doc'da sentence indexlerini bulmalı yeni kolona bunları koymalı (doc uzunluğu en sonki index'mi öyle değil ise ekle)
+        + kısaca token len için ayrı kolon olmayacak, sentence index'lerdeki en son elemandan bu çıkartılabilmeli
+        + 2 cümleden az olan (yani tek cümleli) doc'lar filtrelenecek
+        + doc [token_ids, word_ids, sent_idx]
+        + bu stage'in düzgün çalışıp çalışmadığını kontrol et
+        + 2.2'ye geçmeden free resources
+
+    * 2.2 Stage (ab creation)
+        + block_size, overlap, shard başına kaç ab sample (shard_size) gibi parametrelere göre çalışacak
+        + isnext olasılığı al, next ise:
+            - bloğu doldurulabildiği kadar doldurulacak, yer kalırsa (truncation sayesinde çoğu durumda kalmasa da document'ın sonuna
+              geldiğimizde dolduramama ihtimali var) [PAD] token'ları ile doldurulacak
+        + notNext ise:
+            - random sample alınacak, sample genişliği belli kısıtlamalar ile olacak, eğer kısıtlamalar sağlanamıyorsa başka random sample
+              yapılacak
+            - random sample alındıktan sonra bulunulan kernel/block posizyonunda gene alınabilecek kadar alınacak (sonu cümle gibi bitmeli)
+            - kalan yerler pad ile doldurulacak (bunda pad olasılığı yüksek)
+        + tüm shard shuffle edilmeli (ab halde shuffle et shard'ı)
+        + 2.stage sonu, shard kayıtları (ab sayılarına göre yapılabilir (her doc farklı sayıda ab çıkarabilir sonuçta) ancak aynı kalsın, zaten son
+          aşamada her shard'ı token sayısı eşit olacak biçimde tasarlayacağım (o aşamaya kadar şard'larımız hep aynı sayıda doc olacak şekilde))
+        + bu stage'in düzgün çalışıp çalışmadığını kontrol et
+        + free all resources
+
+        ++ toplam veri seti default overlap param ile yaklaşık 2 x artacak (overlap yarı old'dan 0,5 x gelecek, notNext old yani random sample
+           olduğunda kernel/block hareketi/posizyonu esasında değişmeyecek bunu da havadan yeni bir example oluşturma gibi düşünebilirsin + 0,5 x
+           daha toplamda yaklaşık olarak 2x artmış olur) 
+           tokenların yaklaşık yarısı bir epoch'da 3 kere gözükecek (overlap + random sample sayesinde)
+        ++ kalan yarısı da 2 kere gözükecek (sadece overlap sayesinde) 
+    
+
+Her stage hali hazırda yapılmış ise atlansın
+Her stage kalınıldığı noktadan devam edebilmeli (shard index ile)
+3rd Stage(xy_numpy):
+    * xy'ler numpy arrayler vs oluşturma, SON aşama
+    * % kaç [MASK] token'i var?, % kaç yer değiştirme, aynı bırakma var vs ("kelime" açısından istenilen oranlar sağlansa da, span corruption yapıldığından "token" açısından
+    istatistiği merak ediyorum yüzdesel olarak ne kadar artacak?) 
+    * ekstrem kelimelerde (8 token misal) random kelime yoksa kaçsın ya da MASK yapsın
+    * random word json, unpackleneerek sadece list[list[int]] şekline çevirip kullanmayı deneyelim (idx'ler token len)
+      böylece manager dict yerine düz Array kullanabiliriz
+    * random kelimeleri negative sample gibi düşünebiliriz
+
+
 
 """
-29.06.2024
 
-dosyaları al birleştir
-başlık ve paragrafları birbirinden ayır
-paragrafları all_dataset_string dosyasına yaz
-
-toplam kaç tane example(paragraf/doc), kelime, sentence var onlara bak hatta kaydet bu bilgileri
-merged.raw dosyası için ayrı,
-preprocessed merged için ayrı,
-ab.raw dosyası için ayrı istatistik tutulacak
-
-AB_string dosyası oluştur (sliding olacak)
-
-github push yapılacak
-
-# şimdilik bunlar ---------------------------------------
-
-subtitle'ları temizlemek gerekiyor!!!! 
-
-
-"""
-from typing import List
-import json
+# standard library
 import os
 import sys
+import json
 import logging
-import time
-import tqdm
 import random
-import re
+import multiprocessing as mp
+from typing import List
 
+
+# third party library
+import tqdm
 from nltk import word_tokenize
 from nltk.tokenize import sent_tokenize
+from tokenizers import Tokenizer
+from transformers import PreTrainedTokenizerFast
 
 
 
-# SCRIPT_DIR = os.path.dirname(__file__) # data abs path
-# sys.path.insert(0, os.path.dirname(SCRIPT_DIR)) # bert_implementation_tr abs path appended to sys.path
-# print(sys.path)
 
 
-from data_aux import create_xy_shards, get_fast_tokenizer
-import multiprocessing as mp
 
 
-# print("$$$$$$$$", os.getcwd())
 
-random.seed(42) # reproducibility
+
+
 
 tr_wiki_prefix = "trwiki-67"
 preprocess_and_stats_dir = "preprocess_and_stats"
@@ -76,7 +129,95 @@ merged_filename = preprocess_and_stats_dir + "/merged.raw"
 ab_string_path = preprocess_and_stats_dir + "/ab_string.raw"
 merged_preprocess_path = preprocess_and_stats_dir + "/merged_preprocessed.raw"
 
+
+
 random_words_set_path = random_words_set_dir + "/random_words_set.json"
+tokenizer_path = "../tr_wordpiece_tokenizer_cased.json"
+
+
+NUM_PROCESSES = (os.cpu_count() - 1) if os.cpu_count() > 1 else 1
+
+def get_merged_files():
+
+    
+    raw_dir = os.path.join(os.path.dirname(__file__), "raw")
+
+    files = os.listdir(raw_dir)
+
+    print(f"[INFO] Files in dir: {files}...")
+
+    merged_file_content = ""
+
+    for raw_file in files:
+        with open(os.path.join(raw_dir, raw_file), encoding="utf-8") as raw:
+            merged_file_content += (raw.read() + "\n")
+
+    return merged_file_content
+
+    
+
+def get_tokenizer(tokenizer_path, fast=True):
+
+    if not os.path.exists(tokenizer_path):
+        print(f"[INFO] there is no tokenizer file to wrap with fast tokenizer in {tokenizer_path} Please train tokenizer first...")
+        exit(0)
+    
+    if fast:
+
+        tokenizer = PreTrainedTokenizerFast(
+            tokenizer_file = tokenizer_path, # You can load from the tokenizer file, alternatively
+            unk_token="[UNK]",
+            pad_token="[PAD]",
+            cls_token="[CLS]",
+            sep_token="[SEP]",
+            mask_token="[MASK]",
+        )
+
+    else:
+        tokenizer = Tokenizer.from_file(tokenizer_path)
+
+    return tokenizer
+
+
+def appy_seed(number=13013):
+    random.seed(42) # reproducibility
+
+
+def split_titles_and_docs(content):
+    """Returns a list of titles and a list of documents from merged file"""
+
+    titles = []
+    docs = []
+
+    
+    lines = content.splitlines()
+    doc_lines = []
+
+    for line in lines:
+
+        if line.startswith('== ') and line.endswith(' == '):
+            # New title found
+            titles.append(line)
+
+            # doc_lines will not has any lines for the firs elements, so this block will be passed (list is empty so cond is False)
+            if doc_lines:
+                # append the previous doc into docs
+                # needs to be joined with \n to make it a 1 string not list of strings
+                docs.append("\n".join(doc_lines))
+                # Start a new document for this new title
+                doc_lines = []
+
+        else:
+            # Continue accumulating lines for the current document
+            doc_lines.append(line)
+
+    # Append the last document
+    docs.append("\n".join(doc_lines))
+
+    assert len(titles) == len(docs), f"[ERROR] len(titles) and len(docs) are not same!... num titles: {len(titles)}, num docs: {len(docs)}"
+
+    return titles, docs
+
 
 
 def split_text_to_words(text: str) -> List[str]:
@@ -91,53 +232,6 @@ def split_text_to_words(text: str) -> List[str]:
 
 
 
-
-
-
-if mp.current_process().name == 'MainProcess':
-    NUM_PROCESSES = (os.cpu_count() - 1) if os.cpu_count() > 1 else 1
-    print(f"[INFO] number of core available: {NUM_PROCESSES}")
-
-
-CHUNK_SIZE = 16
-
-
-
-
-def split_titles_and_docs(filename):
-    """Returns a list of titles and a list of documents from merged file"""
-
-    titles = []
-    docs = []
-
-    with open(filename, 'r', encoding='utf-8') as file:
-        lines = file.readlines()
-        doc_lines = []
-
-        for line in lines:
-
-            if line.startswith('== ') and line.endswith('== \n'):
-                # New title found
-                titles.append(line)
-
-                # doc_lines will not has any lines for the firs elements, so this block will be passed (list is empty so cond is False)
-                if doc_lines:
-                    # append the previous doc into docs
-                    # needs to be joined with \n to make it a 1 string not list of strings
-                    docs.append("\n".join(doc_lines))
-                    # Start a new document for this new title
-                    doc_lines = []
-
-            else:
-                # Continue accumulating lines for the current document
-                doc_lines.append(line)
-
-        # Append the last document
-        docs.append("\n".join(doc_lines))
-
-    assert len(titles) == len(docs), "[ERROR] len(titles) and len(docs) are not same!..."
-
-    return titles, docs
 
 def get_num_chars(docs):
     "docs: list[str, str, str, ...]"
@@ -436,7 +530,7 @@ def load_ab_string(ab_string_path, with_seperator=True):
 
     # Create a multiprocessing pool
     with mp.Pool(processes=NUM_PROCESSES) as pool:
-        ab_strings = list(tqdm.tqdm(pool.imap(sliding_doc, docs, chunksize=CHUNK_SIZE // 2), total=len(docs), desc="Sliding window processing..."))
+        ab_strings = list(tqdm.tqdm(pool.imap(sliding_doc, docs, chunksize=NUM_PROCESSES * 2), total=len(docs), desc="Sliding window processing..."))
 
     print(f"[INFO] number of docs deleted bcs of len(sen)==1 (because they can not be ab): {ab_strings.count(None)}")
 
@@ -453,7 +547,7 @@ def load_ab_string(ab_string_path, with_seperator=True):
                                         random.sample(random_sentences, len(ab_strings))))
     
     with mp.Pool(processes=NUM_PROCESSES) as pool:
-        ab_strings = list(tqdm.tqdm(pool.imap(shuffle_ab, ab_and_random_tuple_list, chunksize=CHUNK_SIZE*5), total=len(ab_strings), desc="Shuffling AB strings"))
+        ab_strings = list(tqdm.tqdm(pool.imap(shuffle_ab, ab_and_random_tuple_list, chunksize=NUM_PROCESSES * 2), total=len(ab_strings), desc="Shuffling AB strings"))
 
     
     print(f"[INFO] deleting consecutive newline characters...")
@@ -479,6 +573,8 @@ def load_ab_string(ab_string_path, with_seperator=True):
   
 
 if __name__ == '__main__':
+
+    print(f"[INFO] number of core available: {NUM_PROCESSES}")
 
 
     files_to_merge = [ f'{"raw" + "/" + tr_wiki_prefix}-train.raw',

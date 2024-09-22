@@ -65,26 +65,11 @@ import multiprocessing as mp
 # third party library
 import pandas as pd
 from tqdm import tqdm
-from transformers import PreTrainedTokenizerFast
+
 
 # my library
 
-def get_fast_tokenizer(tokenizer_path):
 
-    if not os.path.exists(tokenizer_path):
-        print("[INFO] there is no tokenizer file to wrap with fast tokenizer, please train tokenizer first...")
-        return 
-
-    wrapped_tokenizer = PreTrainedTokenizerFast(
-        tokenizer_file = tokenizer_path, # You can load from the tokenizer file, alternatively
-        unk_token="[UNK]",
-        pad_token="[PAD]",
-        cls_token="[CLS]",
-        sep_token="[SEP]",
-        mask_token="[MASK]",
-    )
-
-    return wrapped_tokenizer
 
 
 
@@ -328,6 +313,8 @@ def tokenize_row(row):
         - row [A, B, Next, A_tokens, B_tokens, A_word_ids, B_word_ids, A_token_len, B_token_len] pandas.Series GÜNCELLE
         - row dict(A, B, Next, A_tokens, B_tokens, A_word_ids, B_word_ids, A_token_len, B_token_len) 
     """
+    tokenizer_wrapped.add_tokens()
+
     A_encoding = tokenizer_wrapped(row["A"])
     B_encoding = tokenizer_wrapped(row["B"])
 
@@ -381,9 +368,9 @@ def apply_stage1(ab_df):
 
     print(f"[INFO] Applying stage1...")
 
-    # ab_df = tokenize_df(ab_df.iloc[:100_000]) # lets use 100_000 samples for testing
+    ab_df = tokenize_df(ab_df.iloc[:1_000_000]) # lets use 100_000 samples for testing
 
-    ab_df = tokenize_df(ab_df)
+    # ab_df = tokenize_df(ab_df)
 
     blockS, blockL, excluded = split_blocks(ab_df)
     del ab_df
@@ -395,7 +382,8 @@ def apply_stage1(ab_df):
     print(f"[INFO] Number of tokens of blockL: {blockL['A_token_len'].sum()}")
     print(f"[INFO] Number of total tokens: {blockS['A_token_len'].sum() + blockL['A_token_len'].sum()}")
 
-
+    print(blockS.head(2))
+    print(blockL.head(2))
 
     raise NotImplementedError("Do not go further bruh!")
 
@@ -421,8 +409,11 @@ def apply_stage1(ab_df):
 def create_xy_shards(random_word_dict):
 
     ab_df = get_ab_df()
+    print(f"[INFO] ab_df has been loaded.")
+
     try:
-        blockS, blockL = apply_stage1(ab_df)    
+        blockS, blockL = apply_stage1(ab_df) 
+        del ab_df 
     except NotImplementedError as e:
         print(f"[WARNING] {e}, i am out of here bruh!")
         sys.exit(1)
