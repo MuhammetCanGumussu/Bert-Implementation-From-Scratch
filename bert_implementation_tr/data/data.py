@@ -113,14 +113,6 @@ from transformers import PreTrainedTokenizerFast
 
 
 
-
-
-
-
-
-
-
-
 tr_wiki_prefix = "trwiki-67"
 preprocess_and_stats_dir = "preprocess_and_stats"
 random_words_set_dir = "random_words_set"
@@ -156,7 +148,7 @@ def get_merged_files():
 
     
 
-def get_tokenizer(tokenizer_path, fast=True):
+def get_tokenizer(tokenizer_path=tokenizer_path, fast=True):
 
     if not os.path.exists(tokenizer_path):
         print(f"[INFO] there is no tokenizer file to wrap with fast tokenizer in {tokenizer_path} Please train tokenizer first...")
