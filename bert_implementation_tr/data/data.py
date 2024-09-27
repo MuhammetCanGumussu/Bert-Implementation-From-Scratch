@@ -348,7 +348,7 @@ def convert_doc_to_ab(args: Tuple, block_size: int = BLOCK_SIZE,
         raise TypeError("[ERROR] Docs must be DictProxy or dict[str, list] type...")
 
 
-    block_size_raw = block_size - 3     # del special tokens (cls, sep, sep)
+    block_size_raw = block_size - 3     # special token counts (cls, sep, sep)
     block_start_idx = 0
     block_end_idx = block_size_raw
 
@@ -434,16 +434,16 @@ def visualize_ab(ab: pd.Series):
 
 def create_ab_shards():
 
-    os.makedirs("ab_shards", exist_ok=True)
+    os.makedirs(f"ab_shards_{BLOCK_SIZE}", exist_ok=True)
 
     # if shard counts are equal, then exit, if not, create new shards (may do overwriting)
-    if len(os.listdir("doc_shards")) == len(os.listdir("ab_shards")):
+    if len(os.listdir(f"ab_shards_{BLOCK_SIZE}")) == len(os.listdir("doc_shards")):
         print("[INFO] ab_shards already exists. Exiting...")
         sys.exit(0)
 
 
-    for shard_idx in range(len(os.listdir("doc_shards"))):
-        docs_shard_df = read_shard("doc_shards/", shard_idx)
+    for shard_idx in range(len(os.listdir(f"doc_shards_{BLOCK_SIZE}"))):
+        docs_shard_df = read_shard(f"doc_shards_{BLOCK_SIZE}/", shard_idx)
     
         docs_shard_df["token_ids"] = None
         docs_shard_df["word_ids"] = None
@@ -478,7 +478,7 @@ def create_ab_shards():
         ab_df = ab_df.sample(frac=1)
 
         # save
-        ab_df.to_json("./ab_shards/" + f"ab_shard_{shard_idx}.json",
+        ab_df.to_json(f"./ab_shards_{BLOCK_SIZE}/" + f"ab_shard_{shard_idx}.json",
                        orient="records",
                        lines=True,
                        force_ascii=False)
