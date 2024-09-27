@@ -13,6 +13,7 @@ data/preprocess_and_stats/merged_preprocessed.raw
 data/preprocess_and_stats/merged.raw
 
 data/doc_shards
+data/ab_shards
 
 
 # tüm data dir'i ignore edip sadece data.py'ı track etmeyi dene, beceremedim şimdilik

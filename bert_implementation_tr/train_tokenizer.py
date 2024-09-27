@@ -2,9 +2,6 @@
 
 import os
 
-
-
-
 from tokenizers import (
     decoders,
     models,
@@ -14,7 +11,8 @@ from tokenizers import (
     Tokenizer,
 )
 
-from data.data import get_merged_files
+from .data.data import get_merged_files, get_tokenizer
+
 
 
 VOCAB_SIZE = 32_000   
@@ -23,60 +21,53 @@ MIN_FREQUENCY = 2
 SAVE_PATH = "tr_wordpiece_tokenizer_cased.json"
 
 
- 
-
-
-if os.path.exists(SAVE_PATH):
-    print(f"[INFO] {SAVE_PATH} already exists. Skipping tokenizer training...")
-    exit()
 
 
 
 
-merged_file_content = get_merged_files()
+def main():
+    if os.path.exists(SAVE_PATH):
+        print(f"[INFO] {SAVE_PATH} already exists. Skipping tokenizer training...")
+        exit()
 
-merged_file_content = merged_file_content.splitlines()
+    merged_file_content = get_merged_files()
 
-
-
-
-
-tokenizer = Tokenizer(models.WordPiece(vocab={"[PAD]":0, "[UNK]":1}, unk_token="[UNK]"))
-
-tokenizer.normalizer = normalizers.Sequence(
-    [normalizers.NFKC(),
-     normalizers.Lowercase()]
-)
+    merged_file_content = merged_file_content.splitlines()
 
 
+    tokenizer = Tokenizer(models.WordPiece(vocab={"[PAD]":0, "[UNK]":1}, unk_token="[UNK]"))
 
-tokenizer.pre_tokenizer = pre_tokenizers.Sequence([pre_tokenizers.WhitespaceSplit(), 
-                                           pre_tokenizers.Digits(individual_digits=True),
-                                           pre_tokenizers.Punctuation()])
+    tokenizer.normalizer = normalizers.Sequence(
+        [normalizers.NFKC(),
+         normalizers.Lowercase()]   # bunu kullanmayacağım, kaldıracağım zaman her şeyi baştan exec etmeliyim...
+    )
+
+    tokenizer.pre_tokenizer = pre_tokenizers.Sequence([pre_tokenizers.WhitespaceSplit(), 
+                                               pre_tokenizers.Digits(individual_digits=True),
+                                               pre_tokenizers.Punctuation()])
+
+    special_tokens = ["[PAD]", "[UNK]", "[CLS]", "[SEP]", "[MASK]"]
+
+    trainer = trainers.WordPieceTrainer(vocab_size=VOCAB_SIZE, special_tokens=special_tokens, 
+                                        min_frequency=MIN_FREQUENCY,
+                                        continuing_subword_prefix="##", 
+                                        limit_alphabet=LIMIT_ALPHABET)
+
+    print("[INFO] training is started...")
+
+    tokenizer.train_from_iterator(iterator=merged_file_content, trainer=trainer, length=len(merged_file_content))
+
+    tokenizer.decoder = decoders.WordPiece(prefix="##")
+
+    tokenizer.add_tokens(["..."])
+
+    print("[INFO] tokenizer will be saved...")
+
+    tokenizer.save(SAVE_PATH, pretty=True)
 
 
-special_tokens = ["[PAD]", "[UNK]", "[CLS]", "[SEP]", "[MASK]"]
-
-trainer = trainers.WordPieceTrainer(vocab_size=VOCAB_SIZE, special_tokens=special_tokens, 
-                                    min_frequency=MIN_FREQUENCY,
-                                    continuing_subword_prefix="##", 
-                                    limit_alphabet=LIMIT_ALPHABET)
-
-print("[INFO] training is started...")
-
-
-
-tokenizer.train_from_iterator(iterator=merged_file_content, trainer=trainer, length=len(merged_file_content))
-
-tokenizer.decoder = decoders.WordPiece(prefix="##")
-
-tokenizer.add_tokens(["..."])
-
-print("[INFO] tokenizer will be saved...")
-
-
-
-tokenizer.save(SAVE_PATH, pretty=True)
+if __name__ == "__main__":
+    main()
 
 
 # # load tokenizer

@@ -1,20 +1,31 @@
-import pandas as pd
-from multiprocessing import Pool, Manager
+import multiprocessing
+import ctypes
 
+def worker(shared_dict):
+    # ctypes ile bellek adresini al
+    address = ctypes.cast(id(shared_dict), ctypes.py_object).value
+    print(f"Worker Process Address: {address}")
+    shared_dict['key'] = 'value from worker'
 
-def process_item(item, shared_list):
-    # İşlem yap ve sonucu paylaşılmış listeye ekle
-    result = item * item  # Örnek işlem: sayının karesini alma
-    print(shared_list)
-    shared_list.append(result)
+def main():
+    manager = multiprocessing.Manager()
+    shared_dict = manager.dict()  # Paylaşılan sözlük oluştur
+
+    # ctypes ile bellek adresini al
+    address = ctypes.cast(id(shared_dict), ctypes.py_object).value
+    print(f"Main Process Address: {address}")
+
+    processes = []
+    for _ in range(3):
+        p = multiprocessing.Process(target=worker, args=(shared_dict,))
+        processes.append(p)
+        p.start()
+
+    for p in processes:
+        p.join()
+
+    # Paylaşılan sözlüğü yazdır
+    print("Paylaşılan Sözlük:", dict(shared_dict))
 
 if __name__ == "__main__":
-    with Manager() as manager:
-        shared_list = manager.list()  # Paylaşılan liste oluştur
-        items = [1, 2, 3, 4, 5]  # İşlem yapılacak öğeler
-
-        with Pool() as pool:
-            # Argümanları ile birlikte process_item fonksiyonunu çağır
-            pool.starmap(process_item, [(item, shared_list) for item in items])
-
-        print(shared_list)  # Paylaşılan sonuçları yazdır
+    main()

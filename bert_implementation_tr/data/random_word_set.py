@@ -41,6 +41,7 @@ from tokenizers import normalizers, Regex
 
 # local library
 import data
+import bert_implementation_tr.train_tokenizer as train_tokenizer
 
 
 
@@ -53,8 +54,8 @@ RANDOM_SAMPLE = False                       # if false, it will sample most freq
 USE_NUMBER_OF_LINE = None                   # the specified number of rows will be used, if None, it will use all content/lines 
 
 
-slow_tokenizer = data.get_tokenizer(data.tokenizer_path, fast=False)
-fast_tokenizer = data.get_tokenizer(data.tokenizer_path, fast=True)
+slow_tokenizer = data.get_tokenizer("../" + train_tokenizer.SAVE_PATH, fast=False)
+fast_tokenizer = data.get_tokenizer("../" + train_tokenizer.SAVE_PATH, fast=True)
 
 
 normalizer = normalizers.Sequence([normalizers.NFKC(),
