@@ -1,6 +1,9 @@
 import multiprocessing
 import ctypes
 
+
+print(__file__)
+
 def worker(shared_dict):
     # ctypes ile bellek adresini al
     address = ctypes.cast(id(shared_dict), ctypes.py_object).value

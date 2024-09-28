@@ -11,17 +11,19 @@ from tokenizers import (
     Tokenizer,
 )
 
-from .data.data import get_merged_files, get_tokenizer
 
+if os.getcwd() == os.path.dirname(__file__):
+    from data.data import get_merged_files
+else:
+    # GEÇİCİ BUGFİX
+    # cwd data içinde olduğunda, örn data dir içindeki random_word_set.py'i execute edersek cwd data içinde olacak ve yukarıdaki statement hata verecek
+    from data import get_merged_files
 
 
 VOCAB_SIZE = 32_000   
 LIMIT_ALPHABET = 1_000
 MIN_FREQUENCY = 2
 SAVE_PATH = "tr_wordpiece_tokenizer_cased.json"
-
-
-
 
 
 

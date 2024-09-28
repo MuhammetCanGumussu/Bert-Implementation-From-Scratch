@@ -30,6 +30,7 @@
 
 # standard library
 import os
+import sys
 import itertools
 import multiprocessing as mp
 from collections import Counter
@@ -41,6 +42,13 @@ from tokenizers import normalizers, Regex
 
 # local library
 import data
+
+# cwd bu dizinde ise proje root dir'i sys path'e appendlemeliyim ki üst dizinlerden import yapabileyim
+# eğer cwd bu dizinde değilse zaten root dizinde demektir dokunmaya gerek yok
+if os.getcwd() == os.path.dirname(__file__):
+    sys.path.append(os.path.dirname(os.path.dirname(os.getcwd())))
+
+
 import bert_implementation_tr.train_tokenizer as train_tokenizer
 
 
@@ -78,21 +86,6 @@ def tokenize_word(row):
    row["token_ids"] = fast_tokenizer(row["word"])["input_ids"]
    row["token_len"] = len(row["token_ids"])
    return row
-
-
-def get_random_word_set():
-    if not os.path.exists("random_word_set.json"):
-        print(f"[INFO] random_word_set.json is not already exists. Try to execute random_word_set.py script to generate this file before calling this function...")
-        exit(0)
-    
-    random_word_set_df = pd.read_json("random_word_set.json", orient="records", lines=True, encoding="utf-8")
-    random_word_set_dict = {}
-    
-    for group_name, group in random_word_set_df.groupby("token_len"):
-        random_word_set_dict[f"token_group_{group_name}"] = group["token_ids"].to_list()
-        random_word_set_dict[f"token_group_{group_name}_length"] = len(random_word_set_dict[f"token_group_{group_name}"])
-    
-    return random_word_set_dict
 
 
 
