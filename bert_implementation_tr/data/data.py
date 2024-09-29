@@ -4,6 +4,7 @@ import sys
 import json
 import logging
 import random
+from dataclasses import dataclass
 import multiprocessing as mp
 from multiprocessing.managers import DictProxy
 from typing import List, Tuple
@@ -442,25 +443,60 @@ def convert_doc_to_ab(args: Tuple, block_size: int = BLOCK_SIZE,
 
     return ab_dict
 
-def _visualize_ab(ab: pd.Series):
-        print(f"A: {ab['A_token_ids']}")
-        print(f"B: {ab['B_token_ids']}")
-        print(f"A_decoded: {tokenizer.decode(ab['A_token_ids'])}")
-        print(f"B_decoded: {tokenizer.decode(ab['B_token_ids'])}")
-        print(f"len_of_A: {len(ab['A_token_ids'])}")
-        print(f"len_of_B: {len(ab['B_token_ids'])}")
-        print(f"A_word_ids: {ab['A_word_ids']}")
-        print(f"B_word_ids: {ab['B_word_ids']}")
-        print(f"len_of_A_word_ids: {len(ab['A_word_ids'])}")
-        print(f"len_of_B_word_ids: {len(ab['B_word_ids'])}")
-        print(f"sum_of_AB_tokens: {len(ab['B_word_ids']) + len(ab['A_word_ids'])}")
-        print(f"isNext: {ab['isNext']}")
+
+
+
+# @dataclass
+# class FillOutput:
+#     masked_tokens_slice: List[np.ndarray] = None
+#     replaced_tokens_slice: List[np.ndarray] = None
+#     replace_with_slice: List[np.ndarray] = None
+#     identity_tokens_slice: List[np.ndarray] = None
+
+@dataclass
+class ModelInput:
+    x: np.ndarray
+    y: np.ndarray
+    attention_mask: np.ndarray
+    segment_ids: np.ndarray
+
+@dataclass
+class FillInput:
+    mask_word_array: np.ndarray 
+    replace_word_array: np.ndarray 
+    identity_word_array: np.ndarray 
+
+
+@dataclass
+class VisualizeInputXY:
+    fill_output: FillOutput = None
+    model_input: ModelInput
+
+@dataclass
+class VisualizeInputAB:
+    ab: pd.Series
+
+
+
+
+def _visualize_ab(sample: VisualizeInputAB):
+        print(f"A: {sample.ab['A_token_ids']}")
+        print(f"B: {sample.ab['B_token_ids']}")
+        print(f"A_decoded: {tokenizer.decode(sample.ab['A_token_ids'])}")
+        print(f"B_decoded: {tokenizer.decode(sample.ab['B_token_ids'])}")
+        print(f"len_of_A: {len(sample.ab['A_token_ids'])}")
+        print(f"len_of_B: {len(sample.ab['B_token_ids'])}")
+        print(f"A_word_ids: {sample.ab['A_word_ids']}")
+        print(f"B_word_ids: {sample.ab['B_word_ids']}")
+        print(f"len_of_A_word_ids: {len(sample.ab['A_word_ids'])}")
+        print(f"len_of_B_word_ids: {len(sample.ab['B_word_ids'])}")
+        print(f"sum_of_AB_tokens: {len(sample.ab['B_word_ids']) + len(sample.ab['A_word_ids'])}")
+        print(f"isNext: {sample.ab['isNext']}")
         
         print("---------------\n")
 
 
-def _visualize_xy(x: np.ndarray, y: np.ndarray, selected_groups: Tuple[np.array, np.array, np.array] = None , no_id: bool = False):
-
+def _visualize_xy(sample: ModelInput , no_id: bool = False):
     
     print(f"x_decoded: {tokenizer.decode(x)}")
     print(f"y_decoded: {tokenizer.decode(y)}")
@@ -480,16 +516,20 @@ def _visualize_xy(x: np.ndarray, y: np.ndarray, selected_groups: Tuple[np.array,
 
 
     pass
-def visualize_sample(sample: pd.Series | Tuple[np.ndarray, np.ndarray], selected_groups: Tuple[np.array, np.array, np.array] = None, no_id: bool = False):
-    """visualize one AB sample (Series) or X, Y sample (np.ndarray, np.ndarray)"""
-    if type(sample) == tuple:
-        x = sample[0]
-        y = sample[1]
-        _visualize_xy(x=x, y=y, selected_groups=selected_groups, no_id=no_id)
+
+
+def visualize_sample(sample: VisualizeInputAB | ModelInput, show_ids: bool = None):
+    """"""
+    if isinstance(sample, ModelInput):
+        if show_ids is None:
+            show_ids = False
+        _visualize_xy(sample, show_ids=show_ids)
+    elif isinstance(sample, VisualizeInputAB):  
+        if show_ids is not None:
+            raise ValueError("show_ids should be None or empty if sample is VisualizeInputAB...") 
+        _visualize_ab(sample)
     else:
-        if no_id != False or selected_groups != None:
-            raise KeyError("no_id or selected_groups cannot be used for ab samples...")
-        _visualize_ab(ab=sample)
+        raise TypeError("sample must be VisualizeInputAB or VisualizeInputXY")
 
 
 def create_ab_shards():
@@ -547,6 +587,15 @@ def merge_shards():
     pass
 
 
+
+
+
+
+
+
+
+
+
 def get_random_tokens(number_of_token_need: int)-> np.ndarray | None:
     temp = f"token_group_{number_of_token_need}"
     if temp not in word_dict.keys():
@@ -554,7 +603,9 @@ def get_random_tokens(number_of_token_need: int)-> np.ndarray | None:
         return None
     return np.array(random.choice(word_dict[temp]), dtype=np.uint16)
 
-def _fill_mask(mask_word_array: np.ndarray, word_ids: np.ndarray, x: np.ndarray, y: np.ndarray, return_slices: bool = False):
+def _fill_mask(mask_word_array: np.ndarray, word_ids: np.ndarray, x: np.ndarray, y: np.ndarray, return_slices: bool = False) -> List[np.ndarray] | None:
+
+    masked_tokens_slice = []
 
     for mask_word_id in mask_word_array:
 
@@ -571,11 +622,15 @@ def _fill_mask(mask_word_array: np.ndarray, word_ids: np.ndarray, x: np.ndarray,
         y[word_token_slice_start_idx:word_token_slice_end_idx] = word_token_slice
 
         if return_slices:
-            pass
-            # appendle altta return et
-            # NEYDİ NE OLDU GÖRSELLEŞTİRMESİ İÇİN ŞART
+            masked_tokens_slice.append(word_token_slice)
 
-def _fill_replace(replace_word_array: np.ndarray, word_ids: np.ndarray, x: np.ndarray, y: np.ndarray, return_slices: bool = False):
+    if return_slices:
+        return masked_tokens_slice
+
+def _fill_replace(replace_word_array: np.ndarray, word_ids: np.ndarray, x: np.ndarray, y: np.ndarray, return_slices: bool = False) -> Tuple[List[np.ndarray], List[np.ndarray]] | None:
+    replaced_tokens_slice = []
+    replace_with_slice = []
+    
     for replace_word_id in replace_word_array:
 
         word_token_slice_start_idx = np.searchsorted(word_ids, replace_word_id, side="left")
@@ -599,14 +654,16 @@ def _fill_replace(replace_word_array: np.ndarray, word_ids: np.ndarray, x: np.nd
         x[word_token_slice_start_idx:word_token_slice_end_idx] = random_token_slice
 
         if return_slices:
-            pass
-            # append'le altta return et, sen burda return edemen
-            # return word_token_slice.copy(), random_token_slice.copy()
-            # NEYDİ NE OLDU GÖRSELLEŞTİRMESİ ŞART
+            replaced_tokens_slice.append(word_token_slice)
+            replace_with_slice.append(random_token_slice)
 
-        
+    if return_slices:
+        return (replaced_tokens_slice, replace_with_slice)
+   
 
-def _fill_identity(identity_word_array: np.ndarray, word_ids: np.ndarray, x: np.ndarray, y: np.ndarray, return_slices: bool = False):
+def _fill_identity(identity_word_array: np.ndarray, word_ids: np.ndarray, x: np.ndarray, y: np.ndarray, return_slices: bool = False) -> List[np.ndarray] | None:
+    identity_tokens_slice = []
+
     for identity_word_id in identity_word_array:
 
         word_token_slice_start_idx = np.searchsorted(word_ids, identity_word_id, side="left")
@@ -621,11 +678,52 @@ def _fill_identity(identity_word_array: np.ndarray, word_ids: np.ndarray, x: np.
         y[word_token_slice_start_idx:word_token_slice_end_idx] = word_token_slice
 
         if return_slices:
-            pass
-            # NEYDİ NE OLDU GÖRSELLEŞTİRMESİ ŞART
+            identity_tokens_slice.append(word_token_slice)
+
+    if return_slices:
+        return identity_tokens_slice
+
+def fill_xy(word_arrays: FillInput, word_ids: np.ndarray, x: np.ndarray, y: np.ndarray, return_slices: bool = False) -> FillOutput | None:
+        fill_output = FillOutput()
+        fill_output.masked_tokens_slice = _fill_mask(word_arrays.mask_word_array, word_ids, x, y, return_slices=return_slices)
+        fill_output.identity_tokens_slice = _fill_identity(word_arrays.identity_word_array, word_ids, x, y, return_slices=return_slices)
+        fill_output.replaced_tokens_slice, fill_output.replace_with_slice = _fill_replace(word_arrays.replace_word_array, word_ids, x, y, return_slices=return_slices)
+        if return_slices:
+            return fill_output
 
 
-def gecicici(ab_row: pd.Series, return_selected: bool = False)-> Tuple[np.ndarray, np.ndarray] | Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+def create_model_inputs(x: np.ndarray, y: np.ndarray, len_A_tokens: int, blocks_full: bool = True) -> ModelInput:
+
+        # CLS token append
+        x = np.concatenate((np.array([CLS_TOKEN_ID], dtype=np.uint16), x), dtype=np.uint16)
+        y = np.concatenate((np.array([ab_row["isNext"]], dtype=np.uint16), y), dtype=np.uint16)
+        # SEP token append middle (+ 1 başa cls token eklendiği için len 1 artmıştı)
+        x = np.concatenate((x[:len_A_tokens + 1], [SEP_TOKEN_ID], x[len_A_tokens + 1:]), dtype=np.uint16)
+        y = np.concatenate((y[:len_A_tokens + 1], [PAD_TOKEN_ID], y[len_A_tokens + 1:]), dtype=np.uint16)
+        # SEP token append end
+        x = np.concatenate((x, [SEP_TOKEN_ID]), dtype=np.uint16)
+        y = np.concatenate((y, [PAD_TOKEN_ID]), dtype=np.uint16)
+
+
+        # segment ids
+        segment_ids = np.zeros(x.shape, dtype=np.uint16)
+        segment_ids[len_A_tokens + 2:] = 1
+
+        # geliştirdiğim algoritma sonucunda, tüm blocklarım ne olursa olsun full dolu olacak,
+        # bu durumda PAD tokenı içermeyeceğinden attention mask'te full 1'lerden oluşacak.
+        attention_mask = np.ones(x.shape, dtype=np.uint16)
+
+        # ancak block'lar full dolmadı ise yani PAD tokenlarına sahip ise o zaman ona göre
+        # attention mask ayarlanmalı
+        if blocks_full == False:
+            for i in range(len(x) - 1, -1, -1):
+                if x[i] != PAD_TOKEN_ID:
+                    attention_mask[i:] = 0
+        
+        return ModelInput(x=x, y=y, attention_mask=attention_mask, segment_ids=segment_ids)
+
+
+def create_xy(ab_row: pd.Series, return_slices: bool = False)-> Tuple[np.ndarray, np.ndarray] | Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     "ab_row: A_token_ids, B_token_ids, A_word_ids, B_word_ids, isNext"
     len_A_tokens = len(ab_row["A_token_ids"])
     len_B_tokens = len(ab_row["B_token_ids"])
@@ -670,31 +768,28 @@ def gecicici(ab_row: pd.Series, return_selected: bool = False)-> Tuple[np.ndarra
     mask_of_replace =  (prop_of_words > 0.95) & (prop_of_words <= 0.97)     # 0.015'lik dilim
     mask_of_identity = (prop_of_words > 0.97)                               # 0.015'lik dilim
 
+
     mask_word_array = word_array[mask_of_mask]
     replace_word_array = word_array[mask_of_replace]
     identity_word_array = word_array[mask_of_identity]
+
+    word_arrays = FillInput(mask_word_array, identity_word_array, replace_word_array)
     
     # bu referanslara+objelere artık ihtiyacım yok, free memory
     del word_array, prop_of_words, mask_of_mask, mask_of_replace, mask_of_identity
 
-    _fill_mask(mask_word_array, word_ids, x, y)
-    _fill_replace(replace_word_array, word_ids, x, y)
-    _fill_identity(identity_word_array, word_ids, x, y)
 
-    # geçici 
-    x = np.concatenate((np.array([CLS_TOKEN_ID], dtype=np.uint16), x), dtype=np.uint16)
-    y = np.concatenate((np.array([ab_row["isNext"]], dtype=np.uint16), y), dtype=np.uint16)
+    visualize_inputs = fill_xy(word_arrays, word_ids, x, y, return_slices=return_slices) 
 
-    if return_selected == True:
-        return x, y, mask_word_array, replace_word_array, identity_word_array
-    
-    # geçici            
-    return x, y
+    model_inputs = create_model_inputs(x, y, len_A_tokens)
 
-    print("x: ", x)
-    print("x shape: ", x.shape)
-    print("y: ", x)
-    print("y shape: ", y.shape)
+
+    if return_slices == True:
+        return model_inputs, visualize_inputs
+              
+    return model_inputs
+
+
 
 
     # hiç mask olmayan sample vs varsa 1 tane halledeceğük ama şimdi değil GARDAŞ
