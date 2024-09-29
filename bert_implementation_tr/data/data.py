@@ -12,7 +12,6 @@ import sys
 import json
 import logging
 import random
-from dataclasses import dataclass
 import multiprocessing as mp
 from multiprocessing.managers import DictProxy
 from typing import List, Tuple
@@ -25,6 +24,9 @@ import numpy as np
 import pandas as pd
 from transformers import PreTrainedTokenizerFast
 from tokenizers import Tokenizer, decoders
+
+# local
+from data_aux import *
 
 
 
@@ -454,31 +456,6 @@ def convert_doc_to_ab(args: Tuple, block_size: int = BLOCK_SIZE,
 
 
 
-# @dataclass
-# class FillOutput:
-#     masked_tokens_slice: List[np.ndarray] = None
-#     replaced_tokens_slice: List[np.ndarray] = None
-#     replace_with_slice: List[np.ndarray] = None
-#     identity_tokens_slice: List[np.ndarray] = None
-
-@dataclass
-class ModelInput:
-    x: np.ndarray
-    y: np.ndarray
-    attention_mask: np.ndarray
-    segment_ids: np.ndarray
-
-@dataclass
-class FillInput:
-    mask_word_array: np.ndarray 
-    replace_word_array: np.ndarray 
-    identity_word_array: np.ndarray 
-
-
-@dataclass
-class VisualizeInputAB:
-    ab: pd.Series
-
 
 
 
@@ -518,6 +495,9 @@ def _visualize_model_input(sample: ModelInput, show_ids: bool = False, show_atte
     })
     print(print_df.to_string(index=False))
 
+    print(f"\nnumber_of_mask_token: {print_df['X_FILLED'].value_counts()['[MASK]']}")
+    print(f"number_of_filled_token: {len(print_df) - 1}\n")
+
     print(f"\nlen_of_x: {len(sample.x)}")
     print(f"len_of_y: {len(sample.y)}\n")
     print(f"")
@@ -527,6 +507,7 @@ def _visualize_model_input(sample: ModelInput, show_ids: bool = False, show_atte
         print(f"y_ids: {sample.y}")
     
     print("---------------\n")
+
 
 
 
