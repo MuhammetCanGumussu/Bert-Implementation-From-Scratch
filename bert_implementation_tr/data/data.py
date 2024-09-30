@@ -1,8 +1,19 @@
+"""
+tokenizer alfabeyi azalt
+tokenizer cased hale getir
+tokenizer (daha kök ve ekler şeklinde olması için farklı tokenizer'lar vs kullanılabilir bakılacak)
+
+tüm bu shard oluşturma olaylarında en son kalınan yerden devam edebilme yeteneği olabilmeli (hepsi için yapılabilir gayet basit)
+
+isnext class dağılımı (excluded sayesinde imbalance olabilir çok çok az miktarda olsa) weight alınabilir
+toplam kaç token var?
+toplam kaç mask, replace, identity var?
+
+yukarı dizinden burada import vs yapılacağı zaman geçici olarak cwd değiştirilebilir. Böylece tüm kodları güncellemekten kurtulunabilir.
+(dependency mantığı)
 
 
-
-
-# TODO ANAMIN TAHUDUNU AYARLA
+"""
 
 
 
@@ -33,16 +44,11 @@ from data_aux import *
 
 
 # DEFAULT VALUES (değiştirilebilir/config/param)
-NUM_SHARDS = 100
 BLOCK_SIZE = 256
-OVERLAP = BLOCK_SIZE // 2   # pencere hareketi/deltası kesinlikle 4 dene!
-TAMPON = 10                 # block penceresi sınırlarını tamponluyoruz gibi düşünülebilir (tampon içinde kalan sent idx'ler kullanılmayacak)
-SPECIAL_TOKEN_COUNT = 3     # per sample (cls, sep, sep)
-
-NORMAL_TOKEN_PROB = 0.85
-MASK_TOKEN_PROB = 0.8
-REPLACE_TOKEN_PROB = 0.1
-IDENTITY_TOKEN_PROB = 0.1
+NUM_OF_DOCS_PER_SHARD = 4_000       # TODO: bunun bu şekilde olmaktansa, NUM_OF_DOCS_PER_SHARD şeklinde olması lazımdı hem ab hemde doc shards için.
+NUM_TOKENS_PER_SHARD = 10_000_000   # hem ab_shards ve xy_shards için, 40_000 sample * 256 token ~ 10_000_000 tokens
+OVERLAP = BLOCK_SIZE // 2           # pencere hareketi/deltası kesinlikle 4 dene!
+TAMPON = 10                         # block penceresi sınırlarını tamponluyoruz gibi düşünülebilir (tampon içinde kalan sent idx'ler kullanılmayacak)
 
 
 NUM_PROCESSES = (os.cpu_count() - 1) if os.cpu_count() > 1 else 1
@@ -178,7 +184,7 @@ def split_titles_and_docs(content):
 
     return titles, docs
 
-def get_docs_df():
+def get_docs_df() -> pd.DataFrame:
     
     print(f"[INFO] Docs dataframe is being created...")
 
@@ -196,8 +202,8 @@ def get_docs_df():
 
 def create_doc_shards(docs_df):
 
-    num_shards = NUM_SHARDS
-    num_docs_per_shard = len(docs_df) // num_shards
+
+    num_shards = len(docs_df) // NUM_OF_DOCS_PER_SHARD
     extra_shard_len = 0
 
     if len(docs_df) % num_shards != 0:
@@ -211,10 +217,10 @@ def create_doc_shards(docs_df):
 
 
     if len(files) == num_shards:
-        print(f"[INFO] Expected number of shards are already exists. Exiting...")
+        print(f"[INFO] Expected number of doc_shards are already exists. Exiting...")
         return
     
-    # fazlalık dosyaları (eğer olursa) sil (evet biraz brute force)
+    # beklenmeyen dosyaları (eğer olursa) sil (evet biraz brute force)
     if num_shards < len(files):
 
         files_finded = set(files)
@@ -227,7 +233,7 @@ def create_doc_shards(docs_df):
 
 
     print(f"[INFO] Total number of doc: {len(docs_df)}")
-    print(f"[INFO] Each shard will have {num_docs_per_shard} number of docs...")
+    print(f"[INFO] Each shard will have {NUM_OF_DOCS_PER_SHARD} number of docs...")
     print(f"[INFO] Number of shard will be: {num_shards}")
 
     if extra_shard_len:
@@ -235,7 +241,7 @@ def create_doc_shards(docs_df):
 
     
     df_start_idx = 0
-    df_end_idx = num_docs_per_shard
+    df_end_idx = NUM_OF_DOCS_PER_SHARD
 
 
     with tqdm.tqdm(total=num_shards, desc="Doc shards are being created") as pbar:
@@ -259,10 +265,10 @@ def create_doc_shards(docs_df):
                                                           lines=True,
                                                           force_ascii=False)
             df_start_idx = df_end_idx
-            df_end_idx += num_docs_per_shard
+            df_end_idx += NUM_OF_DOCS_PER_SHARD
             pbar.update()
 
-def read_shard(shard_dir, shard_idx, return_type="pd"):
+def read_shard(shard_dir: str, shard_idx: int, return_type: str = "pd") -> pd.DataFrame | dict[str, list]:
 
     if shard_dir.startswith("doc"):
         prefix = "doc"
@@ -281,9 +287,9 @@ def read_shard(shard_dir, shard_idx, return_type="pd"):
 
         elif return_type == "dict":
             return temp.to_dict("list")
-
+        
         else:
-            print(f"[ERROR] Unvalid input for return type, must be 'pd' or 'dict'...")
+            raise ValueError(f"Unvalid input for return type, must be 'pd' or 'dict'...")
 
     else:
         raise IndexError(f"shard_idx >= 0 and shard_idx < {len(os.listdir('doc_shards'))}, shard_idx you gave was: {shard_idx}")
@@ -390,7 +396,7 @@ def convert_doc_to_ab(args: Tuple, block_size: int = BLOCK_SIZE,
         raise TypeError("[ERROR] Docs must be DictProxy or dict[str, list] type...")
 
 
-    block_size_raw = block_size - SPECIAL_TOKEN_COUNT     # special token counts (cls, sep, sep)
+    block_size_raw = block_size - 3     # special token counts (cls, sep, sep)
     block_start_idx = 0
     block_end_idx = block_size_raw
 
@@ -443,13 +449,16 @@ def convert_doc_to_ab(args: Tuple, block_size: int = BLOCK_SIZE,
         block_start_idx += overlap
         block_end_idx += overlap
     
-    # BURASI AÇIK OLDUĞUNDA FALSE SAYISI ~3000 DAHA FAZLA OLUYOR (DOC SAYISI KADAR). CLASS IMBALANCE'A SEBEP OLABİLİR. GERÇİ FOCAL LOSS KULLANABİLİRİZ...
-    # if (block_start_idx + tampon) < doc_len:
-    #     len_of_random_b = block_end_idx - doc_len  # A midpoint yani nokta/sent_idx tokenınıda içine alacağından bir sağ shiftledik
-    #     # random b için istenen token sayısı tampondan az ise o bu ab sample adayı kullanılmayacak (B'de çok çok az sayıda token var demektir)
-    #     if len_of_random_b < tampon:
-    #        return ab_dict
-    #     _fill_a_from_block_b_from_random(ab_dict, doc, docs, block_start_idx, doc_len, len_of_random_b)
+    # Genellikle doc sonlarında block dışında kalan alanlar olur. Burayı random B ile kullanabiliriz. Bu durumda çoğu durumda toplam doc sayısı kadar 
+    # fazladan notNext sample'ımız olur (class imbalance denebilecek kadar orantısal etki olmaz (veri seti büyük olduğundan ve tabi doclar'da geniş olduğundan)
+    # ama mesela doc sayısı çok olsa, doclar kısa olsa (bir doc'tan çok fazla normal sample çıkmaz ise), veri seti küçük olursa o zaman problem olabilir
+    # ben gene de class (isNext or not) weight hesaplayan vs fonklar tanımlayacağım, bariz bir oran farkı varsa o zaman uygulamak önemli olur 
+    if (block_start_idx + tampon) < doc_len:
+        len_of_random_b = block_end_idx - doc_len  # A midpoint yani nokta/sent_idx tokenınıda içine alacağından bir sağ shiftledik
+        # random b için istenen token sayısı tampondan az ise o bu ab sample adayı kullanılmayacak (B'de çok çok az sayıda token var demektir)
+        if len_of_random_b < tampon:
+           return ab_dict
+        _fill_a_from_block_b_from_random(ab_dict, doc, docs, block_start_idx, doc_len, len_of_random_b)
 
     return ab_dict
 
@@ -476,12 +485,12 @@ def _visualize_ab(sample: VisualizeInputAB):
         print("---------------\n")
 
 
-def _visualize_model_input(sample: ModelInput, show_ids: bool = False, show_attention_and_segment: bool = False):
+def _visualize_model_input(sample: VisualizeModelInput):
     
     print(f"x_decoded: {tokenizer.decode(sample.x)}")
     print(f"y_decoded: {tokenizer.decode(sample.y)}\n")
     
-    if show_attention_and_segment == True:
+    if sample.show_attention_and_segment == True:
         print(f"attention_mask: {sample.attention_mask}")
         print(f"segment_ids: {sample.segment_ids}\n")
 
@@ -502,7 +511,7 @@ def _visualize_model_input(sample: ModelInput, show_ids: bool = False, show_atte
     print(f"len_of_y: {len(sample.y)}\n")
     print(f"")
 
-    if show_ids == True:
+    if sample.show_ids == True:
         print(f"x_ids: {sample.x}")
         print(f"y_ids: {sample.y}")
     
@@ -510,29 +519,24 @@ def _visualize_model_input(sample: ModelInput, show_ids: bool = False, show_atte
 
 
 
-
-def visualize_sample(sample: VisualizeInputAB | ModelInput, show_ids: bool = None):
+def visualize_sample(sample: VisualizeInputAB | VisualizeModelInput):
     """"""
     if isinstance(sample, ModelInput):
-        if show_ids is None:
-            show_ids = False
-        _visualize_model_input(sample, show_ids=show_ids)
+        _visualize_model_input(sample)
     elif isinstance(sample, VisualizeInputAB):  
-        if show_ids is not None:
-            raise ValueError("show_ids should be None or empty if sample is VisualizeInputAB...") 
         _visualize_ab(sample)
     else:
         raise TypeError("sample must be VisualizeInputAB or VisualizeInputXY")
 
 
-def create_ab_shards():
+def create_ab_shards() -> None:
 
     os.makedirs(f"ab_shards_{BLOCK_SIZE}", exist_ok=True)
 
     # if shard counts are equal, then exit, if not, create new shards (may do overwriting)
     if len(os.listdir(f"ab_shards_{BLOCK_SIZE}")) == len(os.listdir("doc_shards")):
-        print("[INFO] ab_shards already exists. Exiting...")
-        sys.exit(0)
+        print("[INFO] Expected number of ab_shards already exists. Exiting...")
+        return
 
 
     for shard_idx in range(len(os.listdir(f"doc_shards_{BLOCK_SIZE}"))):
@@ -575,10 +579,6 @@ def create_ab_shards():
                        orient="records",
                        lines=True,
                        force_ascii=False)
-  
-def merge_shards():
-    pass
-
 
 
 
@@ -654,7 +654,7 @@ def _fill_identity(identity_word_array: np.ndarray, word_ids: np.ndarray, x: np.
         y[word_token_slice_start_idx:word_token_slice_end_idx] = word_token_slice
 
 
-def fill_xy(word_arrays: FillInput, word_ids: np.ndarray, x: np.ndarray, y: np.ndarray) -> None:
+def _fill_xy(word_arrays: FillInput, word_ids: np.ndarray, x: np.ndarray, y: np.ndarray) -> None:
         
         _fill_mask(word_arrays.mask_word_array, word_ids, x, y)
         _fill_identity(word_arrays.identity_word_array, word_ids, x, y)
@@ -717,8 +717,13 @@ def _create_model_inputs(x: np.ndarray, y: np.ndarray, len_A_tokens: int, isNext
         return ModelInput(x=x, y=y, attention_mask=attention_mask, segment_ids=segment_ids)
 
 
-def create_xy(ab_row: pd.Series)-> ModelInput:
+def create_xy(ab_row: pd.Series | tuple[int, pd.Series], stat_needed: bool = True)-> ModelInput:
     "ab_row: A_token_ids, B_token_ids, A_word_ids, B_word_ids, isNext"
+
+    # mp pool kullanım, iterrow tuple döndürür
+    if isinstance(ab_row, tuple):
+        ab_row = ab_row[1]
+
     len_A_tokens = len(ab_row["A_token_ids"])
     len_B_tokens = len(ab_row["B_token_ids"])
 
@@ -746,13 +751,101 @@ def create_xy(ab_row: pd.Series)-> ModelInput:
     # 0'dan başlaması gerek. Bunu ab oluşumunda yapmayı unutmuşum. İlerde bunu oraya taşıyabiliriz.
     word_ids -= word_ids[0]   
 
-    fill_input = _create_fill_input_for_sample(word_ids)
+    filled_word_arrays = _create_fill_input_for_sample(word_ids)
 
     # fills with mask, random or identity tokens
-    fill_xy(fill_input, word_ids, x, y) 
+    _fill_xy(filled_word_arrays, word_ids, x, y) 
        
+    if stat_needed:
+        return _create_model_inputs(x, y, len_A_tokens, ab_row["isNext"], len_A_tokens), filled_word_arrays
 
     return _create_model_inputs(x, y, len_A_tokens, ab_row["isNext"], len_A_tokens)
+
+
+
+def get_ratio_for_NSP_classes() -> Tuple[float, float]:
+    """ return isNext and notNext ratio """
+
+    isNext_count = 0
+    for shard_idx in range(len(os.listdir(f"xy_shards_{BLOCK_SIZE}"))):
+        xy_array = read_shard(f"xy_shards_{BLOCK_SIZE}/", shard_idx, return_type="np")
+        isNext_count += xy_array[:,0].sum()
+
+    total_number_sample = Stat.from_file(f"xy_shards_{BLOCK_SIZE}/stat.txt").total_number_sample
+
+    # weight için kullanılacak ise swap yapılmalı
+    return (isNext_count / total_number_sample), ((1 - isNext_count) / total_number_sample)
+
+
+
+
+
+def get_num_lines_from_ab_dir(dir_postfix: str) -> int:
+    """read and count all lines of spesified dir"""
+    num_lines = 0
+    for shard_id in os.listdir(f"ab_shards_{dir_postfix}"):
+        with open(f"ab_shards_{dir_postfix}/{shard_id}", "r", encoding="utf-8") as f:
+            for line in f:
+                num_lines += 1
+    return num_lines
+
+
+def save_xy_shard(placeholder_array, shard_idx) -> None:
+    np.save(f"xy_shards_{BLOCK_SIZE}/xy_shard_{shard_idx}.npy", placeholder_array)
+                        
+
+def load_xy_shard(shard_idx) -> np.ndarray:
+    return np.load(f"xy_shards_{BLOCK_SIZE}/xy_shard_{shard_idx}.npy")
+
+
+def create_xy_shards() -> None:
+
+    os.makedirs(f"xy_shards_{BLOCK_SIZE}", exist_ok=True)
+
+    # örn: 40_000 sample * 256 token ~ 10_000_000 tokens
+    number_of_sample_per_shard = NUM_TOKENS_PER_SHARD // BLOCK_SIZE
+    number_of_shard = get_num_lines_from_ab_dir(dir_postfix=f"{BLOCK_SIZE}") * BLOCK_SIZE // number_of_sample_per_shard
+
+    # if shard counts are equal, then exit, if not, create new shards (may do overwriting), + 1 for stat.txt
+    if len(os.listdir(f"xy_shards_{BLOCK_SIZE}")) == number_of_shard + 1:
+        print("[INFO] Expected number of xy_shards already exists. Exiting...")
+        return
+    
+    # for stat.txt
+    stat = Stat()
+
+    with mp.Pool(NUM_PROCESSES) as pool:
+
+        # np array genişliği: isNext + x + y + segment_ids + attention_mask --> (BLOCK_SIZE * 4) + 1 
+        width = (BLOCK_SIZE * 4) + 1
+
+        placeholder_array = np.empty((number_of_sample_per_shard, width), dtype=np.uint16)
+        xy_shard_idx = 0
+        last_index = 0
+        
+        for ab_shard_idx in range(len(os.listdir(f"ab_shards_{BLOCK_SIZE}"))): 
+            ab_shard_df = read_shard(f"ab_shards_{BLOCK_SIZE}/", ab_shard_idx, return_type="pd")
+
+            xy_map_iterator = pool.imap(create_xy, ab_shard_df.iterrows(), chunksize= 100)
+
+            for filled_word_arrays, model_input in tqdm.tqdm(xy_map_iterator, total=len(ab_shard_df), desc=f"[INFO] Converting ab shards to xy shards..."):
+                    
+                stat.update_stat_with_one_sample(filled_word_arrays, BLOCK_SIZE)
+
+                if last_index < number_of_sample_per_shard:
+                    placeholder_array[last_index] = np.concatenate([model_input.x, model_input.y, model_input.segment_ids, model_input.attention_mask], dtype=np.uint16)
+                    last_index += 1
+                else:
+                    save_xy_shard(placeholder_array, xy_shard_idx)
+                    placeholder_array = np.empty((number_of_sample_per_shard, (BLOCK_SIZE * 4) + 1), dtype=np.uint16)
+                    xy_shard_idx += 1
+                    last_index = 0
+        
+        # save last shard
+        save_xy_shard(placeholder_array[:last_index], xy_shard_idx)
+
+        # save stat
+        stat.save_stat(f"xy_shards_{BLOCK_SIZE}/stat.txt")
 
 
 
@@ -773,3 +866,5 @@ if __name__ == "__main__":
     del docs_df
 
     create_ab_shards()
+
+    create_xy_shards()
