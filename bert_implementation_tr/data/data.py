@@ -870,11 +870,11 @@ def _create_xy(ab_row: pd.Series | tuple[int, pd.Series], stat_needed: bool = Tr
 
 
 
-def get_num_lines_from_ab_dir(dir_postfix: str) -> int:
+def get_num_lines_from_ab_dir(block_size: str) -> int:
     """read and count all lines of spesified dir"""
     num_lines = 0
-    for shard_id in os.listdir(f"ab_shards_{dir_postfix}"):
-        with open(f"ab_shards_{dir_postfix}/{shard_id}", "r", encoding="utf-8") as f:
+    for shard_id in os.listdir(f"ab_shards_{block_size}"):
+        with open(f"ab_shards_{block_size}/{shard_id}", "r", encoding="utf-8") as f:
             for line in f:
                 num_lines += 1
     return num_lines
@@ -888,6 +888,17 @@ def load_xy_shard(shard_idx) -> np.ndarray:
     return np.load(f"xy_shards_{BLOCK_SIZE}/xy_shard_{shard_idx}.npy")
 
 
+def get_last_idxs_of_ab(last_line_idx_xy, block_size=BLOCK_SIZE) -> Tuple[int, int]:
+            num_lines = 0
+            for shard_id in os.listdir(f"ab_shards_{block_size}"):
+                with open(f"ab_shards_{block_size}/{shard_id}", "r", encoding="utf-8") as f:
+                    for line in f:
+                        if num_lines == last_line_idx_xy:
+                            return int(shard_id.split("_")[2].split(".")[0]), line
+                        num_lines += 1
+            raise IndexError("last_line_idx_xy value is unexpected...")
+
+
 def create_xy_shards() -> None:
 
     xy_dir = f"xy_shards_{BLOCK_SIZE}"
@@ -896,14 +907,16 @@ def create_xy_shards() -> None:
     # örn: 40_000 sample * 256 token ~ 10_000_000 tokens
     number_of_sample_per_shard = NUM_TOKENS_PER_SHARD // BLOCK_SIZE
 
-    total_lines_in_ab = get_num_lines_from_ab_dir(dir_postfix=f"{BLOCK_SIZE}") 
+    total_lines_in_ab = get_num_lines_from_ab_dir(block_size=f"{BLOCK_SIZE}") 
     number_of_shard = total_lines_in_ab // number_of_sample_per_shard if total_lines_in_ab % number_of_sample_per_shard == 0 else (total_lines_in_ab // number_of_sample_per_shard) + 1
 
     clean_shards_dir(xy_dir, number_of_shard)
     # son var olan dosya idx'ini aldık bir sonrakinden devam edileceği için 1 ekledik
     last_shard_idx_of_xy = get_last_shard_idx(xy_dir) + 1
-    last_shard_idx_of_ab = ((last_shard_idx_of_xy  * number_of_sample_per_shard) // NUM_OF_DOCS_PER_SHARD )
-    last_line_idx_of_ab = (last_shard_idx_of_xy  * number_of_sample_per_shard) % NUM_OF_DOCS_PER_SHARD
+    last_shard_idx_of_ab, last_line_idx_of_ab = get_last_idxs_of_ab((last_shard_idx_of_xy  * number_of_sample_per_shard))
+    
+    #last_shard_idx_of_ab = ((last_shard_idx_of_xy  * number_of_sample_per_shard) // NUM_OF_DOCS_PER_SHARD )
+    #last_line_idx_of_ab = (last_shard_idx_of_xy  * number_of_sample_per_shard) % NUM_OF_DOCS_PER_SHARD
 
     # beklenen tüm dosyalar hali hazırda mevcut ise, çık
     if last_shard_idx_of_xy == number_of_shard:
@@ -920,29 +933,35 @@ def create_xy_shards() -> None:
         # np array genişliği: x + y + segment_ids + attention_mask --> (BLOCK_SIZE * 4)
         width = (BLOCK_SIZE * 4) 
         
-        #placeholder_array = np.empty((number_of_sample_per_shard, width), dtype=np.uint16)
-        placeholder_array = np.empty((1000, width), dtype=np.uint16)
+        placeholder_array = np.empty((number_of_sample_per_shard, width), dtype=np.uint16)
+        #placeholder_array = np.empty((1000, width), dtype=np.uint16)
         last_row_index = 0
         
         for ab_shard_idx in range(last_shard_idx_of_ab, len(os.listdir(f"ab_shards_{BLOCK_SIZE}"))): 
             ab_shard_df = read_shard(f"ab_shards_{BLOCK_SIZE}/", ab_shard_idx, return_type="pd")
 
-            # xy_map_iterator = pool.imap(_create_xy, ab_shard_df.iloc[last_line_idx_of_ab:].iterrows(), chunksize= 100)
-            xy_map_iterator = pool.imap(_create_xy, ab_shard_df.iloc[:500].iterrows(), chunksize= 100)
+            print(last_line_idx_of_ab, "hello")
+            print(len(ab_shard_df), "bye")
+            ab_shard_df = ab_shard_df.iloc[last_line_idx_of_ab:]
+
+            xy_map_iterator = pool.imap(_create_xy, ab_shard_df.iterrows(), chunksize= 100)
+            # xy_map_iterator = pool.imap(_create_xy, ab_shard_df.iloc[:500].iterrows(), chunksize= 100)
 
 
-            for model_input, one_sample_stat in tqdm.tqdm(xy_map_iterator, total=len(ab_shard_df.iloc[:500]), desc=f"[INFO] Converting ab shards {ab_shard_idx} to xy shards {last_shard_idx_of_xy} ..."):
+            for model_input, one_sample_stat in tqdm.tqdm(xy_map_iterator, total=len(ab_shard_df), desc=f"[INFO] Converting ab shards {ab_shard_idx} to xy shards {last_shard_idx_of_xy} / {number_of_shard}..."):
                 
                 stat.update_stat_with_another_stat(one_sample_stat)
 
-                if last_row_index < 1000:
+                if last_row_index < number_of_sample_per_shard:
                     placeholder_array[last_row_index] = np.concatenate([model_input.x, model_input.y, model_input.segment_ids, model_input.attention_mask], dtype=np.uint16)
                     last_row_index += 1
                 else:
                     save_xy_shard(placeholder_array, last_shard_idx_of_xy)
-                    placeholder_array = np.empty((1000, width), dtype=np.uint16)
+                    placeholder_array = np.empty((number_of_sample_per_shard, width), dtype=np.uint16)
                     last_shard_idx_of_xy += 1
                     last_row_index = 0
+            
+            last_line_idx_of_ab = 0
         
         # save last shard (slice last placeholder_array)
         save_xy_shard(placeholder_array[:last_row_index], last_shard_idx_of_xy)
