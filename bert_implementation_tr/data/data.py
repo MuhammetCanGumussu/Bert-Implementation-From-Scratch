@@ -3,22 +3,9 @@ tokenizer alfabeyi azalt
 tokenizer cased hale getir
 tokenizer (daha kök ve ekler şeklinde olması için farklı tokenizer'lar vs kullanılabilir bakılacak) [pretokenize aşamasında yapılabilir ancak henüz bunu yapabilecek bir sistem bulamadım]
 
-
-yukarı dizinden burada import vs yapılacağı zaman geçici olarak cwd değiştirilebilir. Böylece tüm kodları güncellemekten kurtulunabilir.
-(dependency mantığı)
-
-INTEGRATION & UNIT TESTS:
-    - xy sistemi çalışıyor mu 
-    - read shard sistemi xy, doc, ab için çalışıyor mu
-    - visualization sistemi çalışıyor mu (ab, xy için, doc için yaptım mı hatırlamıyorum) 
-    - doc, ab, xy dosyaları yokken (yani 0'dan) çalışıyor mu (sayıların beklediğin gibi mi)
-    - her alt sistem (doc, ab, xy) en son kaldıkları yerden devam edebiliyorlar mı
-    - farklı configler ile testleri tekrarla
-    - tokenizer yokken test et
-    - random word set yokken test et
-    - tokenizer sistemini test et (beklenen veri yoksa) {bu arada alfabe azalt ve Cased şeklinde test et} [yeni-farklı bir tokenizer eğitildiğinde data ve random word set sistemi güncellenmesi gerek, bunu otomatize edebilir miyiz, ne kadar maliyetli olur gerek varmı]
-    - random word set sistemini test et
-
+exluded notNext sample sayısını track edebiliriz
+stat'da oranlar da olabilir (update yerine en son kaydedilirken)
+weighted loss net gerekiyor gözüküyor
 
 """
 import zeyrek
@@ -51,7 +38,7 @@ from data_aux import *
 
 
 # DEFAULT VALUES (değiştirilebilir/config/param)
-BLOCK_SIZE = 256
+BLOCK_SIZE = 512
 NUM_OF_DOCS_PER_SHARD = 4_000       # doc_shards ve ab_shards için
 NUM_TOKENS_PER_SHARD = 10_000_000   # xy_shards için, örn: 40_000 sample * 256 token ~ 10_000_000 tokens
 OVERLAP = BLOCK_SIZE // 2           # pencere hareketi/deltası kesinlikle 4 dene!
@@ -211,29 +198,29 @@ def get_docs_df() -> pd.DataFrame:
 
 
 
-def clean_shards_dir(shards_dir:str, num_shards:int) -> None:
-    files = os.listdir(shards_dir)
-    
-    for file in files:
-
-        # eğer xy_shards dizininde isek, extra stat.txt dosyası olacak, bu dosyanın silinmesini istemiyoruz
-        if file == "stat.txt":
-            continue
-
-        # dizin ile aynı prefix'e sahip olmayan dosyaları sil 
-        if not file.startswith(shards_dir.split("_")[0]):
-            print(f"[INFO] {shards_dir}/{file} removed, not expected file in this dir...")
-            os.remove(shards_dir + "/" + file)
-            continue
-
-        # dosyanın shard index'ini al
-        last_shard_idx = int(file.split("_")[2].split(".")[0])
-
-        # beklenen aralık dışındaki indexli dosyaları sil
-        if last_shard_idx >= num_shards or last_shard_idx < 0:
-            os.remove(shards_dir + "/" + file)
-            print(f"[INFO] {shards_dir}/{file} removed, not expected index range: {last_shard_idx} >= {num_shards} or {last_shard_idx} < 0...")
-            continue
+#def clean_shards_dir(shards_dir:str, num_shards:int) -> None:
+#    files = os.listdir(shards_dir)
+#    
+#    for file in files:
+#
+#        # eğer xy_shards dizininde isek, extra stat.txt dosyası olacak, bu dosyanın silinmesini istemiyoruz
+#        if file == "stat.txt":
+#            continue
+#
+#        # dizin ile aynı prefix'e sahip olmayan dosyaları sil 
+#        if not file.startswith(shards_dir.split("_")[0]):
+#            print(f"[INFO] {shards_dir}/{file} removed, not expected file in this dir...")
+#            os.remove(shards_dir + "/" + file)
+#            continue
+#
+#        # dosyanın shard index'ini al
+#        last_shard_idx = int(file.split("_")[2].split(".")[0])
+#
+#        # beklenen aralık dışındaki indexli dosyaları sil
+#        if last_shard_idx >= num_shards or last_shard_idx < 0:
+#            os.remove(shards_dir + "/" + file)
+#            print(f"[INFO] {shards_dir}/{file} removed, not expected index range: {last_shard_idx} >= {num_shards} or {last_shard_idx} < 0...")
+#            continue
 
 
 
@@ -246,24 +233,22 @@ def create_doc_shards(docs_df):
     extra_shard_len = 0
 
     if len(docs_df) % num_shards != 0:
-        extra_shard_len = len(docs_df) % num_shards
+        extra_shard_len = len(docs_df) % NUM_OF_DOCS_PER_SHARD
         num_shards += 1
+
         
     doc_shards_dir = "doc_shards"
     os.makedirs("doc_shards", exist_ok=True)
 
-    clean_shards_dir(doc_shards_dir, num_shards)
-
-    # son var olan shard dosyasından bir sonraki dosya indexini al + 1 ile
+    #clean_shards_dir(doc_shards_dir, num_shards)
     last_shard_idx = get_last_shard_idx(doc_shards_dir) + 1
-
 
     # beklenen tüm dosyalar hali hazırda mevcut ise, çık
     if last_shard_idx == num_shards:
         print(f"[INFO] Expected number of doc shard files are already exists. Exiting...")
         return
     
-    print(f"[INFO] Creating doc shard files, continues (or starts) from {last_shard_idx}...")
+    print(f"[INFO] Creating doc shard files, starts from {0}...")
 
     if extra_shard_len:
         print(f"[INFO] Extra shard needed. Number of doc will be placed in extra shard: {extra_shard_len}")
@@ -275,12 +260,13 @@ def create_doc_shards(docs_df):
 
 
     with tqdm.tqdm(total=num_shards, desc="Doc shards are being created") as pbar:
-        for last_shard_idx in range(last_shard_idx, num_shards):
+        for last_shard_idx in range(0, num_shards):
+
             # last iteration (extra shard)
             if last_shard_idx == num_shards - 1:
                 df_end_idx = df_start_idx + extra_shard_len
 
-                assert df_end_idx == len(docs_df)
+                assert df_end_idx == len(docs_df), f"df_end_idx: {df_end_idx}, len(docs_df): {len(docs_df)}"
                 assert (df_end_idx - df_start_idx) == extra_shard_len
 
                 docs_df.iloc[df_start_idx:df_end_idx].to_json(doc_shards_dir + "/" + f"doc_shard_{last_shard_idx}.json",
@@ -602,7 +588,7 @@ def create_ab_shards() -> None:
     os.makedirs(ab_dir_name, exist_ok=True)
 
     num_shards = len(os.listdir("doc_shards"))
-    clean_shards_dir(ab_dir_name, num_shards)
+    # clean_shards_dir(ab_dir_name, num_shards)
 
     # son var olan dosya idx'ini aldık bir sonrakinden devam edileceği için 1 ekledik
     last_shard_idx = get_last_shard_idx(ab_dir_name) + 1
@@ -615,7 +601,7 @@ def create_ab_shards() -> None:
     print(f"[INFO] Creating ab shard files, continues (or starts) from {last_shard_idx}...")
 
     for shard_idx in range(last_shard_idx, num_shards):
-        docs_shard_df = read_shard(f"doc_shards_{BLOCK_SIZE}/", shard_idx)
+        docs_shard_df = read_shard(f"doc_shards/", shard_idx, "pd")
     
         docs_shard_df["token_ids"] = None
         docs_shard_df["word_ids"] = None
@@ -624,8 +610,8 @@ def create_ab_shards() -> None:
         
         with mp.Pool(NUM_PROCESSES) as pool:
             # list[series]
-            docs_tokenized_pool = pool.imap(tokenize_and_sent_idx, docs_shard_df.iterrows(), chunksize= 100)
-            list_of_docs_tokenized = list(tqdm.tqdm(docs_tokenized_pool, total=len(docs_shard_df), desc=f"[INFO] Tokenization and sent_idx of docs, shard_{shard_idx}"))
+            docs_tokenized_pool = pool.imap(tokenize_and_sent_idx, docs_shard_df.iterrows(), chunksize= 200)
+            list_of_docs_tokenized = list(tqdm.tqdm(docs_tokenized_pool, total=len(docs_shard_df), desc=f"[INFO] Tokenization and sent_idx of docs, shard_{shard_idx} / {num_shards - 1}"))
 
         del docs_shard_df
         del docs_tokenized_pool
@@ -638,8 +624,8 @@ def create_ab_shards() -> None:
 
 
         with mp.Pool(NUM_PROCESSES) as pool:
-            # ab_pool = pool.imap(convert_doc_to_ab, [(shared_docs_tokenized_dict, idx) for idx in range(0, len_of_docs)], chunksize= 100)
-            ab_pool = pool.imap(convert_doc_to_ab, [(shared_docs_tokenized_dict, idx) for idx in range(0, len_of_docs)], chunksize= 100)
+            # ab_pool = pool.imap(convert_doc_to_ab, [(shared_docs_tokenized_dict, idx) for idx in range(0, len_of_docs)], chunksize= 200)
+            ab_pool = pool.imap(convert_doc_to_ab, [(shared_docs_tokenized_dict, idx) for idx in range(0, len_of_docs)], chunksize= 200)
             list_of_ab_dicts = list(tqdm.tqdm(ab_pool, total=len_of_docs, desc=f"[INFO] Converting docs to ab, shard_{shard_idx}"))
             ab_df = pd.concat([pd.DataFrame(each_ab_dict) for each_ab_dict in list_of_ab_dicts])
 
@@ -888,15 +874,7 @@ def load_xy_shard(shard_idx) -> np.ndarray:
     return np.load(f"xy_shards_{BLOCK_SIZE}/xy_shard_{shard_idx}.npy")
 
 
-def get_last_idxs_of_ab(last_line_idx_xy, block_size=BLOCK_SIZE) -> Tuple[int, int]:
-            num_lines = 0
-            for shard_id in os.listdir(f"ab_shards_{block_size}"):
-                with open(f"ab_shards_{block_size}/{shard_id}", "r", encoding="utf-8") as f:
-                    for line in f:
-                        if num_lines == last_line_idx_xy:
-                            return int(shard_id.split("_")[2].split(".")[0]), line
-                        num_lines += 1
-            raise IndexError("last_line_idx_xy value is unexpected...")
+
 
 
 def create_xy_shards() -> None:
@@ -908,22 +886,25 @@ def create_xy_shards() -> None:
     number_of_sample_per_shard = NUM_TOKENS_PER_SHARD // BLOCK_SIZE
 
     total_lines_in_ab = get_num_lines_from_ab_dir(block_size=f"{BLOCK_SIZE}") 
+    if total_lines_in_ab == 0:
+        print(f"[INFO] ab files are not exists. Exiting...")
+        return
+    
     number_of_shard = total_lines_in_ab // number_of_sample_per_shard if total_lines_in_ab % number_of_sample_per_shard == 0 else (total_lines_in_ab // number_of_sample_per_shard) + 1
 
-    clean_shards_dir(xy_dir, number_of_shard)
-    # son var olan dosya idx'ini aldık bir sonrakinden devam edileceği için 1 ekledik
+    # clean_shards_dir(xy_dir, number_of_shard)
     last_shard_idx_of_xy = get_last_shard_idx(xy_dir) + 1
-    last_shard_idx_of_ab, last_line_idx_of_ab = get_last_idxs_of_ab((last_shard_idx_of_xy  * number_of_sample_per_shard))
-    
-    #last_shard_idx_of_ab = ((last_shard_idx_of_xy  * number_of_sample_per_shard) // NUM_OF_DOCS_PER_SHARD )
-    #last_line_idx_of_ab = (last_shard_idx_of_xy  * number_of_sample_per_shard) % NUM_OF_DOCS_PER_SHARD
 
+
+    
     # beklenen tüm dosyalar hali hazırda mevcut ise, çık
     if last_shard_idx_of_xy == number_of_shard:
         print(f"[INFO] Expected {xy_dir} files are already exists. Exiting...")
         return
     
-    print(f"[INFO] Creating xy shard files, continues (or starts) from {last_shard_idx_of_ab} ab shard to {last_shard_idx_of_xy} xy shard...")
+    print(f"[INFO] Creating xy shard files, starts from 0...")
+
+    last_shard_idx_of_xy = 0
 
     # for stat.txt
     stat = Stat(block_size = BLOCK_SIZE)
@@ -937,18 +918,14 @@ def create_xy_shards() -> None:
         #placeholder_array = np.empty((1000, width), dtype=np.uint16)
         last_row_index = 0
         
-        for ab_shard_idx in range(last_shard_idx_of_ab, len(os.listdir(f"ab_shards_{BLOCK_SIZE}"))): 
+        for ab_shard_idx in range(len(os.listdir(f"ab_shards_{BLOCK_SIZE}"))): 
             ab_shard_df = read_shard(f"ab_shards_{BLOCK_SIZE}/", ab_shard_idx, return_type="pd")
 
-            print(last_line_idx_of_ab, "hello")
-            print(len(ab_shard_df), "bye")
-            ab_shard_df = ab_shard_df.iloc[last_line_idx_of_ab:]
-
-            xy_map_iterator = pool.imap(_create_xy, ab_shard_df.iterrows(), chunksize= 100)
-            # xy_map_iterator = pool.imap(_create_xy, ab_shard_df.iloc[:500].iterrows(), chunksize= 100)
+            xy_map_iterator = pool.imap(_create_xy, ab_shard_df.iterrows(), chunksize= 200)
+            # xy_map_iterator = pool.imap(_create_xy, ab_shard_df.iloc[:500].iterrows(), chunksize= 200)
 
 
-            for model_input, one_sample_stat in tqdm.tqdm(xy_map_iterator, total=len(ab_shard_df), desc=f"[INFO] Converting ab shards {ab_shard_idx} to xy shards {last_shard_idx_of_xy} / {number_of_shard}..."):
+            for model_input, one_sample_stat in tqdm.tqdm(xy_map_iterator, total=len(ab_shard_df), desc=f"[INFO] Converting ab shards {ab_shard_idx} to xy shards {last_shard_idx_of_xy} / {number_of_shard - 1}..."):
                 
                 stat.update_stat_with_another_stat(one_sample_stat)
 
@@ -961,9 +938,9 @@ def create_xy_shards() -> None:
                     last_shard_idx_of_xy += 1
                     last_row_index = 0
             
-            last_line_idx_of_ab = 0
         
         # save last shard (slice last placeholder_array)
+        print(f"[INFO] Converting ab shards {ab_shard_idx} to xy shards {last_shard_idx_of_xy} / {number_of_shard - 1}, Last shard...")
         save_xy_shard(placeholder_array[:last_row_index], last_shard_idx_of_xy)
 
         # save stat
@@ -976,19 +953,19 @@ def create_xy_shards() -> None:
 
 if __name__ == "__main__":
 
-    #print(f"[INFO] Number of processes: {NUM_PROCESSES}")
-#
-    #appy_seed()
-#
-    #docs_df = get_docs_df()
-#
-    #create_doc_shards(docs_df)
-#
-    ## free resource
-    #del docs_df
-#
-    #create_ab_shards()
-#
+    print(f"[INFO] Number of processes: {NUM_PROCESSES}")
+
+    appy_seed()
+
+    docs_df = get_docs_df()
+
+    create_doc_shards(docs_df)
+
+    # free resource
+    del docs_df
+
+    create_ab_shards()
+
     create_xy_shards()
 
     

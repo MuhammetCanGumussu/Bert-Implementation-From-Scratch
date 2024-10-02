@@ -14,6 +14,9 @@ data/preprocess_and_stats/merged.raw
 
 data/doc_shards
 data/ab_shards_256
+data/ab_shards_512
+data/xy_shards_256
+data/xy_shards_512
 
 
 # tüm data dir'i ignore edip sadece data.py'ı track etmeyi dene, beceremedim şimdilik
