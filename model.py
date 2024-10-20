@@ -13,7 +13,7 @@ def deneme():
 
 @dataclass
 class BertConfig:
-    vocab_size = 30522
+    vocab_size = 32000
     hidden_size = 768
     num_hidden_layers = 12
     num_attention_heads = 12
@@ -24,10 +24,10 @@ class BertConfig:
     max_position_embeddings = 512
     initializer_range = 0.02
     layer_norm_eps = 1e-12
+    type_vocab_size = 2
     classifier_dropout = None
     # bakılacak
     pad_token_id = deneme()
-
 
 
 
@@ -48,7 +48,6 @@ class BertOutput(nn.Module):
 
 
 
-
 class BertIntermediate(nn.Module):
     def __init__(self, config: BertConfig):
         super().__init__()
@@ -61,7 +60,6 @@ class BertIntermediate(nn.Module):
         hidden_states = self.dense(hidden_states)
         hidden_states = self.intermediate_act_fn(hidden_states)
         return hidden_states
-
 
 
 
@@ -79,7 +77,6 @@ class BertSelfOutput(nn.Module):
         hidden_states = self.dropout(hidden_states)
         hidden_states = self.LayerNorm(hidden_states + input_tensor)
         return hidden_states
-
 
 
 
@@ -113,7 +110,6 @@ class BertSelfAttention(nn.Module):
         contexts = contexts.transpose(1, 2).contiguous().view(hidden_states.size(0), hidden_states.size(1), self.all_head_size) 
         
         return contexts
-
 
 
 
@@ -152,7 +148,6 @@ class BertLayer(nn.Module):
 
 
 
-
 class BertEmbeddings(nn.Module):
     def __init__(self, config: BertConfig):
         super().__init__()
@@ -180,18 +175,16 @@ class BertEmbeddings(nn.Module):
 
 
 
-
 class BertEncoder(nn.Module):
     def __init__(self, config: BertConfig):
         super().__init__()
         # bakılacak
-        self.layers = nn.ModuleList([BertLayer(config) for _ in range(config.num_hidden_layers)])
+        self.layer = nn.ModuleList([BertLayer(config) for _ in range(config.num_hidden_layers)])
     
     def forward(self, hidden_states, attention_mask) -> torch.Tensor:
-        for layer_module in self.layers:
+        for layer_module in self.layer:
             hidden_states = layer_module(hidden_states, attention_mask)
         return hidden_states
-
 
 
 
@@ -207,7 +200,6 @@ class BertPooler(nn.Module):
         pooled_output = self.dense(first_token_tensor)
         pooled_output = self.activation(pooled_output)
         return pooled_output
-
 
 
 
@@ -267,8 +259,6 @@ class BertModel(nn.Module):
         return last_hidden_state, pooled_output
 
 
-
-
 class BertPreTrainingHeads(nn.Module):
     """MLM and NSP heads"""
     def __init__(self, config: BertConfig):
@@ -286,9 +276,6 @@ class BertPreTrainingHeads(nn.Module):
 
 
 
-
-
-
 @dataclass
 class BertForPreTrainingOutput():
     loss: Optional[torch.FloatTensor] = None
@@ -296,7 +283,7 @@ class BertForPreTrainingOutput():
     seq_relationship_logits: torch.FloatTensor = None
 
 
-class BertForPretraining(nn.Module):
+class BertForPreTraining(nn.Module):
     
     def __init__(self, config: BertConfig):
         super().__init__()
@@ -306,7 +293,7 @@ class BertForPretraining(nn.Module):
         self.bert = BertModel(config)
         self.cls = BertPreTrainingHeads(config)
 
-        self._init_weights()
+        # self._init_weights()
 
     def forward(
             self, 
@@ -346,15 +333,15 @@ class BertForPretraining(nn.Module):
 
        # create a from-scratch initialized BertForPretraining model
        config = BertConfig()
-       model = BertForPretraining(config)
+       model = cls(config)
        sd = model.state_dict()
        sd_keys = sd.keys()
 
-       from transformers import BertForPretraining
+       from transformers import BertForPreTraining
        print("loading weights from pretrained bert: %s" % "dbmdz/bert-base-turkish-cased")
 
        # init a huggingface/transformers model
-       model_hf = BertForPretraining.from_pretrained("dbmdz/bert-base-turkish-cased")
+       model_hf = BertForPreTraining.from_pretrained("dbmdz/bert-base-turkish-cased")
        sd_hf = model_hf.state_dict()
        sd_keys_hf = sd_hf.keys()
        
@@ -370,15 +357,6 @@ class BertForPretraining(nn.Module):
        return model
 
    
-
-
-
-
-
-
-
-
-
 
 
 
