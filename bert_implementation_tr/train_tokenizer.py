@@ -21,7 +21,7 @@ else:
 
 
 VOCAB_SIZE = 32_000   
-LIMIT_ALPHABET = 1_000
+LIMIT_ALPHABET = 1_000  # TODO: 100 yeterli
 MIN_FREQUENCY = 2
 SAVE_PATH = "tr_wordpiece_tokenizer_cased.json"
 

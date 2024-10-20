@@ -26,8 +26,6 @@ class VisualizeInputAB:
     ab: pd.Series
 
 
-
-
 @dataclass
 class FillInput:
     mask_word_array: np.ndarray 

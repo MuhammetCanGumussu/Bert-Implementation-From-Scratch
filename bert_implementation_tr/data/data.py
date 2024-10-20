@@ -6,19 +6,15 @@ tokenizer (daha kök ve ekler şeklinde olması için farklı tokenizer'lar vs k
 exluded notNext sample sayısını track edebiliriz
 stat'da oranlar da olabilir (update yerine en son kaydedilirken)
 weighted loss net gerekiyor gözüküyor
+tokenizer, random word set vs ayrıca test edilecek
 
 """
-import zeyrek
-analyzer = zeyrek.MorphAnalyzer()
 
 # standard library
 import os
 import sys
-import json
-import logging
 import random
 import multiprocessing as mp
-from multiprocessing.managers import DictProxy
 from typing import List, Tuple
 
 
@@ -28,7 +24,7 @@ import tqdm
 import numpy as np
 import pandas as pd
 from transformers import PreTrainedTokenizerFast
-from tokenizers import Tokenizer, decoders
+from tokenizers import Tokenizer
 
 # local
 from data_aux import *
@@ -853,9 +849,6 @@ def _create_xy(ab_row: pd.Series | tuple[int, pd.Series], stat_needed: bool = Tr
 
 
 
-
-
-
 def get_num_lines_from_ab_dir(block_size: str) -> int:
     """read and count all lines of spesified dir"""
     num_lines = 0
@@ -872,9 +865,6 @@ def save_xy_shard(placeholder_array, shard_idx) -> None:
 
 def load_xy_shard(shard_idx) -> np.ndarray:
     return np.load(f"xy_shards_{BLOCK_SIZE}/xy_shard_{shard_idx}.npy")
-
-
-
 
 
 def create_xy_shards() -> None:
