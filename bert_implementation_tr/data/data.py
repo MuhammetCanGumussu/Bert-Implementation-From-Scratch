@@ -23,11 +23,10 @@ import spacy
 import tqdm
 import numpy as np
 import pandas as pd
-from transformers import PreTrainedTokenizerFast
-from tokenizers import Tokenizer
+
 
 # local
-from data_aux import *
+from .data_aux import *
 
 
 
@@ -62,28 +61,7 @@ def get_random_word_set():
     
     return random_word_set_dict
 
-def get_tokenizer(tokenizer_path=tokenizer_path, fast=True):
 
-    if not os.path.exists(tokenizer_path):
-        print(f"[INFO] there is no tokenizer file to wrap with fast tokenizer in {tokenizer_path} Please train tokenizer first...")
-        exit(0)
-    
-    if fast:
-        tokenizer = PreTrainedTokenizerFast(
-            tokenizer_file = tokenizer_path, # You can load from the tokenizer file, alternatively
-            unk_token="[UNK]",
-            pad_token="[PAD]",
-            cls_token="[CLS]",
-            sep_token="[SEP]",
-            mask_token="[MASK]",
-            clean_up_tokenization_spaces=True   # default olarak ta True ancak future warning ilerde False olacağını belirtti.
-                                                # ilerde problem olmaması için (ve tabiki future warning almamak için) açıkca True yaptık
-        )
-             
-    else:
-        tokenizer = Tokenizer.from_file(tokenizer_path, clean_up_tokenization_spaces=True)
-
-    return tokenizer
 
 
 tokenizer = get_tokenizer(fast=True)
@@ -102,21 +80,6 @@ sent_seperator = spacy.load("xx_sent_ud_sm")
 def appy_seed(number=13013):
     random.seed(42) # reproducibility
 
-def get_merged_files():
-
-    raw_dir = os.path.join(os.path.dirname(__file__), "raw")
-
-    files = os.listdir(raw_dir)
-
-    print(f"[INFO] Files in dir: {files}...")
-
-    merged_file_content = ""
-
-    for raw_file in files:
-        with open(os.path.join(raw_dir, raw_file), encoding="utf-8") as raw:
-            merged_file_content += (raw.read() + "\n")
-
-    return merged_file_content
 
 def delete_subtitles_from_docs(docs):
     """

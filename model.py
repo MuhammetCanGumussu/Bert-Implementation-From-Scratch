@@ -1,7 +1,7 @@
 """Heavily inspired by HuggingFace BERT model: "https://github.com/huggingface/transformers/blob/v4.45.2/src/transformers/models/bert/modeling_bert.py#L529"""
 
 from dataclasses import dataclass
-from typing import Optional, Tuple
+from typing import Optional, Union, Tuple, List
 
 import torch
 import torch.nn as nn
@@ -99,6 +99,7 @@ class BertSelfAttention(nn.Module):
         self.value = nn.Linear(config.hidden_size, self.all_head_size)
 
         self.attention_probs_dropout_prob = config.attention_probs_dropout_prob
+        
 
     
     def forward(self, hidden_states, attention_mask) -> torch.Tensor:        
@@ -106,10 +107,11 @@ class BertSelfAttention(nn.Module):
         k = self.key(hidden_states).view(hidden_states.size(0), hidden_states.size(1), self.num_attention_heads, self.attention_head_size).transpose(1, 2)
         v = self.value(hidden_states).view(hidden_states.size(0), hidden_states.size(1), self.num_attention_heads, self.attention_head_size).transpose(1, 2)
 
-        contexts = F.scaled_dot_product_attention(q, k, v, attention_mask, dropout_p=self.attention_probs_dropout_prob, is_causal=False)
-        contexts = contexts.transpose(1, 2).contiguous().view(hidden_states.size(0), hidden_states.size(1), self.all_head_size) 
+        dropout_p = self.attention_probs_dropout_prob if self.training else 0.0
+        y = F.scaled_dot_product_attention(q, k, v, attention_mask, dropout_p=dropout_p, is_causal=False)
+        y = y.transpose(1, 2).contiguous().view(hidden_states.size(0), hidden_states.size(1), self.all_head_size) 
         
-        return contexts
+        return y
 
 
 
@@ -161,11 +163,9 @@ class BertEmbeddings(nn.Module):
         self.dropout = nn.Dropout(config.hidden_dropout_prob)
 
 
-    def forward(self, input_ids, token_type_ids) -> torch.Tensor:
+    def forward(self, input_ids, token_type_ids, position_ids) -> torch.Tensor:
         input_embeddings = self.word_embeddings(input_ids)
         token_type_embeddings = self.token_type_embeddings(token_type_ids)
-
-        position_ids = torch.arange(input_embeddings.size(1), dtype=torch.long, device=input_embeddings.device)
         position_embeddings = self.position_embeddings(position_ids)
 
         embeddings = input_embeddings + token_type_embeddings + position_embeddings
@@ -230,7 +230,8 @@ class BertLMPredictionHead(nn.Module):
         self.decoder = nn.Linear(config.hidden_size, config.vocab_size, bias=False) 
         self.bias = nn.Parameter(torch.zeros(config.vocab_size))
 
-        # bakılacak
+        # decoder.bias is False means it is None
+        # parameter sharing (now self.decoder.bias reference(pointer logic) self.bias tensor (same memory/object))
         self.decoder.bias = self.bias
 
     def forward(self, hidden_states: torch.Tensor) -> torch.Tensor:
@@ -250,9 +251,11 @@ class BertModel(nn.Module):
         self.pooler = BertPooler(config)
 
 
-    def forward(self, input_ids, attention_mask, token_type_ids) -> Tuple[torch.Tensor]:
+    def forward(self, input_ids, attention_mask, token_type_ids, position_ids) -> Tuple[torch.Tensor]:
+        if position_ids is None:
+            position_ids = torch.arange(input_ids.size(1), dtype=torch.long, device=input_ids.device)
         
-        embedding_output = self.embeddings(input_ids, token_type_ids)
+        embedding_output = self.embeddings(input_ids, token_type_ids, position_ids)
         last_hidden_state = self.encoder(embedding_output, attention_mask)
         pooled_output = self.pooler(last_hidden_state)
 
@@ -293,6 +296,9 @@ class BertForPreTraining(nn.Module):
         self.bert = BertModel(config)
         self.cls = BertPreTrainingHeads(config)
 
+        # weight sharing scheme
+        self.bert.embeddings.word_embeddings.weight = self.cls.predictions.decoder.weight
+
         # self._init_weights()
 
     def forward(
@@ -300,14 +306,12 @@ class BertForPreTraining(nn.Module):
             input_ids: torch.Tensor,
             attention_mask: torch.Tensor,
             token_type_ids: torch.Tensor,
+            position_ids: torch.Tensor = None,
             labels: Optional[torch.Tensor] = None,
             next_sentence_label: Optional[torch.Tensor] = None 
     ) -> BertForPreTrainingOutput:
         
-
-        outputs = self.bert(input_ids, attention_mask, token_type_ids)
-
-        last_hidden_state, pooled_output = outputs
+        last_hidden_state, pooled_output = self.bert(input_ids, attention_mask, token_type_ids, position_ids)
         prediction_logits, seq_relationship_logits = self.cls(last_hidden_state, pooled_output)
             
         total_loss = None
@@ -326,7 +330,8 @@ class BertForPreTraining(nn.Module):
             seq_relationship_logits=seq_relationship_logits,
         )
             
-    
+    # bakılacak: save % load checkpoint mekanizması yapılacak
+
     @classmethod
     def from_pretrained(cls):
        """Loads pretrained BerTurk model weights from huggingface"""
@@ -357,6 +362,110 @@ class BertForPreTraining(nn.Module):
        return model
 
    
+
+
+
+from transformers import PreTrainedTokenizer
+class FillMaskPipeline():
+    def __init__(self, model: BertForPreTraining, tokenizer: PreTrainedTokenizer):
+        self.model = model
+        self.tokenizer = tokenizer
+
+    def __call__(self, text: Union[str, List[str]], max_length: Optional[int] = 100, sampling_strategy: Optional[str] = "greedy", num_sample: Optional[int] = 5) -> None:
+        """
+        if greedy is False, then top-k sampling is used (select top-k then apply multinomial)
+        
+        Args:
+            sampling_strategy (str, optional): --- "greedy" selects the top probability (deterministic), "top-k" selects the top k probabilities then multinomial sampling (stochastic)
+            num_sample (int, optional): --- print k top probabilities, whether the strategy is greedy or top-k sampling 
+        """
+        if sampling_strategy != "greedy" or sampling_strategy != "top-k":
+            raise ValueError(f"sampling strategy not supported: {sampling_strategy}")
+
+        if isinstance(text, str):
+            text = "[CLS] " + text + " [SEP]"
+        else:
+            for i, t in enumerate(text):
+                text[i] = "[CLS] " + t + " [SEP]"
+        
+        encoding = self.tokenizer(text, padding="longest", return_tensors="pt").to(self.model.bert.embeddings.word_embeddings.weight.device) # :D
+        
+        if encoding["input_ids"].size(1) > max_length:
+            raise ValueError(f"text too long: {encoding['input_ids'].size(1)} > {max_length}")
+        
+
+        mask_idx = torch.where(encoding["input_ids"] == self.tokenizer.mask_token_id)[1]
+
+        with torch.no_grad():
+            self.model.eval()
+
+            # B, T, V
+            model_output = self.model(**encoding).prediction_logits
+            mask_logits = model_output[:, mask_idx, :]  # B, V
+            mask_probs = F.softmax(mask_logits, dim=-1) # B, V
+
+            if sampling_strategy == "greedy":
+                topk_probs, topk_indices = torch.topk(mask_probs, num_sample, dim=-1)
+                for b_idx in range(mask_probs.size(0)):
+                    tokens_and_scores = dict()
+                    for token_prob, token_id in zip(topk_probs[b_idx].tolist(), topk_indices[b_idx].tolist()):
+                        tokens_and_scores["token"] = self.tokenizer.convert_ids_to_tokens(token_id)
+                        tokens_and_scores["score"] = token_prob 
+                    print(f"Text: {text[b_idx]}, Top {num_sample} Predictions: {tokens_and_scores}")
+
+            else: # sampling_strategy == "top-k":  
+
+                topk_probs, topk_indices = torch.topk(mask_probs, 50, dim=-1)   # topk_probs: (B, 50), topk_indices: (B, 50)
+                ix = torch.multinomial(topk_probs, num_sample) # (B, num_sample)
+                sampled_token_ids = torch.gather(topk_indices, -1, ix) # (B, 50) --> (B, num_sample)
+                sampled_token_probs = torch.gather(topk_probs, -1, ix) # (B, 50) --> (B, num_sample)
+
+                for b_idx in range(mask_probs.size(0)):
+                    tokens_and_scores = dict()
+                    for token_prob, token_id in zip(sampled_token_probs[b_idx].tolist(), sampled_token_ids[b_idx].tolist()):
+                        tokens_and_scores["token"] = self.tokenizer.convert_ids_to_tokens(token_id)
+                        tokens_and_scores["score"] = token_prob 
+                    print(f"Text: {text[b_idx]}, Top {num_sample} Predictions-> {tokens_and_scores}")
+
+
+
+class IsNextPipeline():
+    def __init__(self, model, tokenizer):
+        self.model = model
+        self.tokenizer = tokenizer
+
+    def __call__(self, text: List[str, str] | List[List[str, str]], max_length: Optional[int] = 100) -> None:
+        # A'nın uzunluğu max uzunluğu aşarsa hata verecek
+        if isinstance(text[0], str):
+            text = "[CLS] " + text[0] + " [SEP]" + text[1] + " [SEP]"
+        else:
+            for i, t in enumerate(text):
+                text[i] = "[CLS] " + t[0] + " [SEP]" + t[1] + " [SEP]"
+
+        encoding = self.tokenizer(text, padding="longest", return_tensors="pt").to(self.model.bert.embeddings.word_embeddings.weight.device)
+
+        if encoding["input_ids"].size(1) > max_length:
+            raise ValueError(f"text too long: {encoding['input_ids'].size(1)} > {max_length}")
+        
+        # encoder.token_type_ids is all 0 due to lack of "postprocess" component in tokenizer (i will fix it later)
+        # because of this reason we need to create token_type_ids by ourselves
+        token_type_ids = torch.ones_like(encoding["input_ids"])
+        first_sep_indices = torch.argmax((encoding["input_ids"] == self.tokenizer.sep_token_id), dim=1)
+
+        for i in torch.arange(token_type_ids.size(0)):
+            token_type_ids[i, :first_sep_indices[i]] = 0
+
+        encoding["token_type_ids"] = token_type_ids
+
+        with torch.no_grad():
+            self.model.eval()
+
+            # B, 2
+            nsp_logits = self.model(**encoding).seq_relationship_logits
+            nsp_probs = F.softmax(nsp_logits, dim=-1) # B, V
+
+            for b_idx in range(nsp_logits.size(0)):
+                print(f"Text: {text[b_idx]}, Predictions-> { f'isNext: {nsp_probs[b_idx][1].item()}, notNext: {nsp_probs[b_idx][0].item()}' }")
 
 
 

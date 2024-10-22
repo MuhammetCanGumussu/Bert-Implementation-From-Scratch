@@ -1,9 +1,14 @@
 
+import os
 from dataclasses import dataclass, asdict
 from typing import Tuple
 import numpy as np
 import pandas as pd
-import ast
+
+from tokenizers import Tokenizer
+from transformers import PreTrainedTokenizerFast
+
+
 
 
 @dataclass
@@ -95,3 +100,51 @@ class Stat:
                 key, value = Stat.parse_line(line)
                 data[key] = value
         return cls(**data)
+    
+
+
+def get_merged_files():
+
+    raw_dir = os.path.join(os.path.dirname(__file__), "raw")
+
+    files = os.listdir(raw_dir)
+
+    print(f"[INFO] Files in dir: {files}...")
+
+    merged_file_content = ""
+
+    for raw_file in files:
+        with open(os.path.join(raw_dir, raw_file), encoding="utf-8") as raw:
+            merged_file_content += (raw.read() + "\n")
+
+    return merged_file_content
+
+
+
+# TODO: path işlerini vs ayarla
+SAVE_PATH = "C:/Users/user/Desktop/Bert Implementation Tr/bert_implementation_tr/tr_wordpiece_tokenizer_cased.json"
+
+def get_tokenizer(tokenizer_path=SAVE_PATH, fast=True):
+    
+
+    if not os.path.exists(tokenizer_path):
+        print(f"[INFO] there is no tokenizer file to wrap with fast tokenizer in {tokenizer_path} Please train tokenizer first...")
+        import sys
+        sys.exit(0)
+    
+    if fast:
+        tokenizer = PreTrainedTokenizerFast(
+            tokenizer_file = tokenizer_path, # You can load from the tokenizer file, alternatively
+            unk_token="[UNK]",
+            pad_token="[PAD]",
+            cls_token="[CLS]",
+            sep_token="[SEP]",
+            mask_token="[MASK]",
+            clean_up_tokenization_spaces=True   # default olarak ta True ancak future warning ilerde False olacağını belirtti.
+                                                # ilerde problem olmaması için (ve tabiki future warning almamak için) açıkca True yaptık
+        )
+             
+    else:
+        tokenizer = Tokenizer.from_file(tokenizer_path)
+
+    return tokenizer
