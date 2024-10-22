@@ -6,6 +6,7 @@ from typing import Optional, Union, Tuple, List
 import torch
 import torch.nn as nn
 from torch.nn import functional as F
+from transformers import PreTrainedTokenizerFast
 
 
 def deneme():
@@ -103,11 +104,17 @@ class BertSelfAttention(nn.Module):
 
     
     def forward(self, hidden_states, attention_mask) -> torch.Tensor:        
+        # (B, num_heads, T, head_size)
         q = self.query(hidden_states).view(hidden_states.size(0), hidden_states.size(1), self.num_attention_heads, self.attention_head_size).transpose(1, 2)
         k = self.key(hidden_states).view(hidden_states.size(0), hidden_states.size(1), self.num_attention_heads, self.attention_head_size).transpose(1, 2)
         v = self.value(hidden_states).view(hidden_states.size(0), hidden_states.size(1), self.num_attention_heads, self.attention_head_size).transpose(1, 2)
 
+        # bakılacak (head_dimli şekilde vermem gerekiyor F.scaled için (bu fonk dimlere göre head sayısını vs anlıyor yani ayrıca head ile alakalı vs param almıyor))
+        # (B, 1, T, 1): singleton'lar broadcast edilecek
+        attention_mask = attention_mask.view(hidden_states.size(0), 1, hidden_states.size(1), 1)
+
         dropout_p = self.attention_probs_dropout_prob if self.training else 0.0
+
         y = F.scaled_dot_product_attention(q, k, v, attention_mask, dropout_p=dropout_p, is_causal=False)
         y = y.transpose(1, 2).contiguous().view(hidden_states.size(0), hidden_states.size(1), self.all_head_size) 
         
@@ -365,114 +372,96 @@ class BertForPreTraining(nn.Module):
 
 
 
-from transformers import PreTrainedTokenizer
+
+
 class FillMaskPipeline():
-    def __init__(self, model: BertForPreTraining, tokenizer: PreTrainedTokenizer):
+    def __init__(self, model: BertForPreTraining, tokenizer: PreTrainedTokenizerFast):
         self.model = model
         self.tokenizer = tokenizer
+        self.max_length = self.model.bert.config.max_position_embeddings
 
-    def __call__(self, text: Union[str, List[str]], max_length: Optional[int] = 100, sampling_strategy: Optional[str] = "greedy", num_sample: Optional[int] = 5) -> None:
-        """
-        if greedy is False, then top-k sampling is used (select top-k then apply multinomial)
-        
-        Args:
-            sampling_strategy (str, optional): --- "greedy" selects the top probability (deterministic), "top-k" selects the top k probabilities then multinomial sampling (stochastic)
-            num_sample (int, optional): --- print k top probabilities, whether the strategy is greedy or top-k sampling 
-        """
-        if sampling_strategy != "greedy" or sampling_strategy != "top-k":
-            raise ValueError(f"sampling strategy not supported: {sampling_strategy}")
+    def __call__(self, text: List[str]) -> None:
 
-        if isinstance(text, str):
-            text = "[CLS] " + text + " [SEP]"
-        else:
-            for i, t in enumerate(text):
-                text[i] = "[CLS] " + t + " [SEP]"
-        
-        encoding = self.tokenizer(text, padding="longest", return_tensors="pt").to(self.model.bert.embeddings.word_embeddings.weight.device) # :D
-        
-        if encoding["input_ids"].size(1) > max_length:
-            raise ValueError(f"text too long: {encoding['input_ids'].size(1)} > {max_length}")
-        
+        text_with_special_tokens = []
+        for t in text:
+            if "[MASK]" not in t:
+                raise ValueError(f"mask token not found in text: {t}")
+            text_with_special_tokens.append("[CLS] " + t + " [SEP]")
 
-        mask_idx = torch.where(encoding["input_ids"] == self.tokenizer.mask_token_id)[1]
+
+        encoding = self.tokenizer(text_with_special_tokens, padding="longest", return_tensors="pt").to(self.model.bert.embeddings.word_embeddings.weight.device)
+        encoding["attention_mask"] = encoding["attention_mask"].to(torch.bool)
+
+        if encoding["input_ids"].size(1) > self.max_length:
+            raise ValueError(f"text too long: {encoding['input_ids'].size(1)} > {self.max_length}")
+        
+        mask_row_idxs, mask_col_idxs = torch.where(encoding["input_ids"] == self.tokenizer.mask_token_id)
 
         with torch.no_grad():
             self.model.eval()
-
             # B, T, V
-            model_output = self.model(**encoding).prediction_logits
-            mask_logits = model_output[:, mask_idx, :]  # B, V
-            mask_probs = F.softmax(mask_logits, dim=-1) # B, V
+            model_prediction_logits = self.model(**encoding).prediction_logits
+            # B, V
+            model_mask_logits = model_prediction_logits[mask_row_idxs, mask_col_idxs, :]    
+            # B, V
+            model_mask_probs = F.softmax(model_mask_logits, dim=-1)
+            # B, 50
+            topk_probs, topk_indices = torch.topk(model_mask_probs, 50, dim=-1)
+            # B, 5
+            sampled_ids = torch.multinomial(topk_probs, 5) 
+            # B, 5
+            sampled_token_ids = torch.gather(topk_indices, -1, sampled_ids)
+            sampled_token_probs = torch.gather(topk_probs, -1, sampled_ids)
 
-            if sampling_strategy == "greedy":
-                topk_probs, topk_indices = torch.topk(mask_probs, num_sample, dim=-1)
-                for b_idx in range(mask_probs.size(0)):
-                    tokens_and_scores = dict()
-                    for token_prob, token_id in zip(topk_probs[b_idx].tolist(), topk_indices[b_idx].tolist()):
-                        tokens_and_scores["token"] = self.tokenizer.convert_ids_to_tokens(token_id)
-                        tokens_and_scores["score"] = token_prob 
-                    print(f"Text: {text[b_idx]}, Top {num_sample} Predictions: {tokens_and_scores}")
-
-            else: # sampling_strategy == "top-k":  
-
-                topk_probs, topk_indices = torch.topk(mask_probs, 50, dim=-1)   # topk_probs: (B, 50), topk_indices: (B, 50)
-                ix = torch.multinomial(topk_probs, num_sample) # (B, num_sample)
-                sampled_token_ids = torch.gather(topk_indices, -1, ix) # (B, 50) --> (B, num_sample)
-                sampled_token_probs = torch.gather(topk_probs, -1, ix) # (B, 50) --> (B, num_sample)
-
-                for b_idx in range(mask_probs.size(0)):
-                    tokens_and_scores = dict()
-                    for token_prob, token_id in zip(sampled_token_probs[b_idx].tolist(), sampled_token_ids[b_idx].tolist()):
-                        tokens_and_scores["token"] = self.tokenizer.convert_ids_to_tokens(token_id)
-                        tokens_and_scores["score"] = token_prob 
-                    print(f"Text: {text[b_idx]}, Top {num_sample} Predictions-> {tokens_and_scores}")
+            for b_idx in range(topk_probs.size(0)):
+                d = {"token_str":[], "score":[]}
+                for i in range(5):
+                    d["score"].append(format(sampled_token_probs[b_idx][i].item(), '.3f'))
+                    d["token_str"].append(self.tokenizer.convert_ids_to_tokens(sampled_token_ids[b_idx][i].item()))
+                
+                print(f"Text: {text[b_idx]} ----> Top 5 Predictions: {d}")
 
 
 
+ 
 class IsNextPipeline():
     def __init__(self, model, tokenizer):
         self.model = model
         self.tokenizer = tokenizer
+        self.max_length = self.model.bert.config.max_position_embeddings
 
-    def __call__(self, text: List[str, str] | List[List[str, str]], max_length: Optional[int] = 100) -> None:
-        # A'nın uzunluğu max uzunluğu aşarsa hata verecek
-        if isinstance(text[0], str):
-            text = "[CLS] " + text[0] + " [SEP]" + text[1] + " [SEP]"
-        else:
-            for i, t in enumerate(text):
-                text[i] = "[CLS] " + t[0] + " [SEP]" + t[1] + " [SEP]"
-
-        encoding = self.tokenizer(text, padding="longest", return_tensors="pt").to(self.model.bert.embeddings.word_embeddings.weight.device)
-
-        if encoding["input_ids"].size(1) > max_length:
-            raise ValueError(f"text too long: {encoding['input_ids'].size(1)} > {max_length}")
+    def __call__(self, text: List[List[str]]) -> None:
+        text_with_special_tokens = []
+        for l_str in text:
+            textA = l_str[0]
+            textB = l_str[1]
+            text_with_special_tokens.append("[CLS] " + textA + " [SEP] " + textB + " [SEP]")
         
-        # encoder.token_type_ids is all 0 due to lack of "postprocess" component in tokenizer (i will fix it later)
-        # because of this reason we need to create token_type_ids by ourselves
+            
+        encoding = self.tokenizer(text_with_special_tokens, padding="longest", return_tensors="pt").to(self.model.bert.embeddings.word_embeddings.weight.device)
+        encoding["attention_mask"] = encoding["attention_mask"].to(torch.bool)
+
+        if encoding["input_ids"].size(1) > self.max_length:
+            raise ValueError(f"text too long: {encoding['input_ids'].size(1)} > {self.max_length}")
+        
         token_type_ids = torch.ones_like(encoding["input_ids"])
-        first_sep_indices = torch.argmax((encoding["input_ids"] == self.tokenizer.sep_token_id), dim=1)
+        first_sep_indices = torch.argmax(((encoding["input_ids"] == self.tokenizer.sep_token_id)).to(torch.int), dim=1)
 
-        for i in torch.arange(token_type_ids.size(0)):
+        for i in range(encoding["input_ids"].size(0)):
             token_type_ids[i, :first_sep_indices[i]] = 0
-
+        
         encoding["token_type_ids"] = token_type_ids
 
         with torch.no_grad():
             self.model.eval()
 
             # B, 2
-            nsp_logits = self.model(**encoding).seq_relationship_logits
-            nsp_probs = F.softmax(nsp_logits, dim=-1) # B, V
+            model_seq_logits = self.model(**encoding).seq_relationship_logits
+            # B, 2
+            nsp_probs = F.softmax(model_seq_logits, dim=-1) 
 
-            for b_idx in range(nsp_logits.size(0)):
-                print(f"Text: {text[b_idx]}, Predictions-> { f'isNext: {nsp_probs[b_idx][1].item()}, notNext: {nsp_probs[b_idx][0].item()}' }")
-
-
-
+            for b_idx in range(model_seq_logits.size(0)):
+                print(f"Text: {text[b_idx]} Predictions ----> { f'isNext: {nsp_probs[b_idx][0].item():.3f}, notNext: {nsp_probs[b_idx][1].item():.3f}' }")         
 
 
-
-
-
-
-
+-
