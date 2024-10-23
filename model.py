@@ -402,8 +402,6 @@ class FillMaskPipeline():
 
         encoding = self.tokenizer(text_with_special_tokens, padding="longest", return_tensors="pt").to(self.model.bert.embeddings.word_embeddings.weight.device)
         encoding["attention_mask"] = encoding["attention_mask"].to(torch.bool)
-        print("encoding_input_id_tensor device: ", encoding["input_ids"].device)
-        print("encoding_input_id_tensor dtype: ", encoding["input_ids"].dtype)
         if encoding["input_ids"].size(1) > self.max_length:
             raise ValueError(f"text too long: {encoding['input_ids'].size(1)} > {self.max_length}")
         
@@ -411,7 +409,6 @@ class FillMaskPipeline():
 
         with torch.no_grad():
             self.model.eval()
-            print("model device: ", self.model.bert.embeddings.word_embeddings.weight.device)
             # B, T, V
             model_prediction_logits = self.model(**encoding).prediction_logits
             # B, V

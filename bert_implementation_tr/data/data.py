@@ -42,10 +42,11 @@ TAMPON = 10                         # block penceresi sınırlarını tamponluyo
 
 NUM_PROCESSES = (os.cpu_count() - 1) if os.cpu_count() > 1 else 1
 
-if os.getcwd() == os.path.dirname(__file__):
-    tokenizer_path = "../tr_wordpiece_tokenizer_cased.json"
-else:
-    tokenizer_path = "./tr_wordpiece_tokenizer_cased.json"
+# bakılacak: data aux'a koyuldu
+# if os.getcwd() == os.path.dirname(__file__):
+#     tokenizer_path = "../tr_wordpiece_tokenizer_cased.json"
+# else:
+#     tokenizer_path = "./tr_wordpiece_tokenizer_cased.json"
 
 def get_random_word_set():
     if not os.path.exists("random_word_set.json"):
@@ -243,23 +244,24 @@ def create_doc_shards(docs_df):
             df_end_idx += NUM_OF_DOCS_PER_SHARD
             pbar.update()
 
-def get_last_shard_idx(shards_dir:str) -> int:
-    """-1 return ederse dizinde hiç shard dosyası yok demektir"""
-    files = os.listdir(shards_dir)
-    last_shard_idx = -1
-    for file in files:
-
-        # eğer xy_shards dizininde isek, extra stat.txt dosyası olacak, atla
-        if file == "stat.txt":
-            continue
-
-        # dizin ile aynı prefix'e sahip olmayan dosyaları atla (zaten olmaması gerek ancak her ihtimale karşı)
-        if not file.startswith(shards_dir.split("_")[0]):
-            continue
-
-        last_shard_idx += 1
-        
-    return last_shard_idx 
+# bakılacak: data aux'a koyuldu
+# def get_last_shard_idx(shards_dir:str) -> int:
+#     """-1 return ederse dizinde hiç shard dosyası yok demektir"""
+#     files = os.listdir(shards_dir)
+#     last_shard_idx = -1
+#     for file in files:
+# 
+#         # eğer xy_shards dizininde isek, extra stat.txt dosyası olacak, atla
+#         if file == "stat.txt":
+#             continue
+# 
+#         # dizin ile aynı prefix'e sahip olmayan dosyaları atla (zaten olmaması gerek ancak her ihtimale karşı)
+#         if not file.startswith(shards_dir.split("_")[0]):
+#             continue
+# 
+#         last_shard_idx += 1
+#         
+#     return last_shard_idx 
 
 def read_shard(shard_dir: str, shard_idx: int, return_type: str) -> pd.DataFrame | dict[str, list] | np.ndarray:
 
@@ -465,76 +467,76 @@ def convert_doc_to_ab(args: Tuple, block_size: int = BLOCK_SIZE,
 
 
 
-
-def _visualize_ab(sample: VisualizeInputAB):
-        print(f"A: {sample.ab['A_token_ids']}")
-        print(f"B: {sample.ab['B_token_ids']}")
-        print(f"A_decoded: {tokenizer.decode(sample.ab['A_token_ids'])}")
-        print(f"B_decoded: {tokenizer.decode(sample.ab['B_token_ids'])}")
-        print(f"len_of_A: {len(sample.ab['A_token_ids'])}")
-        print(f"len_of_B: {len(sample.ab['B_token_ids'])}")
-        print(f"A_word_ids: {sample.ab['A_word_ids']}")
-        print(f"B_word_ids: {sample.ab['B_word_ids']}")
-        print(f"len_of_A_word_ids: {len(sample.ab['A_word_ids'])}")
-        print(f"len_of_B_word_ids: {len(sample.ab['B_word_ids'])}")
-        print(f"sum_of_AB_tokens: {len(sample.ab['B_word_ids']) + len(sample.ab['A_word_ids'])}")
-        print(f"isNext: {sample.ab['isNext']}")
-        
-        print("---------------\n")
-
-
-def _visualize_model_input(sample: VisualizeModelInput):
-
-    show_attention_and_segment = sample.show_attention_and_segment
-    show_ids = sample.show_ids
-    sample = sample.model_input
-    
-    print(f"x_decoded: {tokenizer.decode(sample.x)}")
-    print(f"y_decoded: {tokenizer.decode(sample.y)}\n")
-
-    # sep_idx = np.where(sample.x == SEP_TOKEN_ID)[0][0]
-    # print(f"A_x: {tokenizer.decode(sample.x[:sep_idx], skip_special_tokens=True)}")
-    # print(f"B_x: {tokenizer.decode(sample.x[sep_idx:], skip_special_tokens=True)}\n")
-    
-    
-    if show_attention_and_segment == True:
-        print(f"attention_mask: {sample.attention_mask}")
-        print(f"segment_ids: {sample.segment_ids}\n")
-
-    mask_of_filled = (sample.y != PAD_TOKEN_ID)
-    x_filled = sample.x[mask_of_filled]
-
-    # tokenların hizalı olabilmesi için pd.Dataframe kullanacağım
-    print_df = pd.DataFrame({
-        "X_FILLED": ["----------"] + [tokenizer.decode(token_id) for token_id in sample.x[mask_of_filled]],
-        "Y_FILLED": ["----------"] + [tokenizer.decode(token_id) for token_id in sample.y[mask_of_filled]],
-    })
-    print(print_df.to_string(index=False))
-
-    print(f"\nisNext: {sample.y[0] == 1}")
-    print(f"number_of_mask_token: {print_df['X_FILLED'].value_counts()['[MASK]']}")
-    print(f"number_of_filled_token: {len(print_df) - 1}\n")
-
-    print(f"\nlen_of_x: {len(sample.x)}")
-    print(f"len_of_y: {len(sample.y)}\n")
-    print(f"")
-
-    if show_ids == True:
-        print(f"x_ids: {sample.x}")
-        print(f"y_ids: {sample.y}")
-    
-    print("---------------\n")
-
-
-
-def visualize_sample(sample: VisualizeInputAB | VisualizeModelInput):
-    """"""
-    if isinstance(sample, VisualizeModelInput):
-        _visualize_model_input(sample)
-    elif isinstance(sample, VisualizeInputAB):  
-        _visualize_ab(sample)
-    else:
-        raise TypeError("sample must be VisualizeInputAB or VisualizeModelInput")
+# bakılacak: bunu da data aux'a koydum
+#def _visualize_ab(sample: VisualizeInputAB):
+#        print(f"A: {sample.ab['A_token_ids']}")
+#        print(f"B: {sample.ab['B_token_ids']}")
+#        print(f"A_decoded: {tokenizer.decode(sample.ab['A_token_ids'])}")
+#        print(f"B_decoded: {tokenizer.decode(sample.ab['B_token_ids'])}")
+#        print(f"len_of_A: {len(sample.ab['A_token_ids'])}")
+#        print(f"len_of_B: {len(sample.ab['B_token_ids'])}")
+#        print(f"A_word_ids: {sample.ab['A_word_ids']}")
+#        print(f"B_word_ids: {sample.ab['B_word_ids']}")
+#        print(f"len_of_A_word_ids: {len(sample.ab['A_word_ids'])}")
+#        print(f"len_of_B_word_ids: {len(sample.ab['B_word_ids'])}")
+#        print(f"sum_of_AB_tokens: {len(sample.ab['B_word_ids']) + len(sample.ab['A_word_ids'])}")
+#        print(f"isNext: {sample.ab['isNext']}")
+#        
+#        print("---------------\n")
+#
+#
+#def _visualize_model_input(sample: VisualizeModelInput):
+#
+#    show_attention_and_segment = sample.show_attention_and_segment
+#    show_ids = sample.show_ids
+#    sample = sample.model_input
+#    
+#    print(f"x_decoded: {tokenizer.decode(sample.x)}")
+#    print(f"y_decoded: {tokenizer.decode(sample.y)}\n")
+#
+#    # sep_idx = np.where(sample.x == SEP_TOKEN_ID)[0][0]
+#    # print(f"A_x: {tokenizer.decode(sample.x[:sep_idx], skip_special_tokens=True)}")
+#    # print(f"B_x: {tokenizer.decode(sample.x[sep_idx:], skip_special_tokens=True)}\n")
+#    
+#    
+#    if show_attention_and_segment == True:
+#        print(f"attention_mask: {sample.attention_mask}")
+#        print(f"segment_ids: {sample.segment_ids}\n")
+#
+#    mask_of_filled = (sample.y != PAD_TOKEN_ID)
+#    x_filled = sample.x[mask_of_filled]
+#
+#    # tokenların hizalı olabilmesi için pd.Dataframe kullanacağım
+#    print_df = pd.DataFrame({
+#        "X_FILLED": ["----------"] + [tokenizer.decode(token_id) for token_id in sample.x[mask_of_filled]],
+#        "Y_FILLED": ["----------"] + [tokenizer.decode(token_id) for token_id in sample.y[mask_of_filled]],
+#    })
+#    print(print_df.to_string(index=False))
+#
+#    print(f"\nisNext: {sample.y[0] == 1}")
+#    print(f"number_of_mask_token: {print_df['X_FILLED'].value_counts()['[MASK]']}")
+#    print(f"number_of_filled_token: {len(print_df) - 1}\n")
+#
+#    print(f"\nlen_of_x: {len(sample.x)}")
+#    print(f"len_of_y: {len(sample.y)}\n")
+#    print(f"")
+#
+#    if show_ids == True:
+#        print(f"x_ids: {sample.x}")
+#        print(f"y_ids: {sample.y}")
+#    
+#    print("---------------\n")
+#
+#
+#
+#def visualize_sample(sample: VisualizeInputAB | VisualizeModelInput):
+#    """"""
+#    if isinstance(sample, VisualizeModelInput):
+#        _visualize_model_input(sample)
+#    elif isinstance(sample, VisualizeInputAB):  
+#        _visualize_ab(sample)
+#    else:
+#        raise TypeError("sample must be VisualizeInputAB or VisualizeModelInput")
 
 
 
@@ -821,13 +823,13 @@ def get_num_lines_from_ab_dir(block_size: str) -> int:
                 num_lines += 1
     return num_lines
 
-
-def save_xy_shard(placeholder_array, shard_idx) -> None:
-    np.save(f"xy_shards_{BLOCK_SIZE}/xy_shard_{shard_idx}.npy", placeholder_array)
-                        
-
-def load_xy_shard(shard_idx) -> np.ndarray:
-    return np.load(f"xy_shards_{BLOCK_SIZE}/xy_shard_{shard_idx}.npy")
+# bakılacak: data aux'a koyuldu
+# def save_xy_shard(placeholder_array, shard_idx) -> None:
+#     np.save(f"xy_shards_{BLOCK_SIZE}/xy_shard_{shard_idx}.npy", placeholder_array)
+#                         
+# 
+# def load_xy_shard(shard_idx) -> np.ndarray:
+#     return np.load(f"xy_shards_{BLOCK_SIZE}/xy_shard_{shard_idx}.npy")
 
 
 def create_xy_shards() -> None:
