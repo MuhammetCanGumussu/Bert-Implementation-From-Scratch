@@ -81,6 +81,12 @@ class BertSelfOutput(nn.Module):
 
 
 
+
+
+
+
+
+
 class BertSelfAttention(nn.Module):
     def __init__(self, config: BertConfig):
         super().__init__()
@@ -109,10 +115,9 @@ class BertSelfAttention(nn.Module):
         k = self.key(hidden_states).view(hidden_states.size(0), hidden_states.size(1), self.num_attention_heads, self.attention_head_size).transpose(1, 2)
         v = self.value(hidden_states).view(hidden_states.size(0), hidden_states.size(1), self.num_attention_heads, self.attention_head_size).transpose(1, 2)
 
-        # bakılacak (head_dimli şekilde vermem gerekiyor F.scaled için (bu fonk dimlere göre head sayısını vs anlıyor yani ayrıca head ile alakalı vs param almıyor))
-        # (B, 1, T, 1): singleton'lar broadcast edilecek
-        attention_mask = attention_mask.view(hidden_states.size(0), 1, hidden_states.size(1), 1)
-
+        B, T = attention_mask.shape
+        # (B, 1, 1, T) : this will be broadcasted to (B, num_heads, T, T) in scaled_dot_product_attention
+        attention_mask = attention_mask.view(B, 1, 1, T)
         dropout_p = self.attention_probs_dropout_prob if self.training else 0.0
 
         y = F.scaled_dot_product_attention(q, k, v, attention_mask, dropout_p=dropout_p, is_causal=False)
@@ -375,12 +380,18 @@ class BertForPreTraining(nn.Module):
 
 
 class FillMaskPipeline():
-    def __init__(self, model: BertForPreTraining, tokenizer: PreTrainedTokenizerFast):
+    """"default top-50 multinomial sampling if strategy is multionomial, else top-50 greedy sampling"""
+    def __init__(self, model: BertForPreTraining, tokenizer: PreTrainedTokenizerFast, strategy: str = "multinomial"):
         self.model = model
         self.tokenizer = tokenizer
         self.max_length = self.model.bert.config.max_position_embeddings
+        self.strategy = strategy
 
     def __call__(self, text: List[str]) -> None:
+        
+        if self.strategy not in ["multinomial", "greedy"]:
+            raise ValueError(f"unknown strategy: {self.strategy}")
+
 
         text_with_special_tokens = []
         for t in text:
@@ -391,7 +402,8 @@ class FillMaskPipeline():
 
         encoding = self.tokenizer(text_with_special_tokens, padding="longest", return_tensors="pt").to(self.model.bert.embeddings.word_embeddings.weight.device)
         encoding["attention_mask"] = encoding["attention_mask"].to(torch.bool)
-
+        print("encoding_input_id_tensor device: ", encoding["input_ids"].device)
+        print("encoding_input_id_tensor dtype: ", encoding["input_ids"].dtype)
         if encoding["input_ids"].size(1) > self.max_length:
             raise ValueError(f"text too long: {encoding['input_ids'].size(1)} > {self.max_length}")
         
@@ -399,14 +411,20 @@ class FillMaskPipeline():
 
         with torch.no_grad():
             self.model.eval()
+            print("model device: ", self.model.bert.embeddings.word_embeddings.weight.device)
             # B, T, V
             model_prediction_logits = self.model(**encoding).prediction_logits
             # B, V
             model_mask_logits = model_prediction_logits[mask_row_idxs, mask_col_idxs, :]    
             # B, V
             model_mask_probs = F.softmax(model_mask_logits, dim=-1)
-            # B, 50
-            topk_probs, topk_indices = torch.topk(model_mask_probs, 50, dim=-1)
+            if self.strategy == "multinomial":
+                # B, 50
+                topk_probs, topk_indices = torch.topk(model_mask_probs, 50, dim=-1)
+            else:
+                # top 5 probs will automatically be selected in multinomial below (kind of cheaty but it works as greedy)
+                # B, 5
+                topk_probs, topk_indices = torch.topk(model_mask_probs, 5, dim=-1)
             # B, 5
             sampled_ids = torch.multinomial(topk_probs, 5) 
             # B, 5
@@ -416,7 +434,7 @@ class FillMaskPipeline():
             for b_idx in range(topk_probs.size(0)):
                 d = {"token_str":[], "score":[]}
                 for i in range(5):
-                    d["score"].append(format(sampled_token_probs[b_idx][i].item(), '.3f'))
+                    d["score"].append(format(sampled_token_probs[b_idx][i].item(), '.4f'))
                     d["token_str"].append(self.tokenizer.convert_ids_to_tokens(sampled_token_ids[b_idx][i].item()))
                 
                 print(f"Text: {text[b_idx]} ----> Top 5 Predictions: {d}")
@@ -464,4 +482,3 @@ class IsNextPipeline():
                 print(f"Text: {text[b_idx]} Predictions ----> { f'isNext: {nsp_probs[b_idx][0].item():.3f}, notNext: {nsp_probs[b_idx][1].item():.3f}' }")         
 
 
--
