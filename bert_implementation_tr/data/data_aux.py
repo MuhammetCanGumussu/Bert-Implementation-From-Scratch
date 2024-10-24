@@ -9,8 +9,36 @@ import torch
 from tokenizers import Tokenizer
 from transformers import PreTrainedTokenizerFast
 
+# TODO: path işlerini vs ayarla
+SAVE_PATH = "C:/Users/user/Desktop/Bert Implementation Tr/bert_implementation_tr/tr_wordpiece_tokenizer_cased.json"
 
+def get_tokenizer(tokenizer_path=SAVE_PATH, fast=True):
+    
 
+    if not os.path.exists(tokenizer_path):
+        print(f"[INFO] there is no tokenizer file to wrap with fast tokenizer in {tokenizer_path} Please train tokenizer first...")
+        import sys
+        sys.exit(0)
+    
+    if fast:
+        tokenizer = PreTrainedTokenizerFast(
+            tokenizer_file = tokenizer_path, # You can load from the tokenizer file, alternatively
+            unk_token="[UNK]",
+            pad_token="[PAD]",
+            cls_token="[CLS]",
+            sep_token="[SEP]",
+            mask_token="[MASK]",
+            clean_up_tokenization_spaces=True   # default olarak ta True ancak future warning ilerde False olacağını belirtti.
+                                                # ilerde problem olmaması için (ve tabiki future warning almamak için) açıkca True yaptık
+        )
+             
+    else:
+        tokenizer = Tokenizer.from_file(tokenizer_path)
+
+    return tokenizer
+
+# geçici silinecek (data.py'da labels'da cls tokeni full pad olarak verildiğinde buna ve alttaki olaya gerek kalmayacak)
+TEMP_PAD_TOKEN_ID = get_tokenizer().convert_tokens_to_ids("[PAD]")
 
 @dataclass
 class ModelInput:
@@ -33,19 +61,32 @@ class ModelInput:
         )
     
     @staticmethod
-    def from_numpy_to_tensors_dict(np_array: np.ndarray, block_size: int, device: torch.device | str) -> dict:
+    def from_numpy_to_tensors_dict(np_array: np.ndarray, block_size: int) -> dict:
         """
         ModelInput return edip daha sonra asdict ile dict'e çevirmek eğitim sırasında gereksiz maliyet olabilir (from_numpy_to_tensors).
         Bundan dolayı direkt dict return eden bu static method kullanılmalı (from_numpy_to_tensors_dict).
         """
+
+        # geçici çözüm, data.py'da halledilecek
+        # data.py'da : en sağa is next eklenecek ayrı olarak, y'de pad token yerine ignore idx kullanacak yani -100
+        labels = torch.tensor(np_array[:, block_size:2 * block_size], dtype=torch.long)
+        labels[:, 0] = TEMP_PAD_TOKEN_ID
+
+        # "..." token'ı kaynaklı (vocab'ı 32001 yaptı) geçici çözüm:
+        # 32000 id'sini gördüğümüz elemanları "." token'ı yapacağım
+        # "..." -> "." 
+        labels[labels == 32000] = 18
+        input_ids = torch.tensor(np_array[:, :block_size], dtype=torch.long)
+        input_ids[input_ids == 32000] = 18
+
         return dict(
             # sıraya dikkat : x -> y -> segment_ids -> attention_mask
             # np array genişliği: x + y + segment_ids + attention_mask --> (BLOCK_SIZE * 4)
-            input_ids = torch.tensor(np_array[:, :block_size], dtype=torch.long, device=device),
-            labels = torch.tensor(np_array[:, block_size:2 * block_size], dtype=torch.long, device=device),
-            token_type_ids = torch.tensor(np_array[:, 2 * block_size:3 * block_size], dtype=torch.long, device=device),
-            attention_mask= torch.tensor(np_array[:, 3 * block_size:], dtype=torch.bool, device=device),
-            next_sentence_label = torch.tensor(np_array[:, block_size], dtype=torch.long, device=device)
+            input_ids = input_ids,
+            labels = labels,
+            token_type_ids = torch.tensor(np_array[:, 2 * block_size:3 * block_size], dtype=torch.long),
+            attention_mask= torch.tensor(np_array[:, 3 * block_size:], dtype=torch.bool),
+            next_sentence_label = torch.tensor(np_array[:, block_size], dtype=torch.long)
         )
 
 
@@ -150,33 +191,7 @@ def get_merged_files():
 
 
 
-# TODO: path işlerini vs ayarla
-SAVE_PATH = "C:/Users/user/Desktop/Bert Implementation Tr/bert_implementation_tr/tr_wordpiece_tokenizer_cased.json"
 
-def get_tokenizer(tokenizer_path=SAVE_PATH, fast=True):
-    
-
-    if not os.path.exists(tokenizer_path):
-        print(f"[INFO] there is no tokenizer file to wrap with fast tokenizer in {tokenizer_path} Please train tokenizer first...")
-        import sys
-        sys.exit(0)
-    
-    if fast:
-        tokenizer = PreTrainedTokenizerFast(
-            tokenizer_file = tokenizer_path, # You can load from the tokenizer file, alternatively
-            unk_token="[UNK]",
-            pad_token="[PAD]",
-            cls_token="[CLS]",
-            sep_token="[SEP]",
-            mask_token="[MASK]",
-            clean_up_tokenization_spaces=True   # default olarak ta True ancak future warning ilerde False olacağını belirtti.
-                                                # ilerde problem olmaması için (ve tabiki future warning almamak için) açıkca True yaptık
-        )
-             
-    else:
-        tokenizer = Tokenizer.from_file(tokenizer_path)
-
-    return tokenizer
 
 
 def _visualize_ab(sample: VisualizeInputAB):

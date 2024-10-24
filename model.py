@@ -9,8 +9,9 @@ from torch.nn import functional as F
 from transformers import PreTrainedTokenizerFast
 
 
-def deneme():
-    return 0
+def get_pad_id():
+    from bert_implementation_tr.data.data_aux import get_tokenizer
+    return get_tokenizer().convert_tokens_to_ids("[PAD]")
 
 @dataclass
 class BertConfig:
@@ -23,12 +24,13 @@ class BertConfig:
     hidden_dropout_prob = 0.1
     attention_probs_dropout_prob = 0.1
     max_position_embeddings = 512
+    # 768 ve diğer model türleri için yaklaşık fan değeri 0.02 imiş
     initializer_range = 0.02
     layer_norm_eps = 1e-12
     type_vocab_size = 2
     classifier_dropout = None
     # bakılacak
-    pad_token_id = deneme()
+    pad_token_id = get_pad_id()
 
 
 
@@ -78,11 +80,6 @@ class BertSelfOutput(nn.Module):
         hidden_states = self.dropout(hidden_states)
         hidden_states = self.LayerNorm(hidden_states + input_tensor)
         return hidden_states
-
-
-
-
-
 
 
 
@@ -176,6 +173,9 @@ class BertEmbeddings(nn.Module):
 
 
     def forward(self, input_ids, token_type_ids, position_ids) -> torch.Tensor:
+        # bakılacak: geçici assertion
+        assert input_ids.max().item() < self.word_embeddings.num_embeddings, f"[ERROR]: input_id_max:{input_ids.max().item()} , num_embeddings: {self.word_embeddings.num_embeddings}"
+
         input_embeddings = self.word_embeddings(input_ids)
         token_type_embeddings = self.token_type_embeddings(token_type_ids)
         position_embeddings = self.position_embeddings(position_ids)
@@ -294,6 +294,8 @@ class BertPreTrainingHeads(nn.Module):
 @dataclass
 class BertForPreTrainingOutput():
     loss: Optional[torch.FloatTensor] = None
+    mlm_loss: Optional[torch.FloatTensor] = None
+    nsp_loss: Optional[torch.FloatTensor] = None
     prediction_logits: torch.FloatTensor = None
     seq_relationship_logits: torch.FloatTensor = None
 
@@ -311,7 +313,8 @@ class BertForPreTraining(nn.Module):
         # weight sharing scheme
         self.bert.embeddings.word_embeddings.weight = self.cls.predictions.decoder.weight
 
-        # self._init_weights()
+        # initialize weights
+        self.apply(self._init_weights)
 
     def forward(
             self, 
@@ -328,21 +331,42 @@ class BertForPreTraining(nn.Module):
             
         total_loss = None
         if labels is not None and next_sentence_label is not None:
-            loss_fct = nn.CrossEntropyLoss(ignore_index=self.config.pad_token_id)
-            # bakılacak: pad id'lerden loss alınıyor mu alınmıyor mu?
-            masked_lm_loss = loss_fct(prediction_logits.view(-1, self.config.vocab_size), labels.view(-1))
+            loss_fct_mlm = nn.CrossEntropyLoss(ignore_index = self.config.pad_token_id)
+            loss_fct_nsp = nn.CrossEntropyLoss(ignore_index = -100)
+
+            masked_lm_loss = loss_fct_mlm(prediction_logits.view(-1, self.config.vocab_size), labels.view(-1))
             # bakılacak: focal loss (ce'de weight parametresi) kullanılabilir (notNext, isNext'ten daha fazla old için)
-            next_sentence_loss = loss_fct(seq_relationship_logits.view(-1, 2), next_sentence_label.view(-1))
+            # print(next_sentence_label.view(-1))
+            # print(seq_relationship_logits.view(-1, 2))
+            # print("probs: ", F.softmax(seq_relationship_logits.view(-1, 2), dim=-1))
+            next_sentence_loss = loss_fct_nsp(seq_relationship_logits.view(-1, 2), next_sentence_label.view(-1))
             total_loss = masked_lm_loss + next_sentence_loss
+            # print("mlm loss: ", masked_lm_loss)
+            # print("nsp loss: ", next_sentence_loss)
 
 
         return BertForPreTrainingOutput(
             loss=total_loss,
+            mlm_loss=masked_lm_loss,
+            nsp_loss=next_sentence_loss,
             prediction_logits=prediction_logits,
             seq_relationship_logits=seq_relationship_logits,
         )
             
     # bakılacak: save % load checkpoint mekanizması yapılacak
+
+    def _init_weights(self, module):
+        """Initialize the weights"""
+        if isinstance(module, nn.Linear):
+            module.weight.data.normal_(mean=0.0, std=self.config.initializer_range)
+            if module.bias is not None:
+                module.bias.data.zero_()
+        elif isinstance(module, nn.Embedding):
+            module.weight.data.normal_(mean=0.0, std=self.config.initializer_range)
+        elif isinstance(module, nn.LayerNorm):
+            module.bias.data.zero_()
+            module.weight.data.fill_(1.0)
+
 
     @classmethod
     def from_pretrained(cls):
