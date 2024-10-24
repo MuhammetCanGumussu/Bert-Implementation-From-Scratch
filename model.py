@@ -328,9 +328,9 @@ class BertForPreTraining(nn.Module):
             
         total_loss = None
         if labels is not None and next_sentence_label is not None:
-            loss_fct = nn.CrossEntropyLoss()
+            loss_fct = nn.CrossEntropyLoss(ignore_index=self.config.pad_token_id)
             # bakılacak: pad id'lerden loss alınıyor mu alınmıyor mu?
-            masked_lm_loss = loss_fct(prediction_logits.view(-1, self.config.vocab_size), labels.view(-1), ignore_index=self.config.pad_token_id)
+            masked_lm_loss = loss_fct(prediction_logits.view(-1, self.config.vocab_size), labels.view(-1))
             # bakılacak: focal loss (ce'de weight parametresi) kullanılabilir (notNext, isNext'ten daha fazla old için)
             next_sentence_loss = loss_fct(seq_relationship_logits.view(-1, 2), next_sentence_label.view(-1))
             total_loss = masked_lm_loss + next_sentence_loss

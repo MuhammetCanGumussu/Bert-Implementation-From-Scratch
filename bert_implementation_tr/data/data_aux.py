@@ -14,10 +14,10 @@ from transformers import PreTrainedTokenizerFast
 
 @dataclass
 class ModelInput:
-    x: np.ndarray | torch.Tensor
-    y: np.ndarray | torch.Tensor
+    input_ids: np.ndarray | torch.Tensor        # bakılacak: isimler model forward parametreleri ile uyumlu hale getirilecek
+    labels: np.ndarray | torch.Tensor
     attention_mask: np.ndarray | torch.Tensor
-    segment_ids: np.ndarray | torch.Tensor
+    token_type_ids: np.ndarray | torch.Tensor
     next_sentence_label: np.ndarray | torch.Tensor = None
     
     @classmethod
@@ -25,9 +25,25 @@ class ModelInput:
         return cls(
             # sıraya dikkat : x -> y -> segment_ids -> attention_mask
             # np array genişliği: x + y + segment_ids + attention_mask --> (BLOCK_SIZE * 4)
-            x = torch.tensor(np_array[:, :block_size], dtype=torch.long, device=device),
-            y = torch.tensor(np_array[:, block_size:2 * block_size], dtype=torch.long, device=device),
-            segment_ids = torch.tensor(np_array[:, 2 * block_size:3 * block_size], dtype=torch.long, device=device),
+            input_ids = torch.tensor(np_array[:, :block_size], dtype=torch.long, device=device),
+            labels = torch.tensor(np_array[:, block_size:2 * block_size], dtype=torch.long, device=device),
+            token_type_ids = torch.tensor(np_array[:, 2 * block_size:3 * block_size], dtype=torch.long, device=device),
+            attention_mask= torch.tensor(np_array[:, 3 * block_size:], dtype=torch.bool, device=device),
+            next_sentence_label = torch.tensor(np_array[:, block_size], dtype=torch.long, device=device)
+        )
+    
+    @staticmethod
+    def from_numpy_to_tensors_dict(np_array: np.ndarray, block_size: int, device: torch.device | str) -> dict:
+        """
+        ModelInput return edip daha sonra asdict ile dict'e çevirmek eğitim sırasında gereksiz maliyet olabilir (from_numpy_to_tensors).
+        Bundan dolayı direkt dict return eden bu static method kullanılmalı (from_numpy_to_tensors_dict).
+        """
+        return dict(
+            # sıraya dikkat : x -> y -> segment_ids -> attention_mask
+            # np array genişliği: x + y + segment_ids + attention_mask --> (BLOCK_SIZE * 4)
+            input_ids = torch.tensor(np_array[:, :block_size], dtype=torch.long, device=device),
+            labels = torch.tensor(np_array[:, block_size:2 * block_size], dtype=torch.long, device=device),
+            token_type_ids = torch.tensor(np_array[:, 2 * block_size:3 * block_size], dtype=torch.long, device=device),
             attention_mask= torch.tensor(np_array[:, 3 * block_size:], dtype=torch.bool, device=device),
             next_sentence_label = torch.tensor(np_array[:, block_size], dtype=torch.long, device=device)
         )
@@ -190,8 +206,8 @@ def _visualize_model_input(sample: VisualizeModelInput) -> None:
 
     tokenizer = get_tokenizer(SAVE_PATH, fast=True)
 
-    print(f"x_decoded: {tokenizer.decode(sample.x)}")
-    print(f"y_decoded: {tokenizer.decode(sample.y)}\n")
+    print(f"x_decoded: {tokenizer.decode(sample.input_ids)}")
+    print(f"y_decoded: {tokenizer.decode(sample.labels)}\n")
 
     # sep_idx = np.where(sample.x == SEP_TOKEN_ID)[0][0]
     # print(f"A_x: {tokenizer.decode(sample.x[:sep_idx], skip_special_tokens=True)}")
@@ -200,36 +216,36 @@ def _visualize_model_input(sample: VisualizeModelInput) -> None:
     
     if show_attention_and_segment == True:
         print(f"attention_mask: {sample.attention_mask}")
-        print(f"segment_ids: {sample.segment_ids}\n")
+        print(f"segment_ids: {sample.token_type_ids}\n")
 
-    mask_of_filled = (sample.y != tokenizer.convert_tokens_to_ids("[PAD]"))
-    x_filled = sample.x[mask_of_filled]
+    mask_of_filled = (sample.labels != tokenizer.convert_tokens_to_ids("[PAD]"))
+    x_filled = sample.input_ids[mask_of_filled]
 
     # tokenların hizalı olabilmesi için pd.Dataframe kullanacağım
     print_df = pd.DataFrame({
-        "X_FILLED": ["----------"] + [tokenizer.decode(token_id) for token_id in sample.x[mask_of_filled]],
-        "Y_FILLED": ["----------"] + [tokenizer.decode(token_id) for token_id in sample.y[mask_of_filled]],
+        "X_FILLED": ["----------"] + [tokenizer.decode(token_id) for token_id in sample.input_ids[mask_of_filled]],
+        "Y_FILLED": ["----------"] + [tokenizer.decode(token_id) for token_id in sample.labels[mask_of_filled]],
     })
     print(print_df.to_string(index=False))
 
-    print(f"\nisNext: {sample.y[0] == 1}")
+    print(f"\nisNext: {sample.labels[0] == 1}")
     print(f"number_of_mask_token: {print_df['X_FILLED'].value_counts()['[MASK]']}")
     print(f"number_of_filled_token: {len(print_df) - 1}\n")
 
-    print(f"\nlen_of_x: {len(sample.x)}")
-    print(f"len_of_y: {len(sample.y)}\n")
+    print(f"\nlen_of_x: {len(sample.input_ids)}")
+    print(f"len_of_y: {len(sample.labels)}\n")
     print(f"")
 
     if show_ids == True:
-        print(f"x_ids: {sample.x}")
-        print(f"y_ids: {sample.y}")
+        print(f"x_ids: {sample.input_ids}")
+        print(f"y_ids: {sample.labels}\n")
     
     print("---------------\n")
 
 
 
 def visualize_sample(sample: VisualizeInputAB | VisualizeModelInput):
-    """"""
+    """Be careful, this function works for just one sample"""
     if isinstance(sample, VisualizeModelInput):
         _visualize_model_input(sample)
     elif isinstance(sample, VisualizeInputAB):  
