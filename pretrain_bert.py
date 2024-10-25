@@ -3,17 +3,29 @@
 from dataclasses import dataclass
 import os
 import sys
+import time
 
 import torch
 import torch.nn as nn
 from torch.nn import functional as F
 
-from bert_implementation_tr.data.data_aux import ModelInput, Stat, load_xy_shard, get_last_shard_idx
+
+
 from model import BertConfig, BertForPreTraining
+from bert_implementation_tr.data.data_aux import (
+    ModelInput,
+    Stat,
+    load_xy_shard,
+    get_last_shard_idx
+)
+
+import torch._dynamo
+
+torch._dynamo.config.suppress_errors = True
 
 
 @dataclass
-class PreTrainConfig:
+class PreTrainBertConfig:
     block_size: int = 256
     do_train: bool = False
     do_eval: bool = False
@@ -93,36 +105,61 @@ torch.manual_seed(13013)
 if torch.cuda.is_available():
     torch.cuda.manual_seed(13013)
 
+pretrain_config = PreTrainBertConfig()
+B, T = pretrain_config.train_batch_size, pretrain_config.block_size
+
 # create data loader
-train_loader = DataLoaderCustom(batch_size=4, block_size=256, device=device)
+train_loader = DataLoaderCustom(batch_size=B, block_size=T, device=device)
+
+# tanım: gpu'daki operasyonlara/kernel'lara mm operasyon precisionunu ayarlıyor
+# yaklaşık x2 gain/hızlı oldu 3060rtx'de. Dikkat! actv ve parametreler hala float32
+# "high" parametresi ile mm operasyonları tf32'a dönüşüyor (ismine aldanma
+# precision bit azalıyor) (operasyon esnasında tf32)
+torch.set_float32_matmul_precision("high")
 
 # create model (randomly initialized)
-model = BertForPreTraining(BertConfig())
+cfg = BertConfig()
+cfg.num_hidden_layers = 2
+model = BertForPreTraining(cfg)
 
 # move model to device
 model.to(device)
-model.train()
-
+# model = torch.compile(model)
+# model = torch.compile(model, backend="cudagraphs")
+#torch.compile(m, backend="cudagraphs")
 
 # create optimizer
-optimizer = torch.optim.AdamW(model.parameters(), lr=1e-4)
+optimizer = torch.optim.AdamW(model.parameters(), lr = pretrain_config.learning_rate)
 
 
 for i in range(300):
+    t0 = time.time()
+
     model_input_batch = train_loader.next_batch()
+
     optimizer.zero_grad()
-    model_output = model(**model_input_batch)
+
+    # A100 (ampere architecture) ve sonrası (3060rtx de bu klasmanda) bfloat16 kullanabiliyor
+    # bu sayede gradscale kullanmaya gerek yok (float16'da gradscale gerekli)
+    # artık actv dtype'ları bfloat16 (yarı yarıya bir düşüş (tabi actv için paramlar klasik float32))
+    # torch.set_float32_matmul_precision("high") etkisi kalmadı bu arada
+    with torch.autocast(device_type=device, dtype=torch.bfloat16):
+        model_output = model(**model_input_batch)
+        # mport code; code.interact(local=locals())
+
     model_output.loss.backward()
+
     optimizer.step()
-    print(f"step {i}, total loss: {model_output.loss.item():.6}, mlm loss: {model_output.mlm_loss.item():.6}, nsp loss: {model_output.nsp_loss.item():.6}")
+
+    # wait for all kernels (gpu operations/processes) to finish
+    torch.cuda.synchronize()
+
+    t1 = time.time()
+    dt = (t1 - t0)*1000
+    tokens_per_second = (train_loader.batch_size * train_loader.block_size) / (t1 - t0)
+    print(f"step {i}, total loss: {model_output.loss.item():.6}, mlm loss: {model_output.mlm_loss.item():.6}, nsp loss: {model_output.nsp_loss.item():.6}, dt: {dt:.2f}ms, tok/sec: {tokens_per_second:.2f} tokens/sec")
 
 
-
-
-# print(model_input_batch["next_sentence_label"])
-# print("loss: ", model_output.loss.item()) 
-# print("seq_relationship_logits: ", model_output.seq_relationship_logits) 
-# print("prediction_logits: ", model_output.prediction_logits)
 
 
 

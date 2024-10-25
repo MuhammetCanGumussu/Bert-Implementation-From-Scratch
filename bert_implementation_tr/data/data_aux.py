@@ -9,6 +9,8 @@ import torch
 from tokenizers import Tokenizer
 from transformers import PreTrainedTokenizerFast
 
+
+
 # TODO: path işlerini vs ayarla
 SAVE_PATH = "C:/Users/user/Desktop/Bert Implementation Tr/bert_implementation_tr/tr_wordpiece_tokenizer_cased.json"
 
@@ -301,3 +303,6 @@ def load_xy_shard(shard_idx, block_size=DENEME) -> np.ndarray:
     if (shard_idx < 0) or (shard_idx > get_last_shard_idx(f"bert_implementation_tr/data/xy_shards_{block_size}")):
         raise IndexError(f"shard idx must be >= 0 and <= {get_last_shard_idx(f'bert_implementation_tr/data/xy_shards_{block_size}')}, shard_idx you gave was: {shard_idx}")
     return np.load(f"bert_implementation_tr/data/xy_shards_{block_size}/xy_shard_{shard_idx}.npy")
+
+
+
