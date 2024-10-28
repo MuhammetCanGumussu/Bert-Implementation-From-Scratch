@@ -122,6 +122,15 @@ class OneSampleStat:
     number_of_not_accepted_word: int = 0
 
 
+
+@dataclass
+class DataloaderCustomState:
+    batch_size: int
+    block_size: int
+    current_shard_id: int
+    current_position_in_shard: int
+
+
 @dataclass
 class Stat:
     # for stat.txt
@@ -173,6 +182,69 @@ class Stat:
                 data[key] = value
         return cls(**data)
     
+
+
+
+class DataLoaderCustom:
+    def __init__(self, batch_size: int, block_size: int, device: str = "cpu", current_shard_id: int = 0, current_position_in_shard: int = 0, verbose: bool = True):
+        self.device = device
+        self.batch_size = batch_size
+        self.block_size = block_size
+        self.data_dir = f"bert_implementation_tr/data/xy_shards_{self.block_size}"
+        self.num_shards = get_last_shard_idx(self.data_dir)
+        self.stat = Stat.from_file(f"{self.data_dir}/stat.txt")
+
+        assert self.num_shards != -1 , f"no shards found in {self.data_dir}"
+
+        if verbose:
+            print(f"data shards directory: {self.data_dir}")
+
+            # some stats
+            print(f"block size: {self.block_size}")
+            print(f"batch size: {self.batch_size}")
+            print(f"total number of shards: {self.num_shards}")
+            print(f"total number of tokens: {self.stat.total_number_of_token}")
+            print(f"total number of samples: {self.stat.total_number_of_sample}")
+            print("-------------------------------------------------------------------------")
+            print(f"1 batch: {self.block_size * self.batch_size} tokens")
+            print(f"1 epoch: {self.stat.total_number_of_token // (self.block_size * self.batch_size)} batches")
+            print(f"1 epoch: {self.stat.total_number_of_token} tokens")
+            print(f"1 shard: ~{self.stat.total_number_of_token // self.num_shards} tokens")
+            print(f"1 shard: ~{(self.stat.total_number_of_token // self.num_shards) // (self.block_size * self.batch_size)} batches")
+            print("-------------------------------------------------------------------------")
+
+        self.reset(current_shard_id, current_position_in_shard)
+
+    @classmethod
+    def from_state(cls, state: DataloaderCustomState, device: str="cpu") -> "DataLoaderCustom":
+        print(f"Trainig will be continued from this state: {state}")
+        return cls(state.batch_size, state.block_size, state.device, state.current_shard_id, state.current_position_in_shard)
+        
+    def get_state(self) -> DataloaderCustomState:
+        return DataloaderCustomState(self.batch_size, self.block_size, self.current_shard_id, self.current_position_in_shard, self.device)
+
+    def reset(self, current_shard_id: int = 0, current_position_in_shard: int = 0):
+        self.current_shard_id = current_shard_id
+        self.current_shard = ModelInput.from_numpy_to_tensors_dict(
+                                        np_array = load_xy_shard(self.current_shard_id, block_size=self.block_size), 
+                                        block_size = self.block_size)
+        self.current_position_in_shard = current_position_in_shard
+
+    def next_batch(self):
+        if (self.current_position_in_shard + self.batch_size) >= len(self.current_shard["input_ids"]):
+            # bakılacak BUG! bs belirtilenden çok daha az şekilde dönebiliyor (en fazla shard sayısı kadar çok az evet ama bug! lr vs opt hyperparamlar spesifik bs için sonuçta)
+            model_input = {k: v[self.current_position_in_shard:].to(self.device) for k, v in self.current_shard.items()}
+            self.current_shard_id = 0 if self.current_shard_id % self.num_shards == 0 else (self.current_shard_id + 1)
+            self.current_shard = load_xy_shard(self.current_shard_id, block_size=self.block_size)
+            self.current_shard = ModelInput.from_numpy_to_tensors_dict(self.current_shard, block_size=self.block_size)
+            self.current_position_in_shard = 0
+            return model_input
+        
+        model_input = {k: v[self.current_position_in_shard : self.current_position_in_shard + self.batch_size].to(self.device) for k, v in self.current_shard.items()}
+        self.current_position_in_shard += self.batch_size
+
+        return model_input
+
 
 
 def get_merged_files():
@@ -269,10 +341,6 @@ def visualize_sample(sample: VisualizeInputAB | VisualizeModelInput):
         _visualize_ab(sample)
     else:
         raise TypeError("sample must be VisualizeInputAB or VisualizeModelInput")
-
-
-
-
 
 
 

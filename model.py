@@ -1,16 +1,18 @@
 """Heavily inspired by HuggingFace BERT model: "https://github.com/huggingface/transformers/blob/v4.45.2/src/transformers/models/bert/modeling_bert.py#L529"""
 
+import inspect
 from dataclasses import dataclass
-from typing import Optional, Union, Tuple, List
+from typing import Optional, Tuple, List
 
 import torch
 import torch.nn as nn
 from torch.nn import functional as F
 from transformers import PreTrainedTokenizerFast
 
+from bert_implementation_tr.data.data_aux import get_tokenizer, DataLoaderCustom, DataloaderCustomState
+
 
 def get_pad_id():
-    from bert_implementation_tr.data.data_aux import get_tokenizer
     return get_tokenizer().convert_tokens_to_ids("[PAD]")
 
 @dataclass
@@ -20,17 +22,17 @@ class BertConfig:
     num_hidden_layers = 12
     num_attention_heads = 12
     hidden_act = "gelu"
-    intermediate_size = 3072
+    intermediate_size = hidden_size * 4 
     hidden_dropout_prob = 0.1
     attention_probs_dropout_prob = 0.1
     max_position_embeddings = 512
-    # 768 ve diğer model türleri için yaklaşık fan değeri 0.02 imiş
     initializer_range = 0.02
     layer_norm_eps = 1e-12
     type_vocab_size = 2
     classifier_dropout = None
-    # bakılacak
     pad_token_id = get_pad_id()
+
+
 
 
 
@@ -367,6 +369,60 @@ class BertForPreTraining(nn.Module):
             module.bias.data.zero_()
             module.weight.data.fill_(1.0)
 
+    def configure_optimizers(self, weight_decay: float, learning_rate: float, device: str) -> torch.optim.Optimizer:
+        # start with all of the candidate parameters (that require grad)
+        param_dict = {pn: p for pn, p in self.named_parameters()}
+        param_dict = {pn: p for pn, p in param_dict.items() if p.requires_grad}
+        # create optim groups. Any parameters that is 2D will be weight decayed, otherwise no.
+        # i.e. all weight tensors in matmuls + embeddings decay, all biases and layernorms don't.
+        decay_params = [p for n, p in param_dict.items() if p.dim() >= 2]
+        nodecay_params = [p for n, p in param_dict.items() if p.dim() < 2]
+        optim_groups = [
+            {'params': decay_params, 'weight_decay': weight_decay},
+            {'params': nodecay_params, 'weight_decay': 0.0}
+        ]
+        num_decay_params = sum(p.numel() for p in decay_params)
+        num_nodecay_params = sum(p.numel() for p in nodecay_params)
+
+        print(f"num decayed parameter tensors: {len(decay_params)}, with {num_decay_params:,} parameters")
+        print(f"num non-decayed parameter tensors: {len(nodecay_params)}, with {num_nodecay_params:,} parameters")
+        
+        # Create AdamW optimizer and use the fused version if it is available
+        fused_available = 'fused' in inspect.signature(torch.optim.AdamW).parameters
+        use_fused = fused_available and device == "cuda"
+        
+        print(f"using fused AdamW: {use_fused}")
+        optimizer = torch.optim.AdamW(optim_groups, lr=learning_rate, betas=(0.9, 0.999), eps=1e-8, fused=use_fused)
+        return optimizer
+    
+    def save_checkpoint(self, step: int, postfix: int | str, optimizer: torch.optim.Optimizer, dataloader: DataLoaderCustom) -> None:
+        """
+        Save the model, optimizer and scheduler (last step for resume) states
+        postifx arg might be idx or "best" (we'll keep best model ckpt separately)
+        """
+        torch.save({
+            'last_step': step,
+            'model_state_dict': self.state_dict(),
+            'optimizer_state_dict': optimizer.state_dict(),
+            'dataloader_state': dataloader.get_state()
+            }, f"bert_implementation_tr/model_ckpts/BertForPretraining_{postfix}.pt")
+
+
+    def load_checkpoint(self, postfix: int | str, optimizer: torch.optim.Optimizer = None) -> int:
+        """
+        Load the model, optimizer and scheduler (last step for resume) states
+        postifx arg might be idx or "best" (we'll keep best model ckpt separately)
+        dataloader type is "DataloaderCustom" instance not "DataloaderCustomState"!
+        """
+        ckpt = torch.load(f"bert_implementation_tr/model_ckpts/BertForPretraining_{postfix}.pt")
+        self.load_state_dict(ckpt['model_state_dict'])
+        if optimizer is not None:
+            # load_checkpoint illa resume'da kullanılacak diye bir şey yok, bu durumda bu condition'a girmeyecek!
+            # (yani sadece model state yüklenecek, return vs olmayacak)
+            optimizer.load_state_dict(ckpt['optimizer_state_dict'])
+            return ckpt['last_step'], ckpt['dataloader_state']
+    
+
 
     @classmethod
     def from_pretrained(cls):
@@ -396,6 +452,8 @@ class BertForPreTraining(nn.Module):
             sd[k].copy_(sd_hf[k])
 
        return model
+    
+
 
    
 

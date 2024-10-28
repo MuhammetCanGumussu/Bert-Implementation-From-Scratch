@@ -467,7 +467,7 @@ def convert_doc_to_ab(args: Tuple, block_size: int = BLOCK_SIZE,
 
 
 
-# bakılacak: bunu da data aux'a koydum
+# bakılacak: bunları da data aux'a taşıdım
 #def _visualize_ab(sample: VisualizeInputAB):
 #        print(f"A: {sample.ab['A_token_ids']}")
 #        print(f"B: {sample.ab['B_token_ids']}")
