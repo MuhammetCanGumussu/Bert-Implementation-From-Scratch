@@ -51,7 +51,7 @@ class ModelInput:
     next_sentence_label: np.ndarray | torch.Tensor = None
     
     @classmethod
-    def from_numpy_to_tensors(cls, np_array: np.ndarray, block_size: int, device: torch.device | str) -> "ModelInput":
+    def from_numpy_to_ModelInput(cls, np_array: np.ndarray, block_size: int, device: torch.device | str) -> "ModelInput":
         return cls(
             # sıraya dikkat : x -> y -> segment_ids -> attention_mask
             # np array genişliği: x + y + segment_ids + attention_mask --> (BLOCK_SIZE * 4)
@@ -123,12 +123,7 @@ class OneSampleStat:
 
 
 
-@dataclass
-class DataloaderCustomState:
-    batch_size: int
-    block_size: int
-    current_shard_id: int
-    current_position_in_shard: int
+
 
 
 @dataclass
@@ -183,67 +178,6 @@ class Stat:
         return cls(**data)
     
 
-
-
-class DataLoaderCustom:
-    def __init__(self, batch_size: int, block_size: int, device: str = "cpu", current_shard_id: int = 0, current_position_in_shard: int = 0, verbose: bool = True):
-        self.device = device
-        self.batch_size = batch_size
-        self.block_size = block_size
-        self.data_dir = f"bert_implementation_tr/data/xy_shards_{self.block_size}"
-        self.num_shards = get_last_shard_idx(self.data_dir)
-        self.stat = Stat.from_file(f"{self.data_dir}/stat.txt")
-
-        assert self.num_shards != -1 , f"no shards found in {self.data_dir}"
-
-        if verbose:
-            print(f"data shards directory: {self.data_dir}")
-
-            # some stats
-            print(f"block size: {self.block_size}")
-            print(f"batch size: {self.batch_size}")
-            print(f"total number of shards: {self.num_shards}")
-            print(f"total number of tokens: {self.stat.total_number_of_token}")
-            print(f"total number of samples: {self.stat.total_number_of_sample}")
-            print("-------------------------------------------------------------------------")
-            print(f"1 batch: {self.block_size * self.batch_size} tokens")
-            print(f"1 epoch: {self.stat.total_number_of_token // (self.block_size * self.batch_size)} batches")
-            print(f"1 epoch: {self.stat.total_number_of_token} tokens")
-            print(f"1 shard: ~{self.stat.total_number_of_token // self.num_shards} tokens")
-            print(f"1 shard: ~{(self.stat.total_number_of_token // self.num_shards) // (self.block_size * self.batch_size)} batches")
-            print("-------------------------------------------------------------------------")
-
-        self.reset(current_shard_id, current_position_in_shard)
-
-    @classmethod
-    def from_state(cls, state: DataloaderCustomState, device: str="cpu") -> "DataLoaderCustom":
-        print(f"Trainig will be continued from this state: {state}")
-        return cls(state.batch_size, state.block_size, state.device, state.current_shard_id, state.current_position_in_shard)
-        
-    def get_state(self) -> DataloaderCustomState:
-        return DataloaderCustomState(self.batch_size, self.block_size, self.current_shard_id, self.current_position_in_shard, self.device)
-
-    def reset(self, current_shard_id: int = 0, current_position_in_shard: int = 0):
-        self.current_shard_id = current_shard_id
-        self.current_shard = ModelInput.from_numpy_to_tensors_dict(
-                                        np_array = load_xy_shard(self.current_shard_id, block_size=self.block_size), 
-                                        block_size = self.block_size)
-        self.current_position_in_shard = current_position_in_shard
-
-    def next_batch(self):
-        if (self.current_position_in_shard + self.batch_size) >= len(self.current_shard["input_ids"]):
-            # bakılacak BUG! bs belirtilenden çok daha az şekilde dönebiliyor (en fazla shard sayısı kadar çok az evet ama bug! lr vs opt hyperparamlar spesifik bs için sonuçta)
-            model_input = {k: v[self.current_position_in_shard:].to(self.device) for k, v in self.current_shard.items()}
-            self.current_shard_id = 0 if self.current_shard_id % self.num_shards == 0 else (self.current_shard_id + 1)
-            self.current_shard = load_xy_shard(self.current_shard_id, block_size=self.block_size)
-            self.current_shard = ModelInput.from_numpy_to_tensors_dict(self.current_shard, block_size=self.block_size)
-            self.current_position_in_shard = 0
-            return model_input
-        
-        model_input = {k: v[self.current_position_in_shard : self.current_position_in_shard + self.batch_size].to(self.device) for k, v in self.current_shard.items()}
-        self.current_position_in_shard += self.batch_size
-
-        return model_input
 
 
 
@@ -366,11 +300,127 @@ def get_last_shard_idx(shards_dir:str) -> int:
 def save_xy_shard(placeholder_array, shard_idx, block_size) -> None:
     np.save(f"xy_shards_{block_size}/xy_shard_{shard_idx}.npy", placeholder_array)
                         
-DENEME = 256
-def load_xy_shard(shard_idx, block_size=DENEME) -> np.ndarray:
+
+def load_xy_shard(shard_idx, block_size=256) -> np.ndarray:
     if (shard_idx < 0) or (shard_idx > get_last_shard_idx(f"bert_implementation_tr/data/xy_shards_{block_size}")):
         raise IndexError(f"shard idx must be >= 0 and <= {get_last_shard_idx(f'bert_implementation_tr/data/xy_shards_{block_size}')}, shard_idx you gave was: {shard_idx}")
+    # print(f"loading xy_shard_{shard_idx}.npy")
     return np.load(f"bert_implementation_tr/data/xy_shards_{block_size}/xy_shard_{shard_idx}.npy")
 
 
 
+
+
+class DataLoaderCustom:
+    def __init__(self, batch_size: int,
+                 block_size: int,
+                 device: str = "cpu",
+                 verbose: bool = False,
+                 split: str = "train") -> None:
+        self.split = split
+        self.device = device
+        self.batch_size = batch_size
+        self.block_size = block_size
+        self.data_dir = f"bert_implementation_tr/data/xy_shards_{self.block_size}"
+
+        assert split in ["train", "val"], f"unknown split: {self.split}"
+
+        last_shard_idx = get_last_shard_idx(self.data_dir)
+        assert last_shard_idx != -1 , f"no shards found in {self.data_dir}"
+
+
+        self.last_shard_id = (last_shard_idx - 1) if self.split == "train" else last_shard_idx
+        self.current_shard_id = 0 if self.split == "train" else last_shard_idx
+        self.current_position_in_shard = 0
+
+        # print(f"\nsplit: {self.split}")
+        # print(f"data shards directory: {self.data_dir}\n")
+
+        self.current_shard = ModelInput.from_numpy_to_tensors_dict(
+                                        np_array = load_xy_shard(self.current_shard_id, block_size=self.block_size), 
+                                        block_size = self.block_size)
+
+        
+        self.stat = Stat.from_file(f"{self.data_dir}/stat.txt")
+        isNext_ratio = self.stat.total_isNext_count / self.stat.total_number_of_sample
+        self.class_weights = torch.tensor([isNext_ratio, 1 - isNext_ratio], dtype=torch.float32, device=self.device)
+        
+        # bakılacak bunu kaldırıcam galiba, illa bu statları istersem pretrain dosyasında kendim yaparım kontrolümde (train_loader.stat ile örn)
+        if verbose and split == "train":
+            # bu değerler vs approx'tur, son shard'ı val'a ayırdık
+
+            # some stats
+            print(f"block size: {self.block_size}")
+            print(f"batch size: {self.batch_size}")
+            print(f"total number of shards: {self.last_shard_id + 1}")
+            print(f"total number of tokens: {self.stat.total_number_of_token}")
+            print(f"total number of samples: {self.stat.total_number_of_sample}")
+            print("-------------------------------------------------------------------------")
+            print(f"1 batch: {self.block_size * self.batch_size} tokens")
+            print(f"1 epoch: {self.stat.total_number_of_token // (self.block_size * self.batch_size)} batches")
+            print(f"1 epoch: {self.stat.total_number_of_token} tokens")
+            print(f"1 shard: ~{self.stat.total_number_of_token // (self.last_shard_id + 1)} tokens")
+            print(f"1 shard: ~{(self.stat.total_number_of_token // (self.last_shard_id + 1)) // (self.block_size * self.batch_size)} batches")
+            print("-------------------------------------------------------------------------\n")
+
+
+    def reset(self):
+        if self.split == "train":
+            self.current_shard_id = 0
+            self.current_shard = ModelInput.from_numpy_to_tensors_dict(
+                                        np_array = load_xy_shard(self.current_shard_id, block_size=self.block_size), 
+                                        block_size = self.block_size)
+
+        else:
+            self.current_shard_id = self.last_shard_id  # same shard, last shard
+            # no need to load the same shard again, because it's already loaded in the constructor
+
+        # reset position
+        self.current_position_in_shard = 0
+        
+        
+
+    def next_batch(self):
+        if (self.current_position_in_shard + self.batch_size) >= len(self.current_shard["input_ids"]):
+            # bakılacak: circulasyona izin vermeyeceksek o zaman son kalanları (varsa) verelim (vermeyelim, 5 sample için kod iyice çirkinleşmesin)
+            if self.split == "val":
+                # bakılacak: düz resetlemeye ek olarak bununiçinde reset yapackasın (düz reset: her val sürecinde resetleme yapılır aynı sample'lar gözüksün)
+                # (bu yeni ek reset'de istenilen max_eval sayısı çok büyük olursa durumunda val'da artık başka yeni sample kalmadığında val sürecinden çıkılacak, aslında bu reset değil evet)
+                return None
+            
+            model_input_temp = {k: v[self.current_position_in_shard:].to(self.device) for k, v in self.current_shard.items()}
+            temp_len = len(model_input_temp["input_ids"])
+                
+            # for making modulus work we need to add 1 (first shard id is 0, 0 % any_number == 0, because of this we added 1 to each operand)
+            self.current_shard_id = 0 if (self.current_shard_id + 1) % (self.last_shard_id + 1) == 0 else (self.current_shard_id + 1)
+            
+            self.current_shard = ModelInput.from_numpy_to_tensors_dict(
+                                        np_array = load_xy_shard(self.current_shard_id, block_size=self.block_size), 
+                                        block_size = self.block_size)
+            
+            model_input = {k: torch.cat([model_input_temp[k], v[:self.batch_size - temp_len].to(self.device)]) for k, v in self.current_shard.items()}
+            model_input["class_weights"] = self.class_weights
+            self.current_position_in_shard = self.batch_size - temp_len
+
+            return model_input
+        
+        model_input = {k: v[self.current_position_in_shard : self.current_position_in_shard + self.batch_size].to(self.device) for k, v in self.current_shard.items()}
+        model_input["class_weights"] = self.class_weights
+        self.current_position_in_shard += self.batch_size
+
+        return model_input
+    
+
+    def get_current_state(self) -> dict:
+        return {
+            "last_shard_id": self.current_shard_id,
+            "last_position": self.current_position_in_shard
+        }
+
+    
+    def load_state_dict(self, state_dict: dict):
+        self.current_shard_id = state_dict["last_shard_id"]
+        self.current_position_in_shard = state_dict["last_position"]
+        self.current_shard = ModelInput.from_numpy_to_tensors_dict(
+                                        np_array = load_xy_shard(self.current_shard_id, block_size=self.block_size), 
+                                        block_size = self.block_size)

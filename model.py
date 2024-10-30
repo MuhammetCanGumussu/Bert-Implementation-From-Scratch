@@ -9,7 +9,7 @@ import torch.nn as nn
 from torch.nn import functional as F
 from transformers import PreTrainedTokenizerFast
 
-from bert_implementation_tr.data.data_aux import get_tokenizer, DataLoaderCustom, DataloaderCustomState
+from bert_implementation_tr.data.data_aux import get_tokenizer, DataLoaderCustom
 
 
 def get_pad_id():
@@ -175,6 +175,8 @@ class BertEmbeddings(nn.Module):
 
 
     def forward(self, input_ids, token_type_ids, position_ids) -> torch.Tensor:
+        
+
         # bakılacak: geçici assertion
         assert input_ids.max().item() < self.word_embeddings.num_embeddings, f"[ERROR]: input_id_max:{input_ids.max().item()} , num_embeddings: {self.word_embeddings.num_embeddings}"
 
@@ -325,7 +327,8 @@ class BertForPreTraining(nn.Module):
             token_type_ids: torch.Tensor,
             position_ids: torch.Tensor = None,
             labels: Optional[torch.Tensor] = None,
-            next_sentence_label: Optional[torch.Tensor] = None 
+            next_sentence_label: Optional[torch.Tensor] = None,
+            class_weights: Optional[torch.Tensor] = None 
     ) -> BertForPreTrainingOutput:
         
         last_hidden_state, pooled_output = self.bert(input_ids, attention_mask, token_type_ids, position_ids)
@@ -334,7 +337,7 @@ class BertForPreTraining(nn.Module):
         total_loss = None
         if labels is not None and next_sentence_label is not None:
             loss_fct_mlm = nn.CrossEntropyLoss(ignore_index = self.config.pad_token_id)
-            loss_fct_nsp = nn.CrossEntropyLoss(ignore_index = -100)
+            loss_fct_nsp = nn.CrossEntropyLoss(ignore_index = -100, weight=class_weights)
 
             masked_lm_loss = loss_fct_mlm(prediction_logits.view(-1, self.config.vocab_size), labels.view(-1))
             # bakılacak: focal loss (ce'de weight parametresi) kullanılabilir (notNext, isNext'ten daha fazla old için)
@@ -395,34 +398,6 @@ class BertForPreTraining(nn.Module):
         optimizer = torch.optim.AdamW(optim_groups, lr=learning_rate, betas=(0.9, 0.999), eps=1e-8, fused=use_fused)
         return optimizer
     
-    def save_checkpoint(self, step: int, postfix: int | str, optimizer: torch.optim.Optimizer, dataloader: DataLoaderCustom) -> None:
-        """
-        Save the model, optimizer and scheduler (last step for resume) states
-        postifx arg might be idx or "best" (we'll keep best model ckpt separately)
-        """
-        torch.save({
-            'last_step': step,
-            'model_state_dict': self.state_dict(),
-            'optimizer_state_dict': optimizer.state_dict(),
-            'dataloader_state': dataloader.get_state()
-            }, f"bert_implementation_tr/model_ckpts/BertForPretraining_{postfix}.pt")
-
-
-    def load_checkpoint(self, postfix: int | str, optimizer: torch.optim.Optimizer = None) -> int:
-        """
-        Load the model, optimizer and scheduler (last step for resume) states
-        postifx arg might be idx or "best" (we'll keep best model ckpt separately)
-        dataloader type is "DataloaderCustom" instance not "DataloaderCustomState"!
-        """
-        ckpt = torch.load(f"bert_implementation_tr/model_ckpts/BertForPretraining_{postfix}.pt")
-        self.load_state_dict(ckpt['model_state_dict'])
-        if optimizer is not None:
-            # load_checkpoint illa resume'da kullanılacak diye bir şey yok, bu durumda bu condition'a girmeyecek!
-            # (yani sadece model state yüklenecek, return vs olmayacak)
-            optimizer.load_state_dict(ckpt['optimizer_state_dict'])
-            return ckpt['last_step'], ckpt['dataloader_state']
-    
-
 
     @classmethod
     def from_pretrained(cls):
@@ -452,10 +427,52 @@ class BertForPreTraining(nn.Module):
             sd[k].copy_(sd_hf[k])
 
        return model
+       
     
 
 
-   
+
+
+def save_checkpoint(model: BertForPreTraining,
+                    optimizer: torch.optim.Optimizer,
+                    dataloader: DataLoaderCustom,
+                    step: int, 
+                    best_val_loss: float,
+                    train_loss: float,
+                    val_loss: float,
+                    postfix: int | str,
+                    also_override_best: bool = False
+                    ) -> None:
+    """
+    Save checkpoint dictionary
+    """
+    temp_dict = {
+        'last_step': step,
+        'best_val_loss': best_val_loss,
+        'train_loss': train_loss,     # bakılacak: bunlar history de olabilir (list filan, plot için vs idk) [öyle yap ya, 1000 tane sayı alt tarafı ne olacak] {scratch için değil de resume için düşün}
+        'val_loss': val_loss,         # bakılacak: bunlar history de olabilir (list filan, plot için vs idk) [öyle yap ya, 1000 tane sayı alt tarafı ne olacak]
+        'model_config': model.config,
+        'model_state_dict': model.state_dict(),
+        'optimizer_state_dict': optimizer.state_dict(),
+        'last_dataloader_state': dataloader.get_current_state()
+    }
+
+    torch.save(temp_dict, f"bert_implementation_tr/model_ckpts/BertForPretraining_{postfix}.pt")
+
+    if also_override_best:
+        torch.save(temp_dict, f"bert_implementation_tr/model_ckpts/BertForPretraining_best.pt")
+
+    
+
+
+def load_checkpoint(postfix: int | str) -> dict:
+    """
+    Return ckeckpoint dictionary
+    """
+    return torch.load(f"bert_implementation_tr/model_ckpts/BertForPretraining_{postfix}.pt")
+
+    
+
 
 
 
