@@ -18,5 +18,9 @@ data/ab_shards_512
 data/xy_shards_256
 data/xy_shards_512
 
+# ignore ckpts
+model_ckpts
+
+
 
 # tüm data dir'i ignore edip sadece data.py'ı track etmeyi dene, beceremedim şimdilik

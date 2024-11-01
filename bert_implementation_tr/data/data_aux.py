@@ -315,7 +315,7 @@ class DataLoaderCustom:
     def __init__(self, batch_size: int,
                  block_size: int,
                  device: str = "cpu",
-                 verbose: bool = False,
+                 verbose: bool = True,
                  split: str = "train") -> None:
         self.split = split
         self.device = device
@@ -345,24 +345,28 @@ class DataLoaderCustom:
         isNext_ratio = self.stat.total_isNext_count / self.stat.total_number_of_sample
         self.class_weights = torch.tensor([isNext_ratio, 1 - isNext_ratio], dtype=torch.float32, device=self.device)
         
-        # bakılacak bunu kaldırıcam galiba, illa bu statları istersem pretrain dosyasında kendim yaparım kontrolümde (train_loader.stat ile örn)
         if verbose and split == "train":
-            # bu değerler vs approx'tur, son shard'ı val'a ayırdık
+            print("class weights 0:notNext, 1:isNext -> ", self.class_weights)
 
-            # some stats
-            print(f"block size: {self.block_size}")
-            print(f"batch size: {self.batch_size}")
-            print(f"total number of shards: {self.last_shard_id + 1}")
-            print(f"total number of tokens: {self.stat.total_number_of_token}")
-            print(f"total number of samples: {self.stat.total_number_of_sample}")
-            print("-------------------------------------------------------------------------")
-            print(f"1 batch: {self.block_size * self.batch_size} tokens")
-            print(f"1 epoch: {self.stat.total_number_of_token // (self.block_size * self.batch_size)} batches")
-            print(f"1 epoch: {self.stat.total_number_of_token} tokens")
-            print(f"1 shard: ~{self.stat.total_number_of_token // (self.last_shard_id + 1)} tokens")
-            print(f"1 shard: ~{(self.stat.total_number_of_token // (self.last_shard_id + 1)) // (self.block_size * self.batch_size)} batches")
-            print("-------------------------------------------------------------------------\n")
+        # bakılacak bunu kaldırıcam galiba, illa bu statları istersem pretrain dosyasında kendim yaparım kontrolümde (train_loader.stat ile örn)
+        #if verbose and split == "train":
+        #    # bu değerler vs approx'tur, son shard'ı val'a ayırdık
+#
+        #    # some stats
+        #    print(f"block size: {self.block_size}")
+        #    print(f"batch size: {self.batch_size}")
+        #    print(f"total number of shards: {self.last_shard_id + 1}")
+        #    print(f"total number of tokens: {self.stat.total_number_of_token}")
+        #    print(f"total number of samples: {self.stat.total_number_of_sample}")
+        #    print("-------------------------------------------------------------------------")
+        #    print(f"1 batch: {self.block_size * self.batch_size} tokens")
+        #    print(f"1 epoch: {self.stat.total_number_of_token // (self.block_size * self.batch_size)} batches")
+        #    print(f"1 epoch: {self.stat.total_number_of_token} tokens")
+        #    print(f"1 shard: ~{self.stat.total_number_of_token // (self.last_shard_id + 1)} tokens")
+        #    print(f"1 shard: ~{(self.stat.total_number_of_token // (self.last_shard_id + 1)) // (self.block_size * self.batch_size)} batches")
+        #    print("-------------------------------------------------------------------------\n")
 
+        
 
     def reset(self):
         if self.split == "train":

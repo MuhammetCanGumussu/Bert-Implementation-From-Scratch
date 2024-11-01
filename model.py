@@ -349,14 +349,23 @@ class BertForPreTraining(nn.Module):
             # print("mlm loss: ", masked_lm_loss)
             # print("nsp loss: ", next_sentence_loss)
 
-
-        return BertForPreTrainingOutput(
+            return BertForPreTrainingOutput(
             loss=total_loss,
             mlm_loss=masked_lm_loss,
             nsp_loss=next_sentence_loss,
             prediction_logits=prediction_logits,
             seq_relationship_logits=seq_relationship_logits,
+            )
+
+
+        return BertForPreTrainingOutput(
+            prediction_logits=prediction_logits,
+            seq_relationship_logits=seq_relationship_logits,
         )
+
+
+
+        
             
     # bakılacak: save % load checkpoint mekanizması yapılacak
 
@@ -438,10 +447,9 @@ def save_checkpoint(model: BertForPreTraining,
                     dataloader: DataLoaderCustom,
                     step: int, 
                     best_val_loss: float,
-                    train_loss: float,
-                    val_loss: float,
-                    postfix: int | str,
-                    also_override_best: bool = False
+                    # train_loss: float,    # bakılacak, mlflow ile track edeceğim için bunlara gerek yok bence
+                    # val_loss: float,
+                    postfix: int | str
                     ) -> None:
     """
     Save checkpoint dictionary
@@ -449,8 +457,8 @@ def save_checkpoint(model: BertForPreTraining,
     temp_dict = {
         'last_step': step,
         'best_val_loss': best_val_loss,
-        'train_loss': train_loss,     # bakılacak: bunlar history de olabilir (list filan, plot için vs idk) [öyle yap ya, 1000 tane sayı alt tarafı ne olacak] {scratch için değil de resume için düşün}
-        'val_loss': val_loss,         # bakılacak: bunlar history de olabilir (list filan, plot için vs idk) [öyle yap ya, 1000 tane sayı alt tarafı ne olacak]
+        #'train_loss': train_loss,     # bakılacak, mlflow ile track edeceğim için bunlara gerek yok bence
+        #'val_loss': val_loss,         # 
         'model_config': model.config,
         'model_state_dict': model.state_dict(),
         'optimizer_state_dict': optimizer.state_dict(),
@@ -458,9 +466,6 @@ def save_checkpoint(model: BertForPreTraining,
     }
 
     torch.save(temp_dict, f"bert_implementation_tr/model_ckpts/BertForPretraining_{postfix}.pt")
-
-    if also_override_best:
-        torch.save(temp_dict, f"bert_implementation_tr/model_ckpts/BertForPretraining_best.pt")
 
     
 
