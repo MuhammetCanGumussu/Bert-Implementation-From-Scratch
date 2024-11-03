@@ -318,7 +318,11 @@ class BertForPreTraining(nn.Module):
             
         total_loss = None
         if labels is not None and next_sentence_label is not None:
-            loss_fct_mlm = nn.CrossEntropyLoss(ignore_index = self.config.pad_token_id)
+            # bakılacak, şimdilik ignore idx de pad token id diyeceğim yalnız datayı düzelttikten sonra alttaki satırları istiyorum (self.config.ignore_index, ki -100 değerinde olacak)
+            # oss_fct_mlm = nn.CrossEntropyLoss(ignore_index = self.config.ignore_index)
+            # oss_fct_nsp = nn.CrossEntropyLoss(ignore_index = -100, weight=class_weights)
+            
+            loss_fct_mlm = nn.CrossEntropyLoss(ignore_index = 0)
             loss_fct_nsp = nn.CrossEntropyLoss(ignore_index = -100, weight=class_weights)
 
             masked_lm_loss = loss_fct_mlm(prediction_logits.view(-1, self.config.vocab_size), labels.view(-1))
@@ -431,7 +435,8 @@ def save_checkpoint(model: BertForPreTraining,
                     best_val_loss: float,
                     # train_loss: float,    # bakılacak, mlflow ile track edeceğim için bunlara gerek yok bence
                     # val_loss: float,
-                    postfix: int | str
+                    postfix: int | str,
+                    mlflow_run_id: Optional[str] = None
                     ) -> None:
     """
     Save checkpoint dictionary
@@ -444,7 +449,8 @@ def save_checkpoint(model: BertForPreTraining,
         'model_config': model.config,
         'model_state_dict': model.state_dict(),
         'optimizer_state_dict': optimizer.state_dict(),
-        'last_dataloader_state': dataloader.get_current_state()
+        'last_dataloader_state': dataloader.get_current_state(),
+        'mlflow_run_id': mlflow_run_id
     }
 
     torch.save(temp_dict, f"bert_implementation_tr/model_ckpts/BertForPretraining_{postfix}.pt")

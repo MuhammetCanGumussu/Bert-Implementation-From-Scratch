@@ -14,9 +14,13 @@ from transformers import PreTrainedTokenizerFast
 # TODO: path işlerini vs ayarla
 SAVE_PATH = "C:/Users/user/Desktop/Bert Implementation Tr/bert_implementation_tr/tr_wordpiece_tokenizer_cased.json"
 
-def get_tokenizer(tokenizer_path=SAVE_PATH, fast=True):
-    
+def get_tokenizer(tokenizer_path=SAVE_PATH, fast=True, custom=True):
 
+    if not custom:
+        from transformers import AutoTokenizer
+        return AutoTokenizer.from_pretrained("dbmdz/bert-base-turkish-cased")
+    
+    # if custom tokenizer, we need to check if there is a custom tokenizer file
     if not os.path.exists(tokenizer_path):
         print(f"[INFO] there is no tokenizer file to wrap with fast tokenizer in {tokenizer_path} Please train tokenizer first...")
         import sys
@@ -33,11 +37,11 @@ def get_tokenizer(tokenizer_path=SAVE_PATH, fast=True):
             clean_up_tokenization_spaces=True   # default olarak ta True ancak future warning ilerde False olacağını belirtti.
                                                 # ilerde problem olmaması için (ve tabiki future warning almamak için) açıkca True yaptık
         )
-             
-    else:
-        tokenizer = Tokenizer.from_file(tokenizer_path)
+        return tokenizer
+    
+    return Tokenizer.from_file(tokenizer_path)
 
-    return tokenizer
+
 
 # geçici silinecek (data.py'da labels'da cls tokeni full pad olarak verildiğinde buna ve alttaki olaya gerek kalmayacak)
 PAD_TOKEN_ID = get_tokenizer().convert_tokens_to_ids("[PAD]")

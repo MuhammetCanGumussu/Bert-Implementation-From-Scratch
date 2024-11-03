@@ -21,16 +21,6 @@ from config import get_pretrain_bert_py_configs
 
 
 
-#dummy_data = {"model": "test"}
-#torch.save(dummy_data, "bert_implementation_tr/model_ckpts/BertForPretraining_best.pt")
-#print("saved...")
-#
-#sys.exit(0)
-
-
-
-
-
 warnings.filterwarnings("ignore")
 
 
@@ -114,6 +104,9 @@ warnings.filterwarnings("ignore")
 # mlflow autolog'u dene
 # takip edilmemesi gereken dosyaları takipten çıkarmayı da unutma!
 # cli config comb vs işleri (device kontrolü de yapılmalı)
+# run_id olayı yaptım resume ile scratch case lerini dene (resume olunca mlflow'da o run'ın devam etmesini istiyorum, scratch'de apayrı yeni bir run açılsın)
+# unutma repoda da belirt! : hf modeli sadece evaluation için var (ki onun tensorlarini aldık sadece), alıp hf modelini eğitme yada resume etme ne ise bunu yapmadım (ama yapması çok kolay dur la belki yapabilirim: tokenizer/embedding olayına bi de generation olayına dikkat edecem)
+
 
 
 # tanım: gpu'daki operasyonlara/kernel'lara mm operasyon precisionunu ayarlıyor
@@ -125,12 +118,11 @@ torch.set_float32_matmul_precision("high")
 # create training config (BAKILACAK: şimdilik bu ikisi default configler!)
 model_cfg, pretrain_config = get_pretrain_bert_py_configs()
 
-# dataclass objects are not subscriptable, so convert to dict
+# dataclass objects are not subscriptable, so convert to dict (i want subscription beacause it's more readable than property access in vscode)
 model_cfg = asdict(model_cfg)
 pretrain_config = asdict(pretrain_config)
 
 if pretrain_config["generate_samples"]:
-    tokenizer = get_tokenizer(fast=True)
     samples_for_mlm_generation = ["Merhaba [MASK] efendi nasıl gidiyor?",
                                   "ışınlanma teknolojisini [MASK] Can  bulmuştur. Muhammet Can bu buluş ile büyük alkış topladı"]
 
@@ -138,29 +130,12 @@ if pretrain_config["generate_samples"]:
                                   ["Bu nsp olayı bir garip oldu. Sanki kablolar ters bağlandı.", "Bir şekilde kabloları ayarlamak gerekli"],
                                   ["çoğunuz yaş itibariyle tanımaz ama istanbul'un en iyi belediye başkanı justinianus'tur.", "Samsun Ayvacık belediyesi ne yapmak nereye varmak istemektedir!"] ]
 
-if pretrain_config["mlflow_tracking"]:
-    mlflow.set_tracking_uri("http://localhost:5000")
-    mlflow.set_experiment("bert_implementation_tr")
-    mlflow.start_run(run_name="bert_pretraining")
-
-
-
-
-#device = "cpu"
-## auto detect device
-#if torch.cuda.is_available():
-#    device = "cuda"
-#elif hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
-#    device = "mps"
 
 
 device = pretrain_config["device"]
-print(f"[INFO] using device: {device}")
+print(f"using device: {device}")
 
-# override device
-#device = "cpu"
 
-# reproducibility
 torch.manual_seed(pretrain_config["seed"])
 if torch.cuda.is_available():
     torch.cuda.manual_seed(pretrain_config["seed"])
@@ -168,10 +143,13 @@ if torch.cuda.is_available():
 
 
 def do_just_evaluation_on_pretrain_tasks(model: BertForPreTraining, val_loader: DataLoaderCustom):
-    # if eval hf model, we should use hf tokenizer not custom tokenizer
+    # if eval hf model, we should use hf tokenizer
     if pretrain_config["from_huggingface"]:
         from transformers import AutoTokenizer
         tokenizer = AutoTokenizer.from_pretrained("dbmdz/bert-base-turkish-cased")
+    else:
+        # if eval custom model, we should use custom tokenizer
+        tokenizer = get_tokenizer(fast=True)
     model.eval()
     val_loader.reset()
     fill_mask_pipeline = FillMaskPipeline(model, tokenizer, strategy="greedy")
@@ -199,13 +177,12 @@ def do_just_evaluation_on_pretrain_tasks(model: BertForPreTraining, val_loader: 
 
 
 
-
 # just do evaluation and exit (değiştirdim)
-if pretrain_config["do_eval"] == True:
-    val_loader = DataLoaderCustom(batch_size=pretrain_config["val_batch_size"] // 2, block_size=pretrain_config["block_size"] * 2, split="val", device=device)
-    if pretrain_config["from_huggingface"] == True:
+if pretrain_config["do_eval_from_huggingface"] == True or pretrain_config["do_eval_from_best_ckpt"] == True:
+    val_loader = DataLoaderCustom(batch_size=pretrain_config["val_batch_size"], block_size=pretrain_config["val_block_size"], split="val", device=device)
+    if pretrain_config["do_eval_from_huggingface"] == True:
         model = BertForPreTraining.from_pretrained()
-    if pretrain_config["from_best_ckpt"] == True:
+    elif pretrain_config["do_eval_from_best_ckpt"] == True:
         ckpt_dict = load_checkpoint(postfix="best")
         model = BertForPreTraining(ckpt_dict["model_config"])
         model.load_state_dict(ckpt_dict["model_state_dict"])
@@ -218,25 +195,14 @@ if pretrain_config["do_eval"] == True:
 
 
 
-
-
-
-
-
-
-
-best_val_loss = math.inf
-# bakılacak, mlflow ile track edeceğim için bunlara gerek yok bence
-#train_loss_history = []
-#val_loss_history = []
-last_ckpt_idx = 0
-last_step = 0
-
-
 if not os.path.exists("bert_implementation_tr/model_ckpts"):
     os.mkdir("bert_implementation_tr/model_ckpts")
 
 ckpt_files = os.listdir("bert_implementation_tr/model_ckpts")
+
+best_val_loss = math.inf
+last_ckpt_idx = 0
+last_step = 0
 
 # resume pretraining from last checkpoint
 if pretrain_config["resume"] == True:
@@ -255,12 +221,7 @@ if pretrain_config["resume"] == True:
     print(f"\nresume from ckpt: {last_ckpt_idx}\n")
     last_step = ckpt_dict["last_step"]
     best_val_loss = ckpt_dict["best_val_loss"]
-    # bakılacak, history (list) yapılıp yapılmayacağına göre güncelleme yapılmalı
-    # bakılacak, mlflow ile track edeceğim için bunlara gerek yok bence
-    # train_loss_history = ckpt_dict["train_loss"]
-    # val_loss_history = ckpt_dict["val_loss"]
-
-    # maybe diffrent config/architecture
+    mlflow_run_id = ckpt_dict["mlflow_run_id"]
     model_config = ckpt_dict["model_config"]
     model = BertForPreTraining(model_config)
     model.load_state_dict(ckpt_dict["model_state_dict"])
@@ -270,19 +231,16 @@ if pretrain_config["resume"] == True:
     optimizer = model.configure_optimizers(weight_decay=pretrain_config["weight_decay"], learning_rate=pretrain_config["max_learning_rate"], device=device)
     optimizer.load_state_dict(ckpt_dict["optimizer_state_dict"])
     # val set baştan sonra 512 block size olarak kalacak
-    val_loader = DataLoaderCustom(batch_size=pretrain_config["val_batch_size"], block_size=pretrain_config["block_size"] * 2, split="val", device=device)
+    val_loader = DataLoaderCustom(batch_size=pretrain_config["val_batch_size"], block_size=pretrain_config["val_block_size"], split="val", device=device)
 
     # create and load data loader state
-    if last_step > pretrain_config["num_train_steps"] * 0.9:
-        train_loader = DataLoaderCustom(batch_size=pretrain_config["train_batch_size"] // 2, block_size=pretrain_config["block_size"] * 2, split="train", device=device)
+    if last_step > pretrain_config["num_train_steps"] * pretrain_config["stage1_ratio"]:
+        train_loader = DataLoaderCustom(batch_size=pretrain_config["train_batch_size_s2"], block_size=pretrain_config["block_size_s2"], split="train", device=device)
     else:
-        train_loader = DataLoaderCustom(batch_size=pretrain_config["train_batch_size"], block_size=pretrain_config["block_size"], split="train", device=device)
+        train_loader = DataLoaderCustom(batch_size=pretrain_config["train_batch_size_s1"], block_size=pretrain_config["block_size_s1"], split="train", device=device)
     # val position state is not important, we are resetting it anyway
     train_loader.load_state_dict(ckpt_dict["last_dataloader_state"])
 
-    
-    
-    
 
 
 # train from scratch
@@ -308,23 +266,37 @@ elif (pretrain_config["resume"]) == False:
                 print("invalid input...")
 
     # create model, optimizer, dataloaders "from scratch"
-    model = BertForPreTraining(model_cfg)
+    # if do_train_custom is True, model weights will be randomly initialized else hf model weights will be loaded
+    model = BertForPreTraining(model_cfg) if pretrain_config["do_train_custom"] else BertForPreTraining.from_pretrained()
     model.to(device)
     optimizer = model.configure_optimizers(weight_decay=pretrain_config["weight_decay"], learning_rate=pretrain_config["max_learning_rate"], device=device)
-    train_loader = DataLoaderCustom(batch_size=pretrain_config["train_batch_size"], block_size=pretrain_config["block_size"], split="train", device=device)
+    train_loader = DataLoaderCustom(batch_size=pretrain_config["train_batch_size_s1"], block_size=pretrain_config["block_size_s1"], split="train", device=device)
     # val set baştan sonra 512 block size olarak kalacak
-    val_loader = DataLoaderCustom(batch_size=pretrain_config["val_batch_size"], block_size=pretrain_config["block_size"] * 2, split="val", device=device)
+    val_loader = DataLoaderCustom(batch_size=pretrain_config["val_batch_size"], block_size=pretrain_config["val_block_size"], split="val", device=device)
 
 
 if pretrain_config["generate_samples"]:
+    tokenizer = get_tokenizer(custom=True if pretrain_config["do_train_custom"] else False)
     fill_mask_pipeline = FillMaskPipeline(model, tokenizer, strategy="greedy")
     nsp_pipeline = IsNextPipeline(model, tokenizer)
 
 
 
 if pretrain_config["mlflow_tracking"]:
+    mlflow.set_tracking_uri("http://localhost:5000")
+    mlflow.set_experiment("bert_implementation_tr")
+    # every run should have the same model training whether from scratch or resume! (if mlflow tracking is enabled)
+    # if resume, we need to use last ckpt run id to continue tracking consistently (we kept it in ckpt files) 
+    if (pretrain_config["resume"]):
+        mlflow.start_run(run_id=mlflow_run_id)
+    else:
+        # if scratch, we need to create a new run and keep its run id
+        mlflow_run_id = mlflow.start_run(run_name="bert_pretraining").info.run_id
     mlflow.log_params(pretrain_config)
     mlflow.log_params(asdict(model.config))
+else:
+    # we need this whether we use mlflow or not to keep things working
+    mlflow_run_id = None    
 
 
 
@@ -364,9 +336,6 @@ print("train batch size: ", train_loader.batch_size)
 print("trainblock size: ", train_loader.block_size)
 print("val batch size: ", val_loader.batch_size)
 print("val block size: ", val_loader.block_size)
-
-
-
 
 
 
@@ -418,7 +387,7 @@ for step in range(last_step, max_steps):
             best_val_loss = val_loss_accum
 
             #save_checkpoint(model, optimizer, train_loader, step, best_val_loss, train_loss_history, val_loss_history, "best")
-            save_checkpoint(model, optimizer, train_loader, step, best_val_loss, "best")
+            save_checkpoint(model, optimizer, train_loader, step, best_val_loss, "best", mlflow_run_id=mlflow_run_id)
             # bakılacak, düzenlenebilir ya da komple kaldırılabilir
             print("best ckpt is updated...")
 
@@ -454,7 +423,7 @@ for step in range(last_step, max_steps):
             os.remove(f"bert_implementation_tr/model_ckpts/BertForPretraining_{last_ckpt_idx - pretrain_config['max_ckpt']}.pt")
         # bakılacak, mlflow ile track edeceğim için bunlara gerek yok bence
         # save_checkpoint(model, optimizer, train_loader, step, best_val_loss, train_loss_history, val_loss_history, last_ckpt_idx + 1)
-        save_checkpoint(model, optimizer, train_loader, step, best_val_loss, last_ckpt_idx)
+        save_checkpoint(model, optimizer, train_loader, step, best_val_loss, last_ckpt_idx, mlflow_run_id=mlflow_run_id)
         # bakılacak, düzenlenebilir ya da komple kaldırılabilir
         print(f"ckpt:{last_ckpt_idx} saved...")
         # next ckpt idx
@@ -471,10 +440,10 @@ for step in range(last_step, max_steps):
     # step >= (max_steps * 0.9)
     # eğitimin son %10'lık dilimi: 512 block_size
     # için hazırlık, init
-    if step == (int(max_steps * 0.9)):
+    if step == (int(max_steps * pretrain_config["stage1_ratio"])):
         # bakılacak burada bir tür print yapılamlı info verilmeli (artık bunu tqdm'den mi anlarız yoksa saf print ile mi idk)
-        print("hello, this is the end of 90% of training, now starting 10% of training B 512")
-        train_loader = DataLoaderCustom(batch_size=pretrain_config["train_batch_size"] // 2, block_size=pretrain_config["block_size"] * 2, device=device)
+        print(f"Switching to stage 2, block_size: {pretrain_config['block_size_s2']}, batch_size: {pretrain_config['train_batch_size_s2']}")
+        train_loader = DataLoaderCustom(batch_size=pretrain_config["train_batch_size_s2"], block_size=pretrain_config["block_size_s2"], device=device)
 
     
 
