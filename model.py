@@ -9,30 +9,8 @@ import torch.nn as nn
 from torch.nn import functional as F
 from transformers import PreTrainedTokenizerFast
 
-from bert_implementation_tr.data.data_aux import get_tokenizer, DataLoaderCustom
-
-
-def get_pad_id():
-    return get_tokenizer().convert_tokens_to_ids("[PAD]")
-
-@dataclass
-class BertConfig:
-    vocab_size = 32000
-    hidden_size = 768
-    num_hidden_layers = 12
-    num_attention_heads = 12
-    hidden_act = "gelu"
-    intermediate_size = hidden_size * 4 
-    hidden_dropout_prob = 0.1
-    attention_probs_dropout_prob = 0.1
-    max_position_embeddings = 512
-    initializer_range = 0.02
-    layer_norm_eps = 1e-12
-    type_vocab_size = 2
-    classifier_dropout = None
-    pad_token_id = get_pad_id()
-
-
+from bert_implementation_tr.data.data_aux import DataLoaderCustom
+from config import BertConfig
 
 
 
@@ -60,6 +38,7 @@ class BertIntermediate(nn.Module):
         # bakılacak
         self.dense = nn.Linear(config.hidden_size, config.intermediate_size)
         self.intermediate_act_fn = nn.GELU()
+        
     
     def forward(self, hidden_states: torch.Tensor) -> torch.Tensor:
         hidden_states = self.dense(hidden_states)
@@ -245,6 +224,8 @@ class BertLMPredictionHead(nn.Module):
         self.transform = BertPredictionHeadTransform(config)
         self.decoder = nn.Linear(config.hidden_size, config.vocab_size, bias=False) 
         self.bias = nn.Parameter(torch.zeros(config.vocab_size))
+        # bakılacak: bunu ekstradan koydum, config'de classfier dropout var idi, ancak hf imp'de bunu görmedim (ya da kaçırdım)
+        self.dropout = nn.Dropout(config.classifier_dropout)
 
         # decoder.bias is False means it is None
         # parameter sharing (now self.decoder.bias reference(pointer logic) self.bias tensor (same memory/object))
@@ -253,6 +234,7 @@ class BertLMPredictionHead(nn.Module):
     def forward(self, hidden_states: torch.Tensor) -> torch.Tensor:
         hidden_states = self.transform(hidden_states)
         hidden_states = self.decoder(hidden_states)
+        hidden_states = self.dropout(hidden_states)
         return hidden_states
 
 

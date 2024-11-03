@@ -40,7 +40,7 @@ def get_tokenizer(tokenizer_path=SAVE_PATH, fast=True):
     return tokenizer
 
 # geçici silinecek (data.py'da labels'da cls tokeni full pad olarak verildiğinde buna ve alttaki olaya gerek kalmayacak)
-TEMP_PAD_TOKEN_ID = get_tokenizer().convert_tokens_to_ids("[PAD]")
+PAD_TOKEN_ID = get_tokenizer().convert_tokens_to_ids("[PAD]")
 
 @dataclass
 class ModelInput:
@@ -72,7 +72,7 @@ class ModelInput:
         # geçici çözüm, data.py'da halledilecek
         # data.py'da : en sağa is next eklenecek ayrı olarak, y'de pad token yerine ignore idx kullanacak yani -100
         labels = torch.tensor(np_array[:, block_size:2 * block_size], dtype=torch.long)
-        labels[:, 0] = TEMP_PAD_TOKEN_ID
+        labels[:, 0] = PAD_TOKEN_ID
 
         # "..." token'ı kaynaklı (vocab'ı 32001 yaptı) geçici çözüm:
         # 32000 id'sini gördüğümüz elemanları "." token'ı yapacağım

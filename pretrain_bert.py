@@ -15,8 +15,9 @@ from torch.nn import functional as F
 
 
 
-from model import BertConfig, BertForPreTraining, FillMaskPipeline, IsNextPipeline, load_checkpoint, save_checkpoint
+from model import BertForPreTraining, FillMaskPipeline, IsNextPipeline, load_checkpoint, save_checkpoint
 from bert_implementation_tr.data.data_aux import DataLoaderCustom, get_tokenizer
+from config import get_pretrain_bert_py_configs
 
 
 
@@ -34,30 +35,7 @@ warnings.filterwarnings("ignore")
 
 
 
-@dataclass
-class PreTrainBertConfig:
-    do_eval: bool = False                                   # just do eval the model (from_best_ckpt or from_huggingface) but not training (sadece block512 için çalışacak bu arada)
-    from_best_ckpt: bool = False                            # cannot be used with do_train
-    from_huggingface: bool = False                          # cannot be used with do_train
-    resume: bool = False                                    # resume training from the last step
-    block_size: int = 256
-    train_batch_size: int = 32              
-    val_batch_size: int = 8
-    grad_accum_steps: int = 1                               # total batch size (we are simulating this by grad accum) -> 8x32 = 256 
-    max_learning_rate: float = 1e-4
-    min_learning_rate: float = max_learning_rate * 0.01
-    lr_scheduler: str = "cosine"
-    num_train_steps: int = 1000
-    num_warmup_steps: int = 100
-    save_checkpoints_steps: int = 50                        # her val'da ckpt işini halledeceğim
-    val_check_interval: int = 50                            # 1000 adımda bir validation yap
-    device: str = "cuda"                                    # cpu or cuda (or mps) bakılacak: şimdilik bunun bir etkisi olmayacak, script device'ı otomatik kendi belirleyecek
-    max_eval_steps: int = 50                                # istesem'de 100'ü aşamam gibi çünkü: 256 block_size'da son shard'ta toplam 3872 tane sample var, max eval 122'de bu aşılır, block 512'de bu 8256 sample var
-    weight_decay: float = 0.01
-    max_ckpt: int = 5
-    seed: int = 1881
-    generate_samples: bool = True
-    mlflow_tracking: bool = True           # 
+
 
 
 # @dataclass
@@ -135,6 +113,7 @@ class PreTrainBertConfig:
 # -> * (asterisk) kullandığın zaman '!' sembolü çalışmaya başladı!  (ÖNEMLİ)
 # mlflow autolog'u dene
 # takip edilmemesi gereken dosyaları takipten çıkarmayı da unutma!
+# cli config comb vs işleri (device kontrolü de yapılmalı)
 
 
 # tanım: gpu'daki operasyonlara/kernel'lara mm operasyon precisionunu ayarlıyor
@@ -144,8 +123,11 @@ class PreTrainBertConfig:
 torch.set_float32_matmul_precision("high")
 
 # create training config (BAKILACAK: şimdilik bu ikisi default configler!)
-pretrain_config = asdict(PreTrainBertConfig())
-model_cfg = BertConfig()
+model_cfg, pretrain_config = get_pretrain_bert_py_configs()
+
+# dataclass objects are not subscriptable, so convert to dict
+model_cfg = asdict(model_cfg)
+pretrain_config = asdict(pretrain_config)
 
 if pretrain_config["generate_samples"]:
     tokenizer = get_tokenizer(fast=True)
@@ -164,12 +146,15 @@ if pretrain_config["mlflow_tracking"]:
 
 
 
-device = "cpu"
-# auto detect device
-if torch.cuda.is_available():
-    device = "cuda"
-elif hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
-    device = "mps"
+#device = "cpu"
+## auto detect device
+#if torch.cuda.is_available():
+#    device = "cuda"
+#elif hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
+#    device = "mps"
+
+
+device = pretrain_config["device"]
 print(f"[INFO] using device: {device}")
 
 # override device
@@ -200,16 +185,15 @@ def do_just_evaluation_on_pretrain_tasks(model: BertForPreTraining, val_loader: 
 
             val_loss_accum += model_output.loss.detach().item() / pretrain_config["max_eval_steps"]
 
-        if pretrain_config["generate_samples"]:
-            # bakılacak modularleştirilebilir
-            # bakılacak, sampling/geration/pipeline aşamaları, her task için (mlm, nsp) ayrı ayrı 5 example ve sonuçlarını bas
-            print("\nMLM GENERATION EXAMPLES:")
-            print("---------------------------------------")
-            fill_mask_pipeline(samples_for_mlm_generation)
-            print("NSP GENERATION EXAMPLES:")
-            print("---------------------------------------")
-            nsp_pipeline(samples_for_nsp_generation)
-            print("---------------------------------------")
+        # bakılacak modularleştirilebilir
+        # bakılacak, sampling/geration/pipeline aşamaları, her task için (mlm, nsp) ayrı ayrı 5 example ve sonuçlarını bas
+        print("\nMLM GENERATION EXAMPLES:")
+        print("---------------------------------------")
+        fill_mask_pipeline(samples_for_mlm_generation)
+        print("NSP GENERATION EXAMPLES:")
+        print("---------------------------------------")
+        nsp_pipeline(samples_for_nsp_generation)
+        print("---------------------------------------")
 
         print(f"validation loss: {val_loss_accum}\n")
 
@@ -403,7 +387,7 @@ for step in range(last_step, max_steps):
     # ayrıca en son adımda da validation yapılacağına dikkat
 
     #if step > last_step and step % pretrain_config["val_check_interval"] == 0 or last_step_flag:
-    if step % pretrain_config["val_check_interval"] == 0 or last_step_flag:
+    if step % pretrain_config["val_check_steps"] == 0 or last_step_flag:
       
         model.eval()
         val_loader.reset()
