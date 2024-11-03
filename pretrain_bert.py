@@ -8,6 +8,7 @@ import warnings
 from dataclasses import dataclass, asdict
 from typing import Dict
 
+import mlflow
 import torch
 import torch.nn as nn
 from torch.nn import functional as F
@@ -24,6 +25,10 @@ from bert_implementation_tr.data.data_aux import DataLoaderCustom, get_tokenizer
 #print("saved...")
 #
 #sys.exit(0)
+
+
+
+
 
 warnings.filterwarnings("ignore")
 
@@ -42,18 +47,17 @@ class PreTrainBertConfig:
     max_learning_rate: float = 1e-4
     min_learning_rate: float = max_learning_rate * 0.01
     lr_scheduler: str = "cosine"
-    num_train_steps: int = 300
-    num_warmup_steps: int = 10
+    num_train_steps: int = 1000
+    num_warmup_steps: int = 100
     save_checkpoints_steps: int = 50                        # her val'da ckpt işini halledeceğim
     val_check_interval: int = 50                            # 1000 adımda bir validation yap
-    device: str = "cpu"                                     # cpu or cuda (or mps) bakılacak: şimdilik bunun bir etkisi olmayacak, script device'ı otomatik kendi belirleyecek
-    max_eval_steps: int = 20                                # istesem'de 100'ü aşamam gibi çünkü: 256 block_size'da son shard'ta toplam 3872 tane sample var, max eval 122'de bu aşılır, block 512'de bu 8256 sample var
+    device: str = "cuda"                                    # cpu or cuda (or mps) bakılacak: şimdilik bunun bir etkisi olmayacak, script device'ı otomatik kendi belirleyecek
+    max_eval_steps: int = 50                                # istesem'de 100'ü aşamam gibi çünkü: 256 block_size'da son shard'ta toplam 3872 tane sample var, max eval 122'de bu aşılır, block 512'de bu 8256 sample var
     weight_decay: float = 0.01
     max_ckpt: int = 5
     seed: int = 1881
     generate_samples: bool = True
-    mlflow_tracking: bool = False           # 
-
+    mlflow_tracking: bool = True           # 
 
 
 # @dataclass
@@ -124,7 +128,13 @@ class PreTrainBertConfig:
 # seed olayıda ckpt'de olsa mı acaba?
 # last step olaylarında sıkıntı var düzenlenecek (son adım ckpt yapılabilmeli, hali hazırda eğitimi bitmiş bir modelde pretrain dediğimizde de ckpt yapıyor (en sonu override ediyor) bu problem çözülmeli)
 # has attrib ile gelu yerine farklı actv kullanabilmeli kullanıcı
-
+# do_eval'ın tam anlamıyla çalışabilmesi için data.py'ı güncellemem gerek (tüm adımları hf tokenizer ile de yapabilmeli,
+# -> shard count limit belirleyebilmeli(gerçi buna gerek olmadan data.py üzerinde prepare data for do_eval parametresi yapabiliriz))
+# her validation'da best ckpt yapılmamalı (fazla vakit yiyor, her ckpt yapıldığı zaman yapılmalı bence)
+# git repo işlerine geldiğinde göreceksin: xy_shards256 klasörünü (stat dosyası) track etmişim zamanında, track edilen dosyaları gitignore etsende hala track edilmeye devam edilir unutma!
+# -> * (asterisk) kullandığın zaman '!' sembolü çalışmaya başladı!  (ÖNEMLİ)
+# mlflow autolog'u dene
+# takip edilmemesi gereken dosyaları takipten çıkarmayı da unutma!
 
 
 # tanım: gpu'daki operasyonlara/kernel'lara mm operasyon precisionunu ayarlıyor
@@ -145,6 +155,12 @@ if pretrain_config["generate_samples"]:
     samples_for_nsp_generation = [["Çocuk sahibi çift sayısında inanılmaz bir artış var.", "Uzaya ilk Bekiroğ Reis çıkmıştır"],
                                   ["Bu nsp olayı bir garip oldu. Sanki kablolar ters bağlandı.", "Bir şekilde kabloları ayarlamak gerekli"],
                                   ["çoğunuz yaş itibariyle tanımaz ama istanbul'un en iyi belediye başkanı justinianus'tur.", "Samsun Ayvacık belediyesi ne yapmak nereye varmak istemektedir!"] ]
+
+if pretrain_config["mlflow_tracking"]:
+    mlflow.set_tracking_uri("http://localhost:5000")
+    mlflow.set_experiment("bert_implementation_tr")
+    mlflow.start_run(run_name="bert_pretraining")
+
 
 
 
@@ -167,6 +183,10 @@ if torch.cuda.is_available():
 
 
 def do_just_evaluation_on_pretrain_tasks(model: BertForPreTraining, val_loader: DataLoaderCustom):
+    # if eval hf model, we should use hf tokenizer not custom tokenizer
+    if pretrain_config["from_huggingface"]:
+        from transformers import AutoTokenizer
+        tokenizer = AutoTokenizer.from_pretrained("dbmdz/bert-base-turkish-cased")
     model.eval()
     val_loader.reset()
     fill_mask_pipeline = FillMaskPipeline(model, tokenizer, strategy="greedy")
@@ -201,9 +221,9 @@ if pretrain_config["do_eval"] == True:
     val_loader = DataLoaderCustom(batch_size=pretrain_config["val_batch_size"] // 2, block_size=pretrain_config["block_size"] * 2, split="val", device=device)
     if pretrain_config["from_huggingface"] == True:
         model = BertForPreTraining.from_pretrained()
-        model_cfg = model.config
     if pretrain_config["from_best_ckpt"] == True:
         ckpt_dict = load_checkpoint(postfix="best")
+        model = BertForPreTraining(ckpt_dict["model_config"])
         model.load_state_dict(ckpt_dict["model_state_dict"])
     model.to(device)
     model.eval()
@@ -317,14 +337,12 @@ if pretrain_config["generate_samples"]:
     nsp_pipeline = IsNextPipeline(model, tokenizer)
 
 
-## bakılacak, resume durumda, stage 2 isek T yanlış olur! (hatta B de yanlış olur)
-## gerçi bura komple atılabilir, print amaçlı sadece
-#B, T = pretrain_config["train_batch_size"], pretrain_config["block_size"]
-#grad_accum_steps = pretrain_config["gradient_accumulation_steps"]
-#
-#total_batch_size = B * grad_accum_steps
-#print(f"total desired batch size: {total_batch_size}")
-#print(f"=> calculated gradient accumulation steps: {grad_accum_steps}")
+
+if pretrain_config["mlflow_tracking"]:
+    mlflow.log_params(pretrain_config)
+    mlflow.log_params(asdict(model.config))
+
+
 
 
 max_lr = pretrain_config["max_learning_rate"]
@@ -365,8 +383,14 @@ print("val block size: ", val_loader.block_size)
 
 
 
+
+
+
+
 # 1 additional loop for validation
 max_steps += 1
+train_loss_accum = 0.0
+val_loss_accum = 0.0
 
 # training loop
 for step in range(last_step, max_steps):  
@@ -394,6 +418,15 @@ for step in range(last_step, max_steps):
                     model_output = model(**model_input_batch)
 
                 val_loss_accum += model_output.loss.detach().item() / pretrain_config["max_eval_steps"]
+        
+        if step > last_step and pretrain_config["mlflow_tracking"]:
+            mlflow.log_metric("val_loss", val_loss_accum, step)
+        
+        
+        
+
+        
+
         # if step > last_step and val_loss_accum < best_val_loss:
         # save ckpt if val loss improved
         if step > last_step and val_loss_accum < best_val_loss:
@@ -407,13 +440,18 @@ for step in range(last_step, max_steps):
 
         # bakılacak modularleştirilebilir
         if pretrain_config["generate_samples"]:
-            print("\n[Step:{step}] MLM GENERATION EXAMPLES:")
-            print("---------------------------------------")
-            fill_mask_pipeline(samples_for_mlm_generation)
-            print("[Step:{step}] NSP GENERATION EXAMPLES:")
-            print("---------------------------------------")
-            nsp_pipeline(samples_for_nsp_generation)
-            print("---------------------------------------")
+            txt = f"\n[Step:{step}] MLM GENERATION EXAMPLES:\n"
+            txt += "---------------------------------------\n"
+            txt += fill_mask_pipeline(samples_for_mlm_generation, do_print=False) + "\n"
+            txt += f"[Step:{step}] NSP GENERATION EXAMPLES:\n"
+            txt += "---------------------------------------\n"
+            txt += nsp_pipeline(samples_for_nsp_generation, do_print=False) + "\n"
+            txt += "---------------------------------------\n"
+            print(txt)
+            with open("generated_samples.txt", "a", encoding="utf-8") as f:
+                f.write(txt)
+
+            mlflow.log_artifact("generated_samples.txt") if pretrain_config["mlflow_tracking"] else None
 
         print("val loss: ", val_loss_accum)
 
@@ -442,6 +480,7 @@ for step in range(last_step, max_steps):
     # son adımda validation yaptık, ckpt işlerini hallettik, çıkıyoruz (tekrar eğitim döngüsüne girmeye gerek yok)
     if last_step_flag:
         print("training done...")
+        mlflow.end_run() if pretrain_config["mlflow_tracking"] else None
         break
     
 
@@ -489,6 +528,15 @@ for step in range(last_step, max_steps):
     dt = (t1 - t0)
     tokens_processed = train_loader.batch_size * train_loader.block_size * pretrain_config["grad_accum_steps"]
     tokens_per_second = tokens_processed / dt
+
+    if pretrain_config["mlflow_tracking"]:
+        mlflow.log_metric("total_train_loss", train_loss_accum, step)
+        mlflow.log_metric("lr", lr, step)
+        mlflow.log_metric("grad_norm", norm, step)
+        mlflow.log_metric("mlm_loss", model_output.mlm_loss.item(), step)
+        mlflow.log_metric("nsp_loss", model_output.nsp_loss.item(), step)
+        mlflow.log_metric("tokens_per_second", tokens_per_second, step)
+
     print(f"step {step:5d} | total loss: {train_loss_accum:.6f} | lr: {lr:.4e} | norm: {norm:.4f} | mlm loss: {model_output.mlm_loss.item():.6f} | nsp loss: {model_output.nsp_loss.item():.6f} | dt: {dt:.2f}ms | tok/sec: {tokens_per_second:.2f} tokens/sec")
 
 

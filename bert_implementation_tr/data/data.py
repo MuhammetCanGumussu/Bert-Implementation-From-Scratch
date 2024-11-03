@@ -38,7 +38,11 @@ NUM_OF_DOCS_PER_SHARD = 4_000       # doc_shards ve ab_shards için
 NUM_TOKENS_PER_SHARD = 10_000_000   # xy_shards için, örn: 40_000 sample * 256 token ~ 10_000_000 tokens
 OVERLAP = BLOCK_SIZE // 2           # pencere hareketi/deltası kesinlikle 4 dene!
 TAMPON = 10                         # block penceresi sınırlarını tamponluyoruz gibi düşünülebilir (tampon içinde kalan sent idx'ler kullanılmayacak)
-
+# TODO TODO TODO BAKILACAK:
+# prepare data for do_eval parametresi yapabiliriz, tek bir xy shardı hazırlar (block size'ı vs gene yukarıdaki global ile belirlenecek no problemo)
+# daha iyi moduler çözüm get_tokenizer'ı güncelleyip hf'de return edebiliriz
+# daha sonra shard count limit tanımlayabiliriz gibi gibi
+# tabi xy klasörlerinde ek tokenizer postifx kullanabiliriz (buna gerek kalmayacak şekilde yapalım ya, do eval klasörü oluşsun yeter gibi)
 
 NUM_PROCESSES = (os.cpu_count() - 1) if os.cpu_count() > 1 else 1
 
@@ -900,6 +904,8 @@ def create_xy_shards() -> None:
 
         # save stat
         stat.save_stat(xy_dir + "/" + "stat.txt")
+
+
 
 
 

@@ -328,7 +328,7 @@ class BertForPreTraining(nn.Module):
             position_ids: torch.Tensor = None,
             labels: Optional[torch.Tensor] = None,
             next_sentence_label: Optional[torch.Tensor] = None,
-            class_weights: Optional[torch.Tensor] = None 
+            class_weights: Optional[torch.Tensor] = None
     ) -> BertForPreTrainingOutput:
         
         last_hidden_state, pooled_output = self.bert(input_ids, attention_mask, token_type_ids, position_ids)
@@ -491,7 +491,7 @@ class FillMaskPipeline():
         self.max_length = self.model.bert.config.max_position_embeddings
         self.strategy = strategy
 
-    def __call__(self, text: List[str]) -> None:
+    def __call__(self, text: List[str], do_print: bool = True) -> None:
         
         if self.strategy not in ["multinomial", "greedy"]:
             raise ValueError(f"unknown strategy: {self.strategy}")
@@ -531,14 +531,16 @@ class FillMaskPipeline():
             # B, 5
             sampled_token_ids = torch.gather(topk_indices, -1, sampled_ids)
             sampled_token_probs = torch.gather(topk_probs, -1, sampled_ids)
-
+            txt = ""
             for b_idx in range(topk_probs.size(0)):
                 d = {"token_str":[], "score":[]}
                 for i in range(5):
                     d["score"].append(format(sampled_token_probs[b_idx][i].item(), '.4f'))
                     d["token_str"].append(self.tokenizer.convert_ids_to_tokens(sampled_token_ids[b_idx][i].item()))
-                
-                print(f"Text: {text[b_idx]} ----> Top 5 Predictions: {d}")
+                txt += f"Text: {text[b_idx]} ----> Top 5 Predictions: {d}\n"
+            print(txt) if do_print else None
+            return txt
+
 
 
 
@@ -549,7 +551,7 @@ class IsNextPipeline():
         self.tokenizer = tokenizer
         self.max_length = self.model.bert.config.max_position_embeddings
 
-    def __call__(self, text: List[List[str]]) -> None:
+    def __call__(self, text: List[List[str]], do_print: bool = True) -> None:
         text_with_special_tokens = []
         for l_str in text:
             textA = l_str[0]
@@ -578,8 +580,10 @@ class IsNextPipeline():
             model_seq_logits = self.model(**encoding).seq_relationship_logits
             # B, 2
             nsp_probs = F.softmax(model_seq_logits, dim=-1) 
-
+            txt = ""
             for b_idx in range(model_seq_logits.size(0)):
-                print(f"Text: {text[b_idx]} Predictions ----> { f'isNext: {nsp_probs[b_idx][0].item():.3f}, notNext: {nsp_probs[b_idx][1].item():.3f}' }")         
+                txt += f"Text: {text[b_idx]} Predictions ----> { f'isNext: {nsp_probs[b_idx][0].item():.3f}, notNext: {nsp_probs[b_idx][1].item():.3f}' }\n" 
+            print(txt) if do_print else None
+            return txt
 
 
