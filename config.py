@@ -27,7 +27,7 @@ class DataConfig:
 @dataclass
 class TrainTokenizerConfig:
     vocab_size: int = field(default=32_000, metadata={"description": "Vocab size of token embeddings"})
-    limit_alphabet: int = field(default=1_000, metadata={"description": "Limit for alphabet"})
+    limit_alphabet: int = field(default=250, metadata={"description": "Limit for alphabet"})
     min_frequency: int = field(default=2, metadata={"description": "Min frequency"})
 
 

@@ -23,6 +23,24 @@ class ModelInput:
     
     @classmethod
     def from_numpy_to_ModelInput(cls, np_array: np.ndarray, block_size: int, device: torch.device | str) -> "ModelInput":
+        """
+        Converts a numpy array into a ModelInput object suitable for model input.
+
+        Args:
+            np_array (np.ndarray): A numpy array where each row contains concatenated sequences
+                                  representing input_ids, labels, token_type_ids, attention_mask,
+                                  and next_sentence_label.
+            block_size (int): The size of each individual sequence block within the array.
+            device (torch.device | str): The device where ModelInput tensors will be allocated.
+
+        Returns:
+            ModelInput: A ModelInput object containing the following PyTorch tensors:
+                - 'input_ids': Tensor of input IDs.
+                - 'labels': Tensor of labels.
+                - 'token_type_ids': Tensor of token type IDs.
+                - 'attention_mask': Tensor representing the attention mask.
+                - 'next_sentence_label': Tensor for the next sentence prediction label.
+        """
         return cls(
             # sıraya dikkat : x -> y -> segment_ids -> attention_mask
             # np array genişliği: x + y + segment_ids + attention_mask --> (BLOCK_SIZE * 4)
@@ -35,11 +53,23 @@ class ModelInput:
     
     @staticmethod
     def from_numpy_to_tensors_dict(np_array: np.ndarray, block_size: int) -> dict:
-        """ BURADA KALDIM
-        ModelInput return edip daha sonra asdict ile dict'e çevirmek eğitim sırasında gereksiz maliyet olabilir (from_numpy_to_tensors).
-        Bundan dolayı direkt dict return eden bu static method kullanılmalı (from_numpy_to_tensors_dict).
         """
-        
+        Converts a numpy array into a dictionary of PyTorch tensors suitable for model input.
+    
+        Args:
+            np_array (np.ndarray): A numpy array where each row contains concatenated sequences
+                                   representing input_ids, labels, token_type_ids, attention_mask,
+                                   and next_sentence_label.
+            block_size (int): The size of each individual sequence block within the array.
+    
+        Returns:
+            dict: A dictionary containing the following keys and corresponding PyTorch tensors:
+                - 'input_ids': Tensor of input IDs.
+                - 'labels': Tensor of labels.
+                - 'token_type_ids': Tensor of token type IDs.
+                - 'attention_mask': Tensor representing the attention mask.
+                - 'next_sentence_label': Tensor for the next sentence prediction label.
+        """
         return dict(
             input_ids =  torch.tensor(np_array[:, :block_size], dtype=torch.long),
             labels = torch.tensor(np_array[:, block_size:2 * block_size], dtype=torch.long),
