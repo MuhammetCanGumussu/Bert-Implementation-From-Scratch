@@ -47,7 +47,7 @@ from ..config import get_random_word_set_py_config
 
 
 
-root_dir = os.path.dirname(os.path.abspath(__file__))
+root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 random_word_set_save_path = root_dir + "/random_word_set/random_word_set.json"
 tokenizer_path = root_dir + "/tokenizer/tr_wordpiece_tokenizer_cased.json" 
 

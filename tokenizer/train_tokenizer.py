@@ -19,7 +19,7 @@ from ..config import get_train_tokenizer_py_config
 
 
 
-root_dir = os.path.dirname(os.path.abspath(__file__))
+root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SAVE_PATH = root_dir + "/tokenizer/tr_wordpiece_tokenizer_cased.json"
 
 

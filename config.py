@@ -5,9 +5,22 @@ from typing import Tuple, List, Type
 
 import torch
 
-from model import load_checkpoint
+from model.model import load_checkpoint
 
 
+@dataclass
+class DataConfig:
+    block_size: int = field(default=256, metadata={"description": "Block size"})
+    num_of_docs_per_shard: int = field(default=4_000, metadata={"description": "Number of docs per shard (for doc_shards and ab_shards creation)"})
+    num_tokens_per_shard: int = field(default=10_000_000, metadata={"description": "Number of tokens per shard (for xy_shards creation)"})
+    overlap: int = field(default=128, metadata={"description": "Overlap, how much overlap between windows when ab samples are generated"})
+    edge_buffer: int = field(default=10, metadata={"description": "prevents the use of a and b seperators near window ends by this many tokens (makes a and b more similar length-wise) (for ab_shards creation)"})
+    seed: int = field(default=13013, metadata={"description": "Seed, for reproducibility"})
+    rate_of_untouched_words: float = field(default=0.85, metadata={"description": "Rate of untouched words, these are not gonna replaced by [mask, identity, replaced] tokens"})
+    mask_ratio: float = field(default=0.80, metadata={"description": "Mask ratio"})
+    replace_ratio: float = field(default=0.10, metadata={"description": "Replace ratio"})
+    identity_ratio: float = field(default=0.10, metadata={"description": "Identity ratio"})
+    tokenizer_type: str = field(default="custom", metadata={"description": "Tokenizer type, Data has been prepared/tokenized with. choices: [custom, hf]"})
 
 @dataclass
 class TrainTokenizerConfig:
@@ -23,8 +36,6 @@ class RandomWordSetConfig:
     min_freq_for_words: int = field(default=150, metadata={"description": "Min freq for words"})
     random_sample: bool = field(default=False, metadata={"description": "Randomly sample words (not directly most frequent ones)"})
     use_number_of_line: int = field(default=None, metadata={"description": "Use specified number of lines for training"})
-
-
 
 
 
@@ -65,18 +76,19 @@ class PreTrainBertConfig:
     grad_accum_steps: int = field(default=1, metadata={"description": "Gradient accumulation steps (micro steps)"})
     max_learning_rate: float = field(default=1e-4, metadata={"description": "Maximum learning rate"})
     min_learning_rate: float = field(default=1e-4 * 0.01, metadata={"description": "Minimum learning rate"})
-    lr_scheduler: str = field(default="cosine", metadata={"description": "Learning rate scheduler", "choices": ["linear", "cosine"]})
+    lr_scheduler: str = field(default="cosine", metadata={"description": "Learning rate scheduler choices: [linear, cosine]"})
     num_train_steps: int = field(default=1000, metadata={"description": "Number of training steps"}) 
     num_warmup_steps: int = field(default=100, metadata={"description": "Number of warmup steps"})
     save_checkpoints_steps: int = field(default=50, metadata={"description": "Save checkpoints steps"})
     val_check_steps: int = field(default=50, metadata={"description": "Validation check steps"})
-    device: str = field(default="cuda", metadata={"description": "Device", "choices": ["cpu", "cuda", "mps"]})
+    device: str = field(default="cuda", metadata={"description": "Device choices: [cpu, cuda, mps]"})
     max_eval_steps: int = field(default=50, metadata={"description": "Maximum evaluation steps (if validation set is small then max_eval_steps is gonna be treated as validation set size)"})
     weight_decay: float = field(default=0.01, metadata={"description": "Weight decay (L2 regularization)"})
     max_ckpt: int = field(default=5, metadata={"description": "Maximum number of last checkpoints to keep"})
     seed: int = field(default=13013, metadata={"description": "Random seed"})
     generate_samples: bool = field(default=True, metadata={"description": "Try model on predefined samples"})
     mlflow_tracking: bool = field(default=True, metadata={"description": "MLflow tracking"})      
+    tokenizer_type: str = field(default="custom", metadata={"description": "Tokenizer type, Data has been prepared/tokenized with. choices: [custom, hf]"})
 
 
 
@@ -166,8 +178,23 @@ def get_train_tokenizer_py_config(verbose_changes=True, verbose_all=True) -> Tra
     return overridden_cfg
 
 
-def get_data_py_config():
-    raise NotImplementedError("Not implemented yet")
+def get_data_py_config(verbose_changes=True, verbose_all=True) -> DataConfig:
+    overridden_cfg = _parse_args(cfg_classes=(DataConfig,),
+                                 verbose_changes=verbose_changes,
+                                 verbose_all=verbose_all)[0]
+    
+    # let's check all number fields are positive
+    for field in fields(overridden_cfg):
+        if field.type is int and getattr(overridden_cfg, field.name) < 0:
+            raise argparse.ArgumentTypeError(f"{field.name} must be positive")
+    
+    
+    if overridden_cfg.mask_ratio + overridden_cfg.replace_ratio + overridden_cfg.identity_ratio != 1:
+        raise argparse.ArgumentTypeError("mask_ratio + replace_ratio + identity_ratio must be 1 (these are also probabilities)")
+    if overridden_cfg.rate_of_untouched_words > 1 or overridden_cfg.rate_of_untouched_words < 0:
+        raise argparse.ArgumentTypeError("rate_of_untouched_words must be between 0 and 1")
+
+
 
 
 def get_random_word_set_py_config(verbose_changes=True, verbose_all=True) -> RandomWordSetConfig:
@@ -192,12 +219,9 @@ def get_pretrain_bert_py_configs(verbose_changes=True, verbose_all=True) -> Tupl
                                                                verbose_changes=verbose_changes,
                                                                verbose_all=verbose_all)
     
-    
-
     # let's create default configs
     default_bert_cfg = BertConfig()
     default_pretrain_cfg = PreTrainBertConfig()
-
 
     if overridden_pretrain_cfg.resume:
         # get_last_ckpt_idx() will raise error if no ckpt found
@@ -206,29 +230,41 @@ def get_pretrain_bert_py_configs(verbose_changes=True, verbose_all=True) -> Tupl
         ckpt_bert_cfg = ckpt_dict["bert_config"]
         ckpt_pretrain_cfg = ckpt_dict["pretrain_config"]
 
-        # control if any arg given is not equal to 
         compare_cfgs_if_changed(cfg=ckpt_bert_cfg, overridden_cfg=overridden_bert_cfg, dont_look_fields=["resume"],
-                                error_msg="for resuming training you should not give any bert cfg args (it should use its saved bert cfg)...")
+                                error_msg="for resuming training you should not give any different bert cfg args (it should use its saved bert cfg)...")
         
-        compare_cfgs_if_changed(cfg=ckpt_pretrain_cfg, overridden_cfg=overridden_pretrain_cfg, dont_look_fields=["resume"],
-                                error_msg="for resuming training you should not give any pretrain cfg args (it should use its saved pretrain cfg)...")
+        # we can change some pretrain cfg args when resuming
+        all_fields = set(overridden_pretrain_cfg.__dataclass_fields__.keys())
+        dont_change_fields = set(["max_ckpt", "seed", "do_train_custom", "do_eval_from_best_ckpt", "do_eval_from_huggingface", "tokenizer_type"]) 
+
+        # all_fields - dont_change_fields -> returns fields that we can change by args (so we should not look at them when comparing)
+        dont_look_fields_for_pretrain = all_fields - dont_change_fields
+        compare_cfgs_if_changed(cfg=ckpt_pretrain_cfg, overridden_cfg=overridden_pretrain_cfg, dont_look_fields=dont_look_fields_for_pretrain,
+                                error_msg=f"for resuming training you can only give/change some pretrain cfg args: {dont_look_fields_for_pretrain}...")
         
 
-    # you cannot change bert_config if do train with hf model weights (default config is fixed for hf model weights (BERTurk)) (Not implemented yet)
+    # you cannot change bert_config if do train with hf model weights (default config is fixed for hf model weights (BERTurk)) 
     if overridden_pretrain_cfg.do_train_custom == False:
         compare_cfgs_if_changed(cfg=default_bert_cfg, overridden_cfg=overridden_bert_cfg,
                                 error_msg="for training with hf model weights (BERTurk) bert_config should be fixed (default).")
 
     if overridden_pretrain_cfg.do_eval_from_best_ckpt and overridden_pretrain_cfg.do_eval_from_huggingface:
         raise argparse.ArgumentTypeError("do_eval_from_best_ckpt and do_eval_from_huggingface cannot be True at the same time")
+    
     # you cannot give model args for do_eval_from_best_ckpt or do_eval_from_huggingface, you can give some args for pretrain args (seed, max_eval_steps, device, val_block_size, val_batch_size)
     elif overridden_pretrain_cfg.do_eval_from_best_ckpt or overridden_pretrain_cfg.do_eval_from_huggingface:
+        
         if overridden_pretrain_cfg.generate_samples == False:
             raise argparse.ArgumentTypeError("generate_samples should be True if do_eval_from_best_ckpt or do_eval_from_huggingface is True")
+        
         do_eval_what = "do_eval_from_best_ckpt" if overridden_pretrain_cfg.do_eval_from_best_ckpt else "do_eval_from_huggingface"
         dont_look_fields = [do_eval_what, "seed", "max_eval_steps", "device", "val_block_size", "val_batch_size"]
-        compare_cfgs_if_changed(cfg=default_pretrain_cfg, overridden_cfg=overridden_pretrain_cfg, error_msg=f"for do_eval you should not give any pretrain cfg args rather than : {dont_look_fields}.", dont_look_fields=dont_look_fields)
-        compare_cfgs_if_changed(cfg=default_bert_cfg, overridden_cfg=overridden_bert_cfg, error_msg="for do_eval you should not give bert cfg args, it will use either best ckpt model cfg (already saved in ckpt file) or hf model default cfg...")
+        
+        compare_cfgs_if_changed(cfg=default_pretrain_cfg, overridden_cfg=overridden_pretrain_cfg,
+                                error_msg=f"for do_eval you should not give any pretrain cfg args rather than : {dont_look_fields}.", dont_look_fields=dont_look_fields)
+        
+        compare_cfgs_if_changed(cfg=default_bert_cfg, overridden_cfg=overridden_bert_cfg,
+                                error_msg="for do_eval you should not give bert cfg args, it will use either best ckpt model cfg (already saved in ckpt file) or hf model default cfg...")
 
 
     if overridden_bert_cfg.hidden_act not in ["gelu", "relu"]:
@@ -243,11 +279,8 @@ def get_pretrain_bert_py_configs(verbose_changes=True, verbose_all=True) -> Tupl
         raise argparse.ArgumentTypeError("mps is not available")
     if overridden_pretrain_cfg.lr_scheduler not in ["linear", "cosine"]:
         raise argparse.ArgumentTypeError("lr_scheduler should be linear or cosine")
+    if overridden_pretrain_cfg.tokenizer_type not in ["custom", "hf"]:
+        raise argparse.ArgumentTypeError("tokenizer_type should be custom or hf")
     
-
-
-    
-    
-
 
     return overridden_bert_cfg, overridden_pretrain_cfg

@@ -12,7 +12,6 @@ tokenizer, random word set vs ayrıca test edilecek
 
 # standard library
 import os
-import sys
 import random
 import multiprocessing as mp
 from typing import List, Tuple
@@ -26,7 +25,11 @@ import pandas as pd
 
 
 # local
-from .data_aux import *
+from .data_aux import FillInput, OneSampleStat, ModelInput, Stat, get_merged_files, get_last_shard_idx, get_tokenizer
+from ..random_word_set.random_word_set import get_random_word_set
+from ..tokenizer.train_tokenizer import get_tokenizer
+from ..config import get_data_py_config
+
 
 # aslında en ilk dosyalar arası import olayına bakmalı
 # flags: DİR, TOKENİZER, HATA, MAGIC NUMBERS, tokenizer'da "..." tokeni eklemeyi kaldır! 31999 yerine 32000 alıyoruz emb hatası oluyor!
@@ -40,14 +43,25 @@ from .data_aux import *
 # extra: farklı veri setleri içinde çalışabilme (shard'lı şekilde)
 # extra2: uniform dist for isnext, configurable
 
+root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+cfg = get_data_py_config()
 
 # DEFAULT VALUES (değiştirilebilir/config/param)
-BLOCK_SIZE = 512
-NUM_OF_DOCS_PER_SHARD = 4_000       # doc_shards ve ab_shards için
-NUM_TOKENS_PER_SHARD = 10_000_000   # xy_shards için, örn: 40_000 sample * 256 token ~ 10_000_000 tokens
-OVERLAP = BLOCK_SIZE // 2           # pencere hareketi/deltası kesinlikle 4 dene!
-TAMPON = 10                         # block penceresi sınırlarını tamponluyoruz gibi düşünülebilir (tampon içinde kalan sent idx'ler kullanılmayacak)
+BLOCK_SIZE = cfg.block_size
+NUM_OF_DOCS_PER_SHARD = cfg.num_of_docs_per_shard       # doc_shards ve ab_shards için
+NUM_TOKENS_PER_SHARD = cfg.num_tokens_per_shard   # xy_shards için, örn: 40_000 sample * 256 token ~ 10_000_000 tokens
+OVERLAP = cfg.overlap          # pencere hareketi/deltası kesinlikle 4 dene!
+EDGE_BUFFER = cfg.edge_buffer                        # block penceresi sınırlarını tamponluyoruz gibi düşünülebilir (tampon içinde kalan sent idx'ler kullanılmayacak)
+SEED = cfg.seed
+RATE_OF_UNTOUCHED_WORDS = cfg.rate_of_untouched_words
+MASK_RATIO = cfg.mask_ratio
+REPLACE_RATIO = cfg.replace_ratio
+IDENTITY_RATIO = cfg.identity_ratio
+TOKENIZER_TYPE = cfg.tokenizer_type
+
+
+
 # TODO TODO TODO BAKILACAK:
 # prepare data for do_eval parametresi yapabiliriz, tek bir xy shardı hazırlar (block size'ı vs gene yukarıdaki global ile belirlenecek no problemo)
 # daha iyi moduler çözüm get_tokenizer'ı güncelleyip hf'de return edebiliriz
@@ -56,15 +70,7 @@ TAMPON = 10                         # block penceresi sınırlarını tamponluyo
 
 NUM_PROCESSES = (os.cpu_count() - 1) if os.cpu_count() > 1 else 1
 
-# bakılacak: data aux'a koyuldu
-# if os.getcwd() == os.path.dirname(__file__):
-#     tokenizer_path = "../tr_wordpiece_tokenizer_cased.json"
-# else:
-#     tokenizer_path = "./tr_wordpiece_tokenizer_cased.json"
-
-
-#TOKENİZER
-tokenizer = get_tokenizer(fast=True)
+tokenizer = get_tokenizer(custom=TOKENIZER_TYPE)
 word_dict = get_random_word_set()
 
 CLS_TOKEN_ID = tokenizer.convert_tokens_to_ids("[CLS]")
@@ -77,8 +83,8 @@ UNK_TOKEN_ID = tokenizer.convert_tokens_to_ids("[UNK]")
 sent_seperator = spacy.load("xx_sent_ud_sm")
 
 
-def appy_seed(number=13013):
-    random.seed(42) # reproducibility
+def appy_seed():
+    random.seed(SEED) # reproducibility
 
 
 def delete_subtitles_from_docs(docs):
@@ -196,7 +202,7 @@ def create_doc_shards(docs_df):
         num_shards += 1
 
     # DİR
-    doc_shards_dir = "doc_shards"
+    doc_shards_dir = root_dir + "/doc_shards"
     os.makedirs(doc_shards_dir, exist_ok=True)
 
     #clean_shards_dir(doc_shards_dir, num_shards)
@@ -227,15 +233,15 @@ def create_doc_shards(docs_df):
 
                 assert df_end_idx == len(docs_df), f"df_end_idx: {df_end_idx}, len(docs_df): {len(docs_df)}"
                 assert (df_end_idx - df_start_idx) == extra_shard_len
-
-                docs_df.iloc[df_start_idx:df_end_idx].to_json(doc_shards_dir + "/" + f"doc_shard_{last_shard_idx}.json",
+                #DIR
+                docs_df.iloc[df_start_idx:df_end_idx].to_json(doc_shards_dir + f"/doc_shard_{last_shard_idx}.json",
                                                           orient="records",
                                                           lines=True,
                                                           force_ascii=False)
                 pbar.update()
                 break
-
-            docs_df.iloc[df_start_idx:df_end_idx].to_json(doc_shards_dir + "/" + f"doc_shard_{last_shard_idx}.json",
+            #DIR
+            docs_df.iloc[df_start_idx:df_end_idx].to_json(doc_shards_dir + f"/doc_shard_{last_shard_idx}.json",
                                                           orient="records",
                                                           lines=True,
                                                           force_ascii=False)
@@ -251,23 +257,23 @@ def read_shard(shard_dir: str, shard_idx: int, return_type: str) -> pd.DataFrame
     last_idx = get_last_shard_idx(shard_dir)
 
     if last_idx == -1:
-        raise FileNotFoundError("shard dir is empty...")
+        raise FileNotFoundError(f"{shard_dir} is empty...")
 
     if shard_idx > last_idx or shard_idx < 0:
         raise IndexError(f"shard idx must be >= 0 and <= {last_idx}, shard_idx you gave was: {shard_idx}")
     
-    if shard_dir.startswith("xy"):
+    if shard_dir.split("/")[-1].startswith("xy"):
         if return_type != "np":
             raise ValueError(f"'return_type' parameter must be 'np' for xy_shards dir...")
         #DİR
         return np.load(shard_dir + f"/xy_shard_{shard_idx}.npy")
+    
 
-    prefix = "ab" if shard_dir.startswith("ab") else "doc"
-    #DİR
+    prefix = "doc" if shard_dir.split("/")[-1].startswith("doc") else "ab"
     temp_df = pd.read_json(shard_dir + f"/{prefix}_shard_{shard_idx}.json",
-                           orient="records",
-                           lines=True,
-                           encoding="utf-8")
+                       orient="records",
+                       lines=True,
+                       encoding="utf-8")
     
     if return_type == "pd":
         return temp_df
@@ -371,7 +377,7 @@ def convert_doc_to_ab(args: Tuple)-> dict[str, list]:
     """
     block_size = BLOCK_SIZE
     overlap = OVERLAP
-    tampon = TAMPON
+    edge_buffer = EDGE_BUFFER
     
     docs = args[0]
     doc_idx = args[1]
@@ -395,7 +401,7 @@ def convert_doc_to_ab(args: Tuple)-> dict[str, list]:
     while block_end_idx <= (doc_len):
 
         # block içerisindeki sent indexleri al
-        block_sent_idx = [sent_idx for sent_idx in doc["sent_idx"] if (block_start_idx + tampon) < sent_idx and (block_end_idx - tampon) > sent_idx]
+        block_sent_idx = [sent_idx for sent_idx in doc["sent_idx"] if (block_start_idx + edge_buffer) < sent_idx and (block_end_idx - edge_buffer) > sent_idx]
         number_of_sent = len(block_sent_idx)
 
 
@@ -441,10 +447,10 @@ def convert_doc_to_ab(args: Tuple)-> dict[str, list]:
     # fazladan notNext sample'ımız olur (class imbalance denebilecek kadar orantısal etki olmaz (veri seti büyük olduğundan ve tabi doclar'da geniş olduğundan)
     # ama mesela doc sayısı çok olsa, doclar kısa olsa (bir doc'tan çok fazla normal sample çıkmaz ise), veri seti küçük olursa o zaman problem olabilir
     # ben gene de class (isNext or not) weight hesaplayan vs fonklar tanımlayacağım, bariz bir oran farkı varsa o zaman uygulamak önemli olur 
-    if (block_start_idx + tampon) < doc_len:
+    if (block_start_idx + edge_buffer) < doc_len:
         len_of_random_b = block_end_idx - doc_len  # A midpoint yani nokta/sent_idx tokenınıda içine alacağından bir sağ shiftledik
-        # random b için istenen token sayısı tampondan az ise o bu ab sample adayı kullanılmayacak (B'de çok çok az sayıda token var demektir)
-        if len_of_random_b < tampon:
+        # random b için istenen token sayısı edge_bufferdan az ise o bu ab sample adayı kullanılmayacak (B'de çok çok az sayıda token var demektir)
+        if len_of_random_b < edge_buffer:
            return ab_dict
         _fill_a_from_block_b_from_random(ab_dict, doc, docs, block_start_idx, doc_len, len_of_random_b)
 
@@ -456,27 +462,27 @@ def convert_doc_to_ab(args: Tuple)-> dict[str, list]:
 def create_ab_shards() -> None:
 
     #DİR
-    ab_dir_name = f"ab_shards_{BLOCK_SIZE}"
-    os.makedirs(ab_dir_name, exist_ok=True)
+    ab_dir = root_dir + f"/ab_shards_{TOKENIZER_TYPE}_{BLOCK_SIZE}"
+    os.makedirs(ab_dir, exist_ok=True)
 
     #DİR
-    doc_dir = "doc_shards"
+    doc_dir = root_dir + "/doc_shards"
     num_shards = len(os.listdir(doc_dir))
-    # clean_shards_dir(ab_dir_name, num_shards)
+    # clean_shards_dir(ab_dir, num_shards)
 
     # son var olan dosya idx'ini aldık bir sonrakinden devam edileceği için 1 ekledik
-    last_shard_idx = get_last_shard_idx(ab_dir_name) + 1
+    last_shard_idx = get_last_shard_idx(ab_dir) + 1
     
     # beklenen tüm dosyalar hali hazırda mevcut ise, çık
     if last_shard_idx == num_shards:
-        print(f"[INFO] Expected number of ab shard {BLOCK_SIZE} files are already exists. Exiting...")
+        print(f"[INFO] Expected number of ab shard {BLOCK_SIZE} files are already exists in {ab_dir}. Exiting...")
         return
     
     print(f"[INFO] Creating ab shard files, continues (or starts) from {last_shard_idx}...")
 
     for shard_idx in range(last_shard_idx, num_shards):
         #DİR
-        docs_shard_df = read_shard(f"doc_shards/", shard_idx, "pd")
+        docs_shard_df = read_shard(doc_dir, shard_idx, "pd")
     
         docs_shard_df["token_ids"] = None
         docs_shard_df["word_ids"] = None
@@ -512,7 +518,7 @@ def create_ab_shards() -> None:
 
         #DİR
         # save
-        ab_df.to_json(f"{ab_dir_name}/" + f"ab_shard_{shard_idx}.json",
+        ab_df.to_json(ab_dir + f"/ab_shard_{shard_idx}.json",
                        orient="records",
                        lines=True,
                        force_ascii=False)
@@ -624,11 +630,16 @@ def _create_fill_input_for_sample(word_ids, one_sample_stat: OneSampleStat = Non
         word_array = np.arange(word_count, dtype=np.uint16)
         prop_of_words = np.random.rand(word_count)
 
+        
 
-        #MAGIC NUMBERS, SHOULD BE CONFIGURABLE
-        mask_of_mask = (prop_of_words > 0.85) & (prop_of_words <= 0.97)          # 0.12'lik dilim
-        mask_of_replace =  (prop_of_words > 0.97) & (prop_of_words <= 0.985)     # 0.015'lik dilim
-        mask_of_identity = (prop_of_words > 0.985)                               # 0.015'lik dilim
+        mask_bound = (1 - RATE_OF_UNTOUCHED_WORDS) * MASK_RATIO
+        replace_bound = (1 - mask_bound) * REPLACE_RATIO + mask_bound
+        # not needed
+        #identity_bound = (1 - replace_bound) * IDENTITY_RATIO + replace_bound
+
+        mask_of_mask = (prop_of_words > RATE_OF_UNTOUCHED_WORDS) & (prop_of_words <= mask_bound)          # 0.12'lik dilim
+        mask_of_replace =  (prop_of_words > mask_bound) & (prop_of_words <= 0.985)     # 0.015'lik dilim
+        mask_of_identity = (prop_of_words > replace_bound)                               # 0.015'lik dilim
 
         
         mask_word_array = word_array[mask_of_mask]
@@ -733,33 +744,40 @@ def _create_xy(ab_row: pd.Series | tuple[int, pd.Series], stat_needed: bool = Tr
 
 
 
-def get_num_lines_from_ab_dir(block_size: str) -> int:
+def get_num_lines_from_ab_dir() -> int:
     """read and count all lines of spesified dir"""
     num_lines = 0
     #DİR
-    for shard_id in os.listdir(f"ab_shards_{block_size}"):
-        with open(f"ab_shards_{block_size}/{shard_id}", "r", encoding="utf-8") as f:
+    for shard_id in os.listdir(root_dir + f"/ab_shards_{TOKENIZER_TYPE}_{BLOCK_SIZE}"):
+        with open(root_dir + f"/ab_shards_{TOKENIZER_TYPE}_{BLOCK_SIZE}/ab_shard_{shard_id}", "r", encoding="utf-8") as f:
             for _ in f:
                 num_lines += 1
     return num_lines
 
 
 
+def save_xy_shard(placeholder_array, shard_idx) -> None:
+    #DİR
+    np.save(root_dir + f"/xy_shards_{TOKENIZER_TYPE}_{BLOCK_SIZE}/xy_shard_{shard_idx}.npy", placeholder_array)
+
+
 
 def create_xy_shards() -> None:
 
     #DİR
-    xy_dir = f"xy_shards_{BLOCK_SIZE}"
+    xy_dir = root_dir + f"/xy_shards_{TOKENIZER_TYPE}_{BLOCK_SIZE}"
+    ab_dir = root_dir + f"/ab_shards_{TOKENIZER_TYPE}_{BLOCK_SIZE}"
     os.makedirs(xy_dir, exist_ok=True)
 
     # örn: 40_000 sample * 256 token ~ 10_000_000 tokens
     number_of_sample_per_shard = NUM_TOKENS_PER_SHARD // BLOCK_SIZE
-
-    total_lines_in_ab = get_num_lines_from_ab_dir(block_size=f"{BLOCK_SIZE}") 
-    if total_lines_in_ab == 0:
-        print(f"[INFO] ab files {BLOCK_SIZE} are not exists. Exiting...")
-        return
     
+    # if there is no shard file in ab_shards, then raise error (xy shards can't be created)
+    if get_last_shard_idx(ab_dir) == -1:
+        raise FileNotFoundError(f"There is no shard file in {ab_dir}. To create xy shards please create ab_shards first.")
+
+    # total_lines_in_ab will be used als
+    total_lines_in_ab = get_num_lines_from_ab_dir() 
     number_of_shard = total_lines_in_ab // number_of_sample_per_shard if total_lines_in_ab % number_of_sample_per_shard == 0 else (total_lines_in_ab // number_of_sample_per_shard) + 1
 
     # clean_shards_dir(xy_dir, number_of_shard)
@@ -768,10 +786,10 @@ def create_xy_shards() -> None:
     
     # beklenen tüm dosyalar hali hazırda mevcut ise, çık
     if last_shard_idx_of_xy == number_of_shard:
-        print(f"[INFO] Expected {xy_dir} files are already exists. Exiting...")
+        print(f"[INFO] Expected number of files are already exists in {xy_dir}. Exiting...")
         return
     
-    print(f"[INFO] Creating xy shard {BLOCK_SIZE} files, starts from 0...")
+    print(f"[INFO] Creating xy shard {TOKENIZER_TYPE}, {BLOCK_SIZE} files, starts from 0...")
 
     last_shard_idx_of_xy = 0
 
@@ -788,9 +806,9 @@ def create_xy_shards() -> None:
         #placeholder_array = np.empty((1000, width), dtype=np.uint16)
         last_row_index = 0
         
-        for ab_shard_idx in range(len(os.listdir(f"ab_shards_{BLOCK_SIZE}"))): 
+        for ab_shard_idx in range(len(os.listdir(ab_dir))): 
             #DİR
-            ab_shard_df = read_shard(f"ab_shards_{BLOCK_SIZE}/", ab_shard_idx, return_type="pd")
+            ab_shard_df = read_shard(ab_dir, ab_shard_idx, return_type="pd")
 
             xy_map_iterator = pool.imap(_create_xy, ab_shard_df.iterrows(), chunksize= 200)
             # xy_map_iterator = pool.imap(_create_xy, ab_shard_df.iloc[:500].iterrows(), chunksize= 200)
@@ -816,7 +834,7 @@ def create_xy_shards() -> None:
 
         #DİR
         # save stat
-        stat.save_stat(xy_dir + "/" + "stat.txt")
+        stat.save_stat(xy_dir + "/stat.txt")
 
 
 

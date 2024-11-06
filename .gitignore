@@ -3,7 +3,9 @@ data/*
 !data/data_aux.py
 !data/data_playground.ipynb
 !data/data.py
-!data/prepare_do_eval_data.py
+# kontrol et çalışıyor mu diye
+!data/xy_shards_{custom, hf}_{256, 512}/stat.txt
+
 
 
 # ignore ckpts

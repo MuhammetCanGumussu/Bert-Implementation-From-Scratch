@@ -12,7 +12,7 @@ from transformers import PreTrainedTokenizerFast
 
 from ..data.data_aux import DataLoaderCustom
 from ..tokenizer.train_tokenizer import get_tokenizer
-from config import BertConfig
+from config import BertConfig, PreTrainBertConfig
 
 
 
@@ -430,9 +430,8 @@ def save_checkpoint(model: BertForPreTraining,
                     dataloader: DataLoaderCustom,
                     step: int, 
                     best_val_loss: float,
-                    # train_loss: float,    # bakılacak, mlflow ile track edeceğim için bunlara gerek yok bence
-                    # val_loss: float,
                     postfix: int | str,
+                    pretrain_config: PreTrainBertConfig,
                     mlflow_run_id: Optional[str] = None
                     ) -> None:
     """
@@ -440,10 +439,9 @@ def save_checkpoint(model: BertForPreTraining,
     """
     temp_dict = {
         'last_step': step,
-        'best_val_loss': best_val_loss,
-        #'train_loss': train_loss,     # bakılacak, mlflow ile track edeceğim için bunlara gerek yok bence
-        #'val_loss': val_loss,         # 
+        'best_val_loss': best_val_loss, 
         'model_config': model.config,
+        'pretrain_config': pretrain_config,
         'model_state_dict': model.state_dict(),
         'optimizer_state_dict': optimizer.state_dict(),
         'last_dataloader_state': dataloader.get_current_state(),

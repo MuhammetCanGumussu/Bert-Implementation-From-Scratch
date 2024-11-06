@@ -9,6 +9,7 @@ from dataclasses import dataclass, asdict
 from ..tokenizer.train_tokenizer import get_tokenizer
 
 
+root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 @dataclass
@@ -135,11 +136,11 @@ class Stat:
 
 def get_merged_files() -> str:
 
-    raw_dir = os.path.join(os.path.dirname(__file__), "raw")
+    raw_dir = root_dir + "/data/raw"
 
     files = os.listdir(raw_dir)
 
-    print(f"[INFO] Files in dir: {files}...")
+    print(f"[INFO] Files in raw_dir: {files}...")
 
     merged_file_content = ""
 
@@ -241,25 +242,24 @@ def get_last_shard_idx(shards_dir:str) -> int:
         if file == "stat.txt":
             continue
 
-        # dizin ile aynı prefix'e sahip olmayan dosyaları atla (zaten olmaması gerek ancak her ihtimale karşı)
-        if not file.startswith("xy_shard_"):
-            continue
+        #HATA doc_shards dizininde çalışmaz bu fonksiyon
+        ## dizin ile aynı prefix'e sahip olmayan dosyaları atla (zaten olmaması gerek ancak her ihtimale karşı)
+        #if not file.startswith("xy_shard_"):
+        #    continue
 
         last_shard_idx += 1
     return last_shard_idx 
 
 
-def save_xy_shard(placeholder_array, shard_idx, block_size) -> None:
-    #DİR
-    np.save(f"xy_shards_{block_size}/xy_shard_{shard_idx}.npy", placeholder_array)
+
                         
 
-def load_xy_shard(shard_idx, block_size=256) -> np.ndarray:
+def load_xy_shard(shard_idx, block_size=256, tokenizer_type="custom") -> np.ndarray:
     #DİR LER
-    if (shard_idx < 0) or (shard_idx > get_last_shard_idx(f"bert_implementation_tr/data/xy_shards_{block_size}")):
-        raise IndexError(f"shard idx must be >= 0 and <= {get_last_shard_idx(f'bert_implementation_tr/data/xy_shards_{block_size}')}, shard_idx you gave was: {shard_idx}")
+    if (shard_idx < 0) or (shard_idx > get_last_shard_idx(root_dir + f"/data/xy_shards_{tokenizer_type}_{block_size}")):
+        raise IndexError(f"shard idx must be >= 0 and <= {get_last_shard_idx(root_dir + f"/data/xy_shards_{tokenizer_type}_{block_size}")}, shard_idx you gave was: {shard_idx}")
     # print(f"loading xy_shard_{shard_idx}.npy")
-    return np.load(f"bert_implementation_tr/data/xy_shards_{block_size}/xy_shard_{shard_idx}.npy")
+    return np.load(root_dir + f"/data/xy_shards_{tokenizer_type}_{block_size}/xy_shard_{shard_idx}.npy")
 
 
 
@@ -270,12 +270,14 @@ class DataLoaderCustom:
                  block_size: int,
                  device: str = "cpu",
                  verbose: bool = True,
+                 tokenizer_type: str = "custom",
                  split: str = "train") -> None:
         self.split = split
         self.device = device
         self.batch_size = batch_size
         self.block_size = block_size
-        self.data_dir = f"bert_implementation_tr/data/xy_shards_{self.block_size}"
+        self.tokenizer_type = tokenizer_type
+        self.data_dir = root_dir + f"/data/xy_shards_{self.tokenizer_type}_{self.block_size}"
 
         assert split in ["train", "val"], f"unknown split: {self.split}"
 
@@ -291,7 +293,7 @@ class DataLoaderCustom:
         # print(f"data shards directory: {self.data_dir}\n")
 
         self.current_shard = ModelInput.from_numpy_to_tensors_dict(
-                                        np_array = load_xy_shard(self.current_shard_id, block_size=self.block_size), 
+                                        np_array = load_xy_shard(self.current_shard_id, block_size=self.block_size, tokenizer_type=self.tokenizer_type), 
                                         block_size = self.block_size)
 
         
@@ -326,7 +328,7 @@ class DataLoaderCustom:
         if self.split == "train":
             self.current_shard_id = 0
             self.current_shard = ModelInput.from_numpy_to_tensors_dict(
-                                        np_array = load_xy_shard(self.current_shard_id, block_size=self.block_size), 
+                                        np_array = load_xy_shard(self.current_shard_id, block_size=self.block_size, tokenizer_type=self.tokenizer_type), 
                                         block_size = self.block_size)
 
         else:
@@ -353,7 +355,7 @@ class DataLoaderCustom:
             self.current_shard_id = 0 if (self.current_shard_id + 1) % (self.last_shard_id + 1) == 0 else (self.current_shard_id + 1)
             
             self.current_shard = ModelInput.from_numpy_to_tensors_dict(
-                                        np_array = load_xy_shard(self.current_shard_id, block_size=self.block_size), 
+                                        np_array = load_xy_shard(self.current_shard_id, block_size=self.block_size, tokenizer_type=self.tokenizer_type), 
                                         block_size = self.block_size)
             
             model_input = {k: torch.cat([model_input_temp[k], v[:self.batch_size - temp_len].to(self.device)]) for k, v in self.current_shard.items()}
@@ -380,5 +382,5 @@ class DataLoaderCustom:
         self.current_shard_id = state_dict["last_shard_id"]
         self.current_position_in_shard = state_dict["last_position"]
         self.current_shard = ModelInput.from_numpy_to_tensors_dict(
-                                        np_array = load_xy_shard(self.current_shard_id, block_size=self.block_size), 
+                                        np_array = load_xy_shard(self.current_shard_id, block_size=self.block_size, tokenizer_type=self.tokenizer_type), 
                                         block_size = self.block_size)
