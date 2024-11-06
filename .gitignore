@@ -7,15 +7,18 @@ data/*
 !data/xy_shards_{custom, hf}_{256, 512}/stat.txt
 
 
-
 # ignore ckpts
 model/model_ckpts
+
+# ignore __pycache__'s
+__pycache__
+tokenizer/__pycache__
+random_word_set/__pycache__
 
 
 # ignore root
 mlruns
 mlartifacts
-__pycache__
 .vscode
 
 

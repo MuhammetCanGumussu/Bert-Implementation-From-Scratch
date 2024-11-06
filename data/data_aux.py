@@ -222,21 +222,21 @@ def _visualize_ab(sample: VisualizeInputAB):
     Args:
         sample (VisualizeInputAB): The sample to visualize.
     """
-        tokenizer = get_tokenizer()
-        print(f"A: {sample.ab['A_token_ids']}")
-        print(f"B: {sample.ab['B_token_ids']}")
-        print(f"A_decoded: {tokenizer.decode(sample.ab['A_token_ids'])}")
-        print(f"B_decoded: {tokenizer.decode(sample.ab['B_token_ids'])}")
-        print(f"len_of_A: {len(sample.ab['A_token_ids'])}")
-        print(f"len_of_B: {len(sample.ab['B_token_ids'])}")
-        print(f"A_word_ids: {sample.ab['A_word_ids']}")
-        print(f"B_word_ids: {sample.ab['B_word_ids']}")
-        print(f"len_of_A_word_ids: {len(sample.ab['A_word_ids'])}")
-        print(f"len_of_B_word_ids: {len(sample.ab['B_word_ids'])}")
-        print(f"sum_of_AB_tokens: {len(sample.ab['B_word_ids']) + len(sample.ab['A_word_ids'])}")
-        print(f"isNext: {sample.ab['isNext']}")
-        
-        print("---------------\n")
+    tokenizer = get_tokenizer()
+    print(f"A: {sample.ab['A_token_ids']}")
+    print(f"B: {sample.ab['B_token_ids']}")
+    print(f"A_decoded: {tokenizer.decode(sample.ab['A_token_ids'])}")
+    print(f"B_decoded: {tokenizer.decode(sample.ab['B_token_ids'])}")
+    print(f"len_of_A: {len(sample.ab['A_token_ids'])}")
+    print(f"len_of_B: {len(sample.ab['B_token_ids'])}")
+    print(f"A_word_ids: {sample.ab['A_word_ids']}")
+    print(f"B_word_ids: {sample.ab['B_word_ids']}")
+    print(f"len_of_A_word_ids: {len(sample.ab['A_word_ids'])}")
+    print(f"len_of_B_word_ids: {len(sample.ab['B_word_ids'])}")
+    print(f"sum_of_AB_tokens: {len(sample.ab['B_word_ids']) + len(sample.ab['A_word_ids'])}")
+    print(f"isNext: {sample.ab['isNext']}")
+    
+    print("---------------\n")
 
 
 
