@@ -26,8 +26,6 @@
 """
 
 
-
-
 # standard library
 import os
 import sys
@@ -38,32 +36,29 @@ from collections import Counter
 # third party library
 import tqdm
 import pandas as pd
-from tokenizers import normalizers, Regex
+from tokenizers import normalizers, Regex, pre_tokenizers
 
 # local library
-import data
-
-# cwd bu dizinde ise proje root dir'i sys path'e appendlemeliyim ki üst dizinlerden import yapabileyim
-# eğer cwd bu dizinde değilse zaten root dizinde demektir dokunmaya gerek yok
-if os.getcwd() == os.path.dirname(__file__):
-    sys.path.append(os.path.dirname(os.path.dirname(os.getcwd())))
-
-
-import bert_implementation_tr.train_tokenizer as train_tokenizer
+from ..data import data_aux
+from ..tokenizer.train_tokenizer import get_tokenizer
+from ..config import get_random_word_set_py_config
 
 
 
 
-LIMIT_FOR_TOKEN_GROUP = 5                   # 5 ten fazla token'a sahip kelimeleri istemiyoruz (token_len <= 5)
-MAX_WORD_LIMIT_FOR_TOKEN_GROUP = 5_000      # gruplarda da maximum belirtilen sayıda kelime olabilecek
-MIN_FREQ_FOR_WORDS = 150                    # gruplarda az occur olan kelimelerin atılmasını gerekiyor (çince, arapça vs)
 
-RANDOM_SAMPLE = False                       # if false, it will sample most frequent ones (words)
-USE_NUMBER_OF_LINE = None                   # the specified number of rows will be used, if None, it will use all content/lines 
+root_dir = os.path.dirname(os.path.abspath(__file__))
+random_word_set_save_path = root_dir + "/random_word_set/random_word_set.json"
+tokenizer_path = root_dir + "/tokenizer/tr_wordpiece_tokenizer_cased.json" 
 
 
-slow_tokenizer = data.get_tokenizer("../" + train_tokenizer.SAVE_PATH, fast=False)
-fast_tokenizer = data.get_tokenizer("../" + train_tokenizer.SAVE_PATH, fast=True)
+
+tokenizer = get_tokenizer(root_dir + "/tokenizer/tr_wordpiece_tokenizer_cased.json")
+
+
+pre_tokenizer = pre_tokenizers.Sequence([pre_tokenizers.WhitespaceSplit(), 
+                                               pre_tokenizers.Digits(individual_digits=True),
+                                               pre_tokenizers.Punctuation()])
 
 
 normalizer = normalizers.Sequence([normalizers.NFKC(),
@@ -73,17 +68,32 @@ normalizer = normalizers.Sequence([normalizers.NFKC(),
 
 
 
+def get_random_word_set():
+    if not os.path.exists(random_word_set_save_path):
+        print(f"[INFO] {random_word_set_save_path} is not already exists. Try to execute random_word_set.py script to generate this file before calling this function...")
+        sys.exit(0)
+
+    random_word_set_df = pd.read_json(random_word_set_save_path, orient="records", lines=True, encoding="utf-8")
+    random_word_set_dict = {}
+    
+    for group_name, group in random_word_set_df.groupby("token_len"):
+        random_word_set_dict[f"token_group_{group_name}"] = group["token_ids"].to_list()
+        random_word_set_dict[f"token_group_{group_name}_length"] = len(random_word_set_dict[f"token_group_{group_name}"])
+    
+    return random_word_set_dict
+
+
 
 def normalize_line(line):
     return normalizer.normalize_str(line)
 
 def pre_tokenize_line(line):
-    pretokenized_tuple = slow_tokenizer.pre_tokenizer.pre_tokenize_str(line)
+    pretokenized_tuple = pre_tokenizer.pre_tokenize_str(line)
     return [each_tuple[0] for each_tuple in pretokenized_tuple]
 
 def tokenize_word(row):
    row = row[1]
-   row["token_ids"] = fast_tokenizer(row["word"])["input_ids"]
+   row["token_ids"] = tokenizer(row["word"])["input_ids"]
    row["token_len"] = len(row["token_ids"])
    return row
 
@@ -91,14 +101,28 @@ def tokenize_word(row):
 
 
 if __name__ == "__main__":
-    
-   if os.path.exists("random_word_set.json"):
-       print("[INFO] random_word_set.json is already exists Terminating...")
+   
+   cfg = get_random_word_set_py_config()
+
+
+   LIMIT_FOR_TOKEN_GROUP = cfg.limit_for_token_group
+   MAX_WORD_LIMIT_FOR_TOKEN_GROUP = cfg.max_word_limit_for_token_group
+   MIN_FREQ_FOR_WORDS = cfg.min_freq_for_words
+
+   RANDOM_SAMPLE = cfg.random_sample
+   USE_NUMBER_OF_LINE = cfg.use_number_of_line
+
+
+   if os.path.exists(random_word_set_save_path):
+       print(f"[INFO] {random_word_set_save_path} is already exists Terminating...")
        exit(0)
 
-   
 
-   merged_file_content = data.get_merged_files()
+   NUM_PROCESSES = (os.cpu_count() - 1) if os.cpu_count() > 1 else 1
+   print(f"[INFO] Using {NUM_PROCESSES} processes...")
+
+
+   merged_file_content = data_aux.get_merged_files()
 
    if USE_NUMBER_OF_LINE is None:
        merged_file_content = merged_file_content.splitlines()
@@ -110,16 +134,15 @@ if __name__ == "__main__":
                                   
 
    # multiprocessing pool
-   with mp.Pool(data.NUM_PROCESSES) as pool:
+   with mp.Pool(NUM_PROCESSES) as pool:
        merged_file_content = pool.imap(normalize_line, merged_file_content, chunksize= 2048)
        merged_file_content = list(tqdm.tqdm(merged_file_content, total=len_merged_file_content, desc="[INFO] Normalizing lines..."))    
 
    # multiprocessing pool
-   with mp.Pool(data.NUM_PROCESSES) as pool:
+   with mp.Pool(NUM_PROCESSES) as pool:
        merged_file_content = pool.imap(pre_tokenize_line, merged_file_content, chunksize= 2048)
        merged_file_content = list(tqdm.tqdm(merged_file_content, total=len_merged_file_content, desc="[INFO] Pre-tokenizing lines..."))    
    
-
 
    # list[list[str]] -> list[str]
    merged_file_content = list(itertools.chain.from_iterable(merged_file_content))
@@ -141,7 +164,7 @@ if __name__ == "__main__":
 
    
    # Create a multiprocessing pool
-   with mp.Pool(data.NUM_PROCESSES) as pool:
+   with mp.Pool(NUM_PROCESSES) as pool:
        iterable_freq_df = pool.imap(tokenize_word, frequency_df.iterrows(), chunksize= 216)
        frequency_df = list(tqdm.tqdm(iterable_freq_df, total=len(frequency_df), desc="[INFO] Tokenization of words..."))  
        frequency_df = pd.DataFrame(frequency_df, columns=["word", "frequency", "token_ids", "token_len"])
@@ -178,7 +201,7 @@ if __name__ == "__main__":
    del frequency_df
 
 
-   print(f"[INFO] Saving random_word_set.json file... ")
+   print(f"[INFO] Saving {random_word_set_save_path} ... ")
    
    total_df = pd.concat(group_list)
-   total_df.to_json("random_word_set.json", orient="records", lines=True, force_ascii=False)
+   total_df.to_json(random_word_set_save_path, orient="records", lines=True, force_ascii=False)

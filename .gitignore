@@ -1,48 +1,24 @@
-## Ignore the data/raw
-#data/raw
-#data/merged.raw
-#data/merged_preprocessed.raw
-#data/__pycache__
-#data/ab_string.raw
-#data/random_words_set/random_words_set.json
-#data/dataframe/ab_df.json
-#
-## stat'ları ignore etme! 
-#data/preprocess_and_stats/ab_string.raw
-#data/preprocess_and_stats/merged_preprocessed.raw
-#data/preprocess_and_stats/merged.raw
-#
-#data/doc_shards
-#data/ab_shards_256
-#data/ab_shards_512
-#data/xy_shards_256
-#data/xy_shards_512
-
-
-
 # ignore data
-bert_implementation_tr/data
-!bert_implementation_tr/data/data.py
-!bert_implementation_tr/data/data_aux.py
-!bert_implementation_tr/data/prepare_do_eval_data.py
-!bert_implementation_tr/data/TEMP_NAME.ipynb
-!bert_implementation_tr/data/random_words_set.py
-!bert_implementation_tr/data/random_words_set.json
+data/*
+!data/raw
+!data/data_aux.py
+!data/data_playground.ipynb
+!data/data.py
+!data/prepare_do_eval_data.py
 
-# ignore pycache
-bert_implementation_tr/__pycache__
+
 # ignore ckpts
-bert_implementation_tr/model_ckpts
-# ignore ...
+model/model_ckpts
+
+
+# ignore root
 mlruns
 mlartifacts
 __pycache__
 .vscode
-generated_samples.txt
-deneme2.py
 
 
 
 
 
-# tüm data dir'i ignore edip sadece data.py'ı track etmeyi dene, beceremedim şimdilik
+

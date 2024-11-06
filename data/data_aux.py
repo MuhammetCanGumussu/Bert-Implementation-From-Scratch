@@ -1,57 +1,22 @@
 
 import os
-from dataclasses import dataclass, asdict
-from typing import Tuple
+import torch
 import numpy as np
 import pandas as pd
-import torch
+from typing import Tuple
+from dataclasses import dataclass, asdict
 
-from tokenizers import Tokenizer
-from transformers import PreTrainedTokenizerFast
-
-
-
-# TODO: path işlerini vs ayarla
-SAVE_PATH = "C:/Users/user/Desktop/Bert Implementation Tr/bert_implementation_tr/tr_wordpiece_tokenizer_cased.json"
-
-def get_tokenizer(tokenizer_path=SAVE_PATH, fast=True, custom=True):
-
-    if not custom:
-        from transformers import AutoTokenizer
-        return AutoTokenizer.from_pretrained("dbmdz/bert-base-turkish-cased")
-    
-    # if custom tokenizer, we need to check if there is a custom tokenizer file
-    if not os.path.exists(tokenizer_path):
-        print(f"[INFO] there is no tokenizer file to wrap with fast tokenizer in {tokenizer_path} Please train tokenizer first...")
-        import sys
-        sys.exit(0)
-    
-    if fast:
-        tokenizer = PreTrainedTokenizerFast(
-            tokenizer_file = tokenizer_path, # You can load from the tokenizer file, alternatively
-            unk_token="[UNK]",
-            pad_token="[PAD]",
-            cls_token="[CLS]",
-            sep_token="[SEP]",
-            mask_token="[MASK]",
-            clean_up_tokenization_spaces=True   # default olarak ta True ancak future warning ilerde False olacağını belirtti.
-                                                # ilerde problem olmaması için (ve tabiki future warning almamak için) açıkca True yaptık
-        )
-        return tokenizer
-    
-    return Tokenizer.from_file(tokenizer_path)
+from ..tokenizer.train_tokenizer import get_tokenizer
 
 
 
-# geçici silinecek (data.py'da labels'da cls tokeni full pad olarak verildiğinde buna ve alttaki olaya gerek kalmayacak)
-PAD_TOKEN_ID = get_tokenizer().convert_tokens_to_ids("[PAD]")
 
 @dataclass
 class ModelInput:
     input_ids: np.ndarray | torch.Tensor        # bakılacak: isimler model forward parametreleri ile uyumlu hale getirilecek
-    labels: np.ndarray | torch.Tensor
     attention_mask: np.ndarray | torch.Tensor
     token_type_ids: np.ndarray | torch.Tensor
+    labels: np.ndarray | torch.Tensor = None
     next_sentence_label: np.ndarray | torch.Tensor = None
     
     @classmethod
@@ -63,7 +28,7 @@ class ModelInput:
             labels = torch.tensor(np_array[:, block_size:2 * block_size], dtype=torch.long, device=device),
             token_type_ids = torch.tensor(np_array[:, 2 * block_size:3 * block_size], dtype=torch.long, device=device),
             attention_mask= torch.tensor(np_array[:, 3 * block_size:], dtype=torch.bool, device=device),
-            next_sentence_label = torch.tensor(np_array[:, block_size], dtype=torch.long, device=device)
+            next_sentence_label = torch.tensor(np_array[:, -1], dtype=torch.long, device=device)
         )
     
     @staticmethod
@@ -72,27 +37,13 @@ class ModelInput:
         ModelInput return edip daha sonra asdict ile dict'e çevirmek eğitim sırasında gereksiz maliyet olabilir (from_numpy_to_tensors).
         Bundan dolayı direkt dict return eden bu static method kullanılmalı (from_numpy_to_tensors_dict).
         """
-
-        # geçici çözüm, data.py'da halledilecek
-        # data.py'da : en sağa is next eklenecek ayrı olarak, y'de pad token yerine ignore idx kullanacak yani -100
-        labels = torch.tensor(np_array[:, block_size:2 * block_size], dtype=torch.long)
-        labels[:, 0] = PAD_TOKEN_ID
-
-        # "..." token'ı kaynaklı (vocab'ı 32001 yaptı) geçici çözüm:
-        # 32000 id'sini gördüğümüz elemanları "." token'ı yapacağım
-        # "..." -> "." 
-        labels[labels == 32000] = 18
-        input_ids = torch.tensor(np_array[:, :block_size], dtype=torch.long)
-        input_ids[input_ids == 32000] = 18
-
+        
         return dict(
-            # sıraya dikkat : x -> y -> segment_ids -> attention_mask
-            # np array genişliği: x + y + segment_ids + attention_mask --> (BLOCK_SIZE * 4)
-            input_ids = input_ids,
-            labels = labels,
+            input_ids =  torch.tensor(np_array[:, :block_size], dtype=torch.long),
+            labels = torch.tensor(np_array[:, block_size:2 * block_size], dtype=torch.long),
             token_type_ids = torch.tensor(np_array[:, 2 * block_size:3 * block_size], dtype=torch.long),
             attention_mask= torch.tensor(np_array[:, 3 * block_size:], dtype=torch.bool),
-            next_sentence_label = torch.tensor(np_array[:, block_size], dtype=torch.long)
+            next_sentence_label = torch.tensor(np_array[:, -1], dtype=torch.long)
         )
 
 
@@ -124,9 +75,6 @@ class OneSampleStat:
     number_of_replace_word: int = 0
     number_of_identity_word: int = 0
     number_of_not_accepted_word: int = 0
-
-
-
 
 
 
@@ -185,7 +133,7 @@ class Stat:
 
 
 
-def get_merged_files():
+def get_merged_files() -> str:
 
     raw_dir = os.path.join(os.path.dirname(__file__), "raw")
 
@@ -207,7 +155,7 @@ def get_merged_files():
 
 
 def _visualize_ab(sample: VisualizeInputAB):
-        tokenizer = get_tokenizer(SAVE_PATH, fast=True)
+        tokenizer = get_tokenizer()
         print(f"A: {sample.ab['A_token_ids']}")
         print(f"B: {sample.ab['B_token_ids']}")
         print(f"A_decoded: {tokenizer.decode(sample.ab['A_token_ids'])}")
@@ -231,7 +179,7 @@ def _visualize_model_input(sample: VisualizeModelInput) -> None:
     show_ids = sample.show_ids
     sample = sample.model_input
 
-    tokenizer = get_tokenizer(SAVE_PATH, fast=True)
+    tokenizer = get_tokenizer()
 
     print(f"x_decoded: {tokenizer.decode(sample.input_ids)}")
     print(f"y_decoded: {tokenizer.decode(sample.labels)}\n")
@@ -302,10 +250,12 @@ def get_last_shard_idx(shards_dir:str) -> int:
 
 
 def save_xy_shard(placeholder_array, shard_idx, block_size) -> None:
+    #DİR
     np.save(f"xy_shards_{block_size}/xy_shard_{shard_idx}.npy", placeholder_array)
                         
 
 def load_xy_shard(shard_idx, block_size=256) -> np.ndarray:
+    #DİR LER
     if (shard_idx < 0) or (shard_idx > get_last_shard_idx(f"bert_implementation_tr/data/xy_shards_{block_size}")):
         raise IndexError(f"shard idx must be >= 0 and <= {get_last_shard_idx(f'bert_implementation_tr/data/xy_shards_{block_size}')}, shard_idx you gave was: {shard_idx}")
     # print(f"loading xy_shard_{shard_idx}.npy")
@@ -399,7 +349,7 @@ class DataLoaderCustom:
             model_input_temp = {k: v[self.current_position_in_shard:].to(self.device) for k, v in self.current_shard.items()}
             temp_len = len(model_input_temp["input_ids"])
                 
-            # for making modulus work we need to add 1 (first shard id is 0, 0 % any_number == 0, because of this we added 1 to each operand)
+            # for making modulus work we need to add 1 (first shard id is 0, 0 % any_number == 0)
             self.current_shard_id = 0 if (self.current_shard_id + 1) % (self.last_shard_id + 1) == 0 else (self.current_shard_id + 1)
             
             self.current_shard = ModelInput.from_numpy_to_tensors_dict(

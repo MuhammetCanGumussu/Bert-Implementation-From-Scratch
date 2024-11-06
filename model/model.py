@@ -1,5 +1,6 @@
-"""Heavily inspired by HuggingFace BERT model: "https://github.com/huggingface/transformers/blob/v4.45.2/src/transformers/models/bert/modeling_bert.py#L529"""
+"""Model implementation is heavily inspired by HuggingFace BERT model: "https://github.com/huggingface/transformers/blob/v4.45.2/src/transformers/models/bert/modeling_bert.py#L529"""
 
+import os
 import inspect
 from dataclasses import dataclass
 from typing import Optional, Tuple, List
@@ -9,8 +10,11 @@ import torch.nn as nn
 from torch.nn import functional as F
 from transformers import PreTrainedTokenizerFast
 
-from bert_implementation_tr.data.data_aux import DataLoaderCustom
+from ..data.data_aux import DataLoaderCustom
+from ..tokenizer.train_tokenizer import get_tokenizer
 from config import BertConfig
+
+
 
 
 
@@ -286,6 +290,9 @@ class BertForPreTrainingOutput():
     seq_relationship_logits: torch.FloatTensor = None
 
 
+PAD_TOKEN_ID = get_tokenizer().convert_tokens_to_ids("[PAD]")
+
+
 class BertForPreTraining(nn.Module):
     
     def __init__(self, config: BertConfig):
@@ -318,22 +325,13 @@ class BertForPreTraining(nn.Module):
             
         total_loss = None
         if labels is not None and next_sentence_label is not None:
-            # bakılacak, şimdilik ignore idx de pad token id diyeceğim yalnız datayı düzelttikten sonra alttaki satırları istiyorum (self.config.ignore_index, ki -100 değerinde olacak)
-            # oss_fct_mlm = nn.CrossEntropyLoss(ignore_index = self.config.ignore_index)
-            # oss_fct_nsp = nn.CrossEntropyLoss(ignore_index = -100, weight=class_weights)
-            
-            loss_fct_mlm = nn.CrossEntropyLoss(ignore_index = 0)
+            loss_fct_mlm = nn.CrossEntropyLoss(ignore_index = PAD_TOKEN_ID)
             loss_fct_nsp = nn.CrossEntropyLoss(ignore_index = -100, weight=class_weights)
 
             masked_lm_loss = loss_fct_mlm(prediction_logits.view(-1, self.config.vocab_size), labels.view(-1))
-            # bakılacak: focal loss (ce'de weight parametresi) kullanılabilir (notNext, isNext'ten daha fazla old için)
-            # print(next_sentence_label.view(-1))
-            # print(seq_relationship_logits.view(-1, 2))
-            # print("probs: ", F.softmax(seq_relationship_logits.view(-1, 2), dim=-1))
             next_sentence_loss = loss_fct_nsp(seq_relationship_logits.view(-1, 2), next_sentence_label.view(-1))
             total_loss = masked_lm_loss + next_sentence_loss
-            # print("mlm loss: ", masked_lm_loss)
-            # print("nsp loss: ", next_sentence_loss)
+
 
             return BertForPreTrainingOutput(
             loss=total_loss,
@@ -424,8 +422,7 @@ class BertForPreTraining(nn.Module):
        return model
        
     
-
-
+MODEL_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
 def save_checkpoint(model: BertForPreTraining,
@@ -452,23 +449,18 @@ def save_checkpoint(model: BertForPreTraining,
         'last_dataloader_state': dataloader.get_current_state(),
         'mlflow_run_id': mlflow_run_id
     }
-
-    torch.save(temp_dict, f"bert_implementation_tr/model_ckpts/BertForPretraining_{postfix}.pt")
-
     
+    torch.save(temp_dict, MODEL_DIR + f"/model_ckpts/BertForPretraining_{postfix}.pt")
+
 
 
 def load_checkpoint(postfix: int | str) -> dict:
     """
     Return ckeckpoint dictionary
     """
-    return torch.load(f"bert_implementation_tr/model_ckpts/BertForPretraining_{postfix}.pt")
+    return torch.load(MODEL_DIR + f"/model_ckpts/BertForPretraining_{postfix}.pt")
 
     
-
-
-
-
 
 
 class FillMaskPipeline():

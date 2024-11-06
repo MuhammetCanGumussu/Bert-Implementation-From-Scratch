@@ -15,9 +15,9 @@ from torch.nn import functional as F
 
 
 
-from model import BertForPreTraining, FillMaskPipeline, IsNextPipeline, load_checkpoint, save_checkpoint
-from bert_implementation_tr.data.data_aux import DataLoaderCustom, get_tokenizer
-from config import get_pretrain_bert_py_configs
+from model.model import BertForPreTraining, FillMaskPipeline, IsNextPipeline, load_checkpoint, save_checkpoint
+from data.data_aux import DataLoaderCustom, get_tokenizer
+from config import get_pretrain_bert_py_configs, get_last_ckpt_idx
 
 
 
@@ -195,10 +195,10 @@ if pretrain_config["do_eval_from_huggingface"] == True or pretrain_config["do_ev
 
 
 
-if not os.path.exists("bert_implementation_tr/model_ckpts"):
-    os.mkdir("bert_implementation_tr/model_ckpts")
+if not os.path.exists("model/model_ckpts"):
+    os.mkdir("model/model_ckpts")
 
-ckpt_files = os.listdir("bert_implementation_tr/model_ckpts")
+ckpt_files = os.listdir("model/model_ckpts")
 
 best_val_loss = math.inf
 last_ckpt_idx = 0
@@ -206,16 +206,8 @@ last_step = 0
 
 # resume pretraining from last checkpoint
 if pretrain_config["resume"] == True:
-    if len(ckpt_files) == 0:
-        raise ValueError("no ckpt found to resume")
-    
-    for idx, post_fix in enumerate(list(map(lambda x: x.split("_")[-1].split(".")[0], ckpt_files))):
 
-        if post_fix == "best":
-            continue
-
-        last_ckpt_idx = int(post_fix) if int(post_fix) > last_ckpt_idx else last_ckpt_idx
-        
+    last_ckpt_idx = get_last_ckpt_idx()    
     ckpt_dict = load_checkpoint(postfix=last_ckpt_idx)
     # bakılacak, daha güzel yap
     print(f"\nresume from ckpt: {last_ckpt_idx}\n")
@@ -252,10 +244,10 @@ elif (pretrain_config["resume"]) == False:
                 print("deleting all ckpt files ...")
                 # delete all ckpt files
                 for file in ckpt_files:
-                    os.remove("bert_implementation_tr/model_ckpts/" + file)
+                    os.remove("model/model_ckpts/" + file)
 
                 # bakılacak, daha güzel info verilecek
-                print(f"from scratch...")
+                print("Training starts with {}...".format("randomly initialized" if pretrain_config["do_train_custom"] else "hf model weights"))
                 break 
             elif response in ['n', 'no']:
                 # bakılacak, çoğu şeyi fonksiyonal hale getirdikten sonra:
@@ -265,8 +257,7 @@ elif (pretrain_config["resume"]) == False:
             else:
                 print("invalid input...")
 
-    # create model, optimizer, dataloaders "from scratch"
-    # if do_train_custom is True, model weights will be randomly initialized else hf model weights will be loaded
+    # create model, optimizer, dataloaders "from scratch" 
     model = BertForPreTraining(model_cfg) if pretrain_config["do_train_custom"] else BertForPreTraining.from_pretrained()
     model.to(device)
     optimizer = model.configure_optimizers(weight_decay=pretrain_config["weight_decay"], learning_rate=pretrain_config["max_learning_rate"], device=device)
@@ -420,7 +411,7 @@ for step in range(last_step, max_steps):
         if (last_ckpt_idx + 1 > pretrain_config["max_ckpt"]):
             # we will remove the oldest checkpoint
             print(f"override old ckpt: {last_ckpt_idx - pretrain_config['max_ckpt']} with current ckpt: {last_ckpt_idx}")
-            os.remove(f"bert_implementation_tr/model_ckpts/BertForPretraining_{last_ckpt_idx - pretrain_config['max_ckpt']}.pt")
+            os.remove(f"model/model_ckpts/BertForPretraining_{last_ckpt_idx - pretrain_config['max_ckpt']}.pt")
         # bakılacak, mlflow ile track edeceğim için bunlara gerek yok bence
         # save_checkpoint(model, optimizer, train_loader, step, best_val_loss, train_loss_history, val_loss_history, last_ckpt_idx + 1)
         save_checkpoint(model, optimizer, train_loader, step, best_val_loss, last_ckpt_idx, mlflow_run_id=mlflow_run_id)
