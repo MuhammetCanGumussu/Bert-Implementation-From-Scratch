@@ -1,6 +1,5 @@
 # ignore data
 data/*
-!data/raw
 !data/data_aux.py
 !data/data_playground.ipynb
 !data/data.py
