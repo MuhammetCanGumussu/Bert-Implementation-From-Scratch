@@ -29,6 +29,11 @@
 # standard library
 import os
 import sys
+
+# add root directory to sys path
+root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) if root_dir not in sys.path else None
+
 import itertools
 import multiprocessing as mp
 from collections import Counter
@@ -39,32 +44,20 @@ import pandas as pd
 from tokenizers import normalizers, Regex, pre_tokenizers
 
 # local library
-from ..data import data_aux
-from ..tokenizer.train_tokenizer import get_tokenizer
-from ..config import get_random_word_set_py_config
+from data import data_aux
+from tokenizer.tokenizer_aux import get_tokenizer, get_tokenizer_file_path
+from config import get_random_word_set_py_config
 
 
 
-
-
-root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 random_word_set_save_path = root_dir + "/random_word_set/random_word_set.json"
-tokenizer_path = root_dir + "/tokenizer/tr_wordpiece_tokenizer_cased.json" 
 
 
-
-tokenizer = get_tokenizer(root_dir + "/tokenizer/tr_wordpiece_tokenizer_cased.json")
-
-
-pre_tokenizer = pre_tokenizers.Sequence([pre_tokenizers.WhitespaceSplit(), 
-                                               pre_tokenizers.Digits(individual_digits=True),
-                                               pre_tokenizers.Punctuation()])
-
-
-normalizer = normalizers.Sequence([normalizers.NFKC(),
-                                           normalizers.Lowercase(),
-                                           normalizers.Replace(Regex('[^\w\s]'),""),   # for numbers
-                                           normalizers.Replace(Regex('\d+'),"") ])     # for punctiations
+if __name__ == "__main__":
+    cfg = get_random_word_set_py_config(verbose_all=True,  verbose_changes=True)
+else:
+    # for pool processes name is __mp_main__, we do not want to print cfg information in them
+    cfg = get_random_word_set_py_config(verbose_all=False,  verbose_changes=False)
 
 
 
@@ -81,6 +74,25 @@ def get_random_word_set():
         random_word_set_dict[f"token_group_{group_name}_length"] = len(random_word_set_dict[f"token_group_{group_name}"])
     
     return random_word_set_dict
+
+
+
+
+tokenizer = get_tokenizer(cfg.tokenizer_type)
+
+
+pre_tokenizer = pre_tokenizers.Sequence([pre_tokenizers.WhitespaceSplit(), 
+                                         pre_tokenizers.Digits(individual_digits=True),
+                                         pre_tokenizers.Punctuation()])
+
+normalizer_list = [normalizers.NFKC(),
+                   normalizers.Replace(Regex('[^\w\s]'),""),
+                   normalizers.Replace(Regex('\d+'),"")]
+
+
+if cfg.tokenizer_type == "custom" and ("uncased" in get_tokenizer_file_path()):
+    normalizer_list.insert(1, normalizers.Lowercase())
+normalizer = normalizers.Sequence(normalizer_list) 
 
 
 
@@ -102,9 +114,6 @@ def tokenize_word(row):
 
 if __name__ == "__main__":
    
-   cfg = get_random_word_set_py_config()
-
-
    LIMIT_FOR_TOKEN_GROUP = cfg.limit_for_token_group
    MAX_WORD_LIMIT_FOR_TOKEN_GROUP = cfg.max_word_limit_for_token_group
    MIN_FREQ_FOR_WORDS = cfg.min_freq_for_words
@@ -123,13 +132,13 @@ if __name__ == "__main__":
 
 
    merged_file_content = data_aux.get_merged_files()
+   merged_file_content = merged_file_content.splitlines()
+   print("[INFO] Total number of lines: ", len(merged_file_content))
 
-   if USE_NUMBER_OF_LINE is None:
-       merged_file_content = merged_file_content.splitlines()
-   else:
-       merged_file_content = merged_file_content.splitlines()[:USE_NUMBER_OF_LINE]
-
+   if USE_NUMBER_OF_LINE is not None and USE_NUMBER_OF_LINE < len(merged_file_content):
+       merged_file_content = merged_file_content[:USE_NUMBER_OF_LINE]
    len_merged_file_content = len(merged_file_content)
+   print("[INFO] Number of lines will be used: ", len_merged_file_content)
 
                                   
 
@@ -161,7 +170,7 @@ if __name__ == "__main__":
    # New columns for token_ids and token_len
    frequency_df["token_ids"]=None
    frequency_df["token_len"]=None
-
+   
    
    # Create a multiprocessing pool
    with mp.Pool(NUM_PROCESSES) as pool:

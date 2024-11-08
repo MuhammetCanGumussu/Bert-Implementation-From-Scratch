@@ -4,10 +4,10 @@ import os
 import torch
 import numpy as np
 import pandas as pd
-from typing import Tuple
+from typing import Tuple, Type, Optional
 from dataclasses import dataclass, asdict
 
-from ..tokenizer.train_tokenizer import get_tokenizer
+from tokenizer.tokenizer_aux import get_tokenizer
 
 
 root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -156,7 +156,7 @@ class Stat:
      self.total_number_of_word += other.number_of_word
 
 
-    def save_stat(self, save_path: str) -> None:
+    def save_stat(self, save_path: str, cfg: Optional[dataclass]) -> None:
         """Save the statistics to a file.
 
         Parameters
@@ -168,6 +168,14 @@ class Stat:
         with open(save_path, "w", encoding="utf-8") as f:
             for key, value in asdict(self).items():
                 f.write(f"{key}: {value:_}\n")
+
+            if cfg is not None:
+                cfg = asdict(cfg)
+                f.write("\nCONFIGS:\n")
+                f.write("-----------------------------------------------------------------------\n")
+                
+                for k, v in cfg.items():
+                    f.write(f"{k}: {v}\n")
        
     @staticmethod
     def parse_line(line:str) -> Tuple[str, int]:
@@ -226,7 +234,13 @@ def get_merged_files() -> str:
     """
     raw_dir = root_dir + "/data/raw"
 
+    if not os.path.exists(raw_dir):
+        raise FileNotFoundError(f"Raw directory {raw_dir} does not exist.")
+
     files = os.listdir(raw_dir)
+
+    if len(files) == 0:
+        raise FileNotFoundError(f"Raw directory {raw_dir} is empty.")
 
     print(f"[INFO] Files in raw_dir: {files}...")
 
@@ -400,7 +414,7 @@ def load_xy_shard(shard_idx, block_size=256, tokenizer_type="custom") -> np.ndar
         IndexError: If the `shard_idx` is out of the valid range of available shards.
     """
     if (shard_idx < 0) or (shard_idx > get_last_shard_idx(root_dir + f"/data/xy_shards_{tokenizer_type}_{block_size}")):
-        raise IndexError(f"shard idx must be >= 0 and <= {get_last_shard_idx(root_dir + f"/data/xy_shards_{tokenizer_type}_{block_size}")}, shard_idx you gave was: {shard_idx}")
+        raise IndexError(f"shard idx must be >= 0 and <= {get_last_shard_idx(root_dir + f'/data/xy_shards_{tokenizer_type}_{block_size}')}, shard_idx you gave was: {shard_idx}")
     # print(f"loading xy_shard_{shard_idx}.npy")
     return np.load(root_dir + f"/data/xy_shards_{tokenizer_type}_{block_size}/xy_shard_{shard_idx}.npy")
 

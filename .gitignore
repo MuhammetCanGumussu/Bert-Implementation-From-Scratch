@@ -1,22 +1,34 @@
 # ignore data
-data/*
-!data/data_aux.py
-!data/data_playground.ipynb
-!data/data.py
-# kontrol et çalışıyor mu diye
-!data/xy_shards_{custom, hf}_{256, 512}/stat.txt
+data/raw
+data/doc_shards
+
+data/ab_shards_custom_256
+data/ab_shards_custom_512
+data/xy_shards_custom_256/*
+data/xy_shards_custom_512/*
+!data/xy_shards_custom_256/stat.txt
+!data/xy_shards_custom_512/stat.txt
+
+data/ab_shards_hf_256
+data/ab_shards_hf_512
+data/xy_shards_hf_256/*
+data/xy_shards_hf_512/*
+!data/xy_shards_hf_256/stat.txt
+!data/xy_shards_hf_512/stat.txt
 
 
 # ignore ckpts
 model/model_ckpts
 
+
 # ignore __pycache__'s
 __pycache__
+data/__pycache__
 tokenizer/__pycache__
 random_word_set/__pycache__
 
 
-# ignore root
+# ignore other
 mlruns
 mlartifacts
 .vscode

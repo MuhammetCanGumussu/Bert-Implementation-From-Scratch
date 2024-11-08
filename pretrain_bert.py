@@ -10,9 +10,10 @@ from dataclasses import asdict
 import mlflow
 import torch
 
-from model.model import BertForPreTraining, FillMaskPipeline, IsNextPipeline, load_checkpoint, save_checkpoint
+from model.model import BertForPreTraining
+from model.model_aux import FillMaskPipeline, IsNextPipeline, load_checkpoint, save_checkpoint, get_last_ckpt_idx
 from data.data_aux import DataLoaderCustom, get_tokenizer
-from config import get_pretrain_bert_py_configs, get_last_ckpt_idx
+from config import get_pretrain_bert_py_configs
 
 
 
@@ -111,7 +112,7 @@ warnings.filterwarnings("ignore")
 torch.set_float32_matmul_precision("high")
 
 # create training config (BAKILACAK: şimdilik bu ikisi default configler!)
-model_cfg, pretrain_config = get_pretrain_bert_py_configs()
+model_cfg, pretrain_config = get_pretrain_bert_py_configs(verbose_all=True, verbose_changes=True)
 
 # dataclass objects are not subscriptable, so convert to dict (i want subscription beacause it's more readable than property access in vscode)
 model_cfg = asdict(model_cfg)
@@ -138,13 +139,8 @@ if torch.cuda.is_available():
 
 
 def do_just_evaluation_on_pretrain_tasks(model: BertForPreTraining, val_loader: DataLoaderCustom):
-    # if eval hf model, we should use hf tokenizer
-    if pretrain_config["from_huggingface"]:
-        from transformers import AutoTokenizer
-        tokenizer = AutoTokenizer.from_pretrained("dbmdz/bert-base-turkish-cased")
-    else:
-        # if eval custom model, we should use custom tokenizer
-        tokenizer = get_tokenizer(fast=True)
+
+    tokenizer = get_tokenizer(tokenizer_postfix="hf" if pretrain_config["from_huggingface"] else pretrain_config["tokenizer_type"])
     model.eval()
     val_loader.reset()
     fill_mask_pipeline = FillMaskPipeline(model, tokenizer, strategy="greedy")
@@ -268,7 +264,7 @@ elif (pretrain_config["resume"]) == False:
 
 
 if pretrain_config["generate_samples"]:
-    tokenizer = get_tokenizer(custom=True if pretrain_config["do_train_custom"] else False)
+    tokenizer = get_tokenizer(tokenizer_postfix="hf" if pretrain_config["do_train_custom"] else pretrain_config["tokenizer_type"])
     fill_mask_pipeline = FillMaskPipeline(model, tokenizer, strategy="greedy")
     nsp_pipeline = IsNextPipeline(model, tokenizer)
 
@@ -483,7 +479,13 @@ for step in range(last_step, max_steps):
         mlflow.log_metric("nsp_loss", model_output.nsp_loss.item(), step)
         mlflow.log_metric("tokens_per_second", tokens_per_second, step)
 
-    print(f"step {step:5d} | total loss: {train_loss_accum:.6f} | lr: {lr:.4e} | norm: {norm:.4f} | mlm loss: {model_output.mlm_loss.item():.6f} | nsp loss: {model_output.nsp_loss.item():.6f} | dt: {dt:.2f}ms | tok/sec: {tokens_per_second:.2f} tokens/sec")
+    print_txt = f"step {step:5d} | total loss: {train_loss_accum:.6f} | lr: {lr:.4e} | norm: {norm:.4f} | mlm loss: {model_output.mlm_loss.item():.6f} | nsp loss: {model_output.nsp_loss.item():.6f} | dt: {dt:.2f}ms | tok/sec: {tokens_per_second:.2f} tokens/sec"
+    
+    # log to file whether or not mlflow is enabled
+    with open("log.txt", "a", encoding="utf-8") as f:
+                f.write(print_txt)
+
+    print(print_txt)
 
 
 

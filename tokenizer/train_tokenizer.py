@@ -1,8 +1,12 @@
 """trains wordpiece tokenizer from scratch on turkish data (trwiki)"""
 
 import os
+import sys
 
-from transformers import PreTrainedTokenizerFast
+# add root directory to sys path
+root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) if root_dir not in sys.path else None
+
 from tokenizers import (
     decoders,
     models,
@@ -12,44 +16,8 @@ from tokenizers import (
     Tokenizer,
 )
 
-from ..data.data_aux import get_merged_files
-from ..config import get_train_tokenizer_py_config
-
-
-
-
-
-root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SAVE_PATH = root_dir + "/tokenizer/tr_wordpiece_tokenizer_cased.json"
-
-
-
-def get_tokenizer(custom=True):
-
-    if not custom:
-        from transformers import AutoTokenizer
-        return AutoTokenizer.from_pretrained("dbmdz/bert-base-turkish-cased")
-    
-
-    # if custom tokenizer, we need to check if there is a custom tokenizer file
-    if not os.path.exists(SAVE_PATH):
-        print(f"[INFO] there is no tokenizer file to wrap with fast tokenizer in {SAVE_PATH} Please train tokenizer first...")
-        import sys
-        sys.exit(0)
-    
-    
-    tokenizer = PreTrainedTokenizerFast(
-        tokenizer_file = SAVE_PATH, # You can load from the tokenizer file, alternatively
-        unk_token="[UNK]",
-        pad_token="[PAD]",
-        cls_token="[CLS]",
-        sep_token="[SEP]",
-        mask_token="[MASK]",
-        clean_up_tokenization_spaces=True   # default olarak ta True ancak future warning ilerde False olacağını belirtti.
-                                            # ilerde problem olmaması için (ve tabiki future warning almamak için) açıkca True yaptık
-    )
-    return tokenizer
-    
+from data.data_aux import get_merged_files
+from config import get_train_tokenizer_py_config
 
 
 def main():
@@ -58,11 +26,14 @@ def main():
     VOCAB_SIZE = cfg.vocab_size   
     LIMIT_ALPHABET = cfg.limit_alphabet
     MIN_FREQUENCY = cfg.min_frequency
+    CASED = cfg.cased
+
+    SAVE_PATH = root_dir + f"/tokenizer/tr_wordpiece_tokenizer_{'cased' if CASED else 'uncased'}.json"
 
 
     if os.path.exists(SAVE_PATH):
         print(f"[INFO] {SAVE_PATH} already exists. Skipping tokenizer training...")
-        exit()
+        sys.exit(0)
 
     merged_file_content = get_merged_files()
 
@@ -71,10 +42,9 @@ def main():
 
     tokenizer = Tokenizer(models.WordPiece(vocab={"[PAD]":0, "[UNK]":1}, unk_token="[UNK]"))
 
-    tokenizer.normalizer = normalizers.Sequence(
-        [normalizers.NFKC(),
-         normalizers.Lowercase()]   # bunu kullanmayacağım, kaldıracağım zaman her şeyi baştan exec etmeliyim...
-    )
+    normalizer_list = [normalizers.NFKC()] if CASED else [normalizers.NFKC(), normalizers.Lowercase()]
+
+    tokenizer.normalizer = normalizers.Sequence(normalizer_list)
 
     tokenizer.pre_tokenizer = pre_tokenizers.Sequence([pre_tokenizers.WhitespaceSplit(), 
                                                pre_tokenizers.Digits(individual_digits=True),
@@ -93,7 +63,7 @@ def main():
 
     tokenizer.decoder = decoders.WordPiece(prefix="##")
 
-    print("[INFO] tokenizer will be saved {SAVE_PATH}...")
+    print(f"[INFO] tokenizer will be saved {SAVE_PATH}...")
 
     tokenizer.save(SAVE_PATH, pretty=True)
 

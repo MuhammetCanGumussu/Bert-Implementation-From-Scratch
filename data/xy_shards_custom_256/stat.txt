@@ -1,0 +1,26 @@
+block_size: 256
+total_number_of_token: 27_164_672
+total_number_of_sample: 106_112
+total_isNext_count: 38_649
+total_mask_token_count: 3_203_686
+total_replace_token_count: 399_281
+total_identity_token_count: 399_343
+total_number_of_word: 22_329_238
+total_number_of_mask_word: 2_678_244
+total_number_of_replace_word: 334_028
+total_number_of_identity_word: 334_137
+total_number_of_not_accepted_word: 108
+
+CONFIGS:
+-----------------------------------------------------------------------
+block_size: 256
+num_of_docs_per_shard: 4000
+num_tokens_per_shard: 10000000
+overlap: 128
+edge_buffer: 10
+seed: 13013
+rate_of_untouched_words: 0.85
+mask_ratio: 0.8
+replace_ratio: 0.1
+identity_ratio: 0.1
+tokenizer_type: custom
