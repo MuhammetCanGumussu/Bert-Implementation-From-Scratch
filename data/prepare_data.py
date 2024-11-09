@@ -24,13 +24,14 @@ import pandas as pd
 
 # local
 from data_aux import FillInput, OneSampleStat, ModelInput, Stat, get_merged_files, get_last_shard_idx
-from random_word_set.prepare_random_word_set import get_random_word_set
+from random_word_set.random_word_set_aux import get_random_word_set
 from tokenizer.tokenizer_aux import get_tokenizer
 from config import get_prepare_data_py_config
 
 
 
 root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 
 if __name__ == "__main__":
     cfg = get_prepare_data_py_config(verbose_all=True,  verbose_changes=True)

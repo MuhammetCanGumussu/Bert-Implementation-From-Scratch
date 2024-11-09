@@ -74,7 +74,7 @@ class ModelInput:
             input_ids =  torch.tensor(np_array[:, :block_size], dtype=torch.long),
             labels = torch.tensor(np_array[:, block_size:2 * block_size], dtype=torch.long),
             token_type_ids = torch.tensor(np_array[:, 2 * block_size:3 * block_size], dtype=torch.long),
-            attention_mask= torch.tensor(np_array[:, 3 * block_size:], dtype=torch.bool),
+            attention_mask= torch.tensor(np_array[:, 3 * block_size:-1], dtype=torch.bool),
             next_sentence_label = torch.tensor(np_array[:, -1], dtype=torch.long)
         )
 
@@ -214,6 +214,8 @@ class Stat:
         data = {}
         with open(load_path, "r", encoding="utf-8") as f:
             for line in f:
+                if line == "\n":
+                    break
                 key, value = Stat.parse_line(line)
                 data[key] = value
         return cls(**data)
@@ -415,7 +417,8 @@ def load_xy_shard(shard_idx, block_size=256, tokenizer_type="custom") -> np.ndar
     """
     if (shard_idx < 0) or (shard_idx > get_last_shard_idx(root_dir + f"/data/xy_shards_{tokenizer_type}_{block_size}")):
         raise IndexError(f"shard idx must be >= 0 and <= {get_last_shard_idx(root_dir + f'/data/xy_shards_{tokenizer_type}_{block_size}')}, shard_idx you gave was: {shard_idx}")
-    # print(f"loading xy_shard_{shard_idx}.npy")
+    if not os.path.exists(root_dir + f"/data/xy_shards_{tokenizer_type}_{block_size}/xy_shard_{shard_idx}.npy"):
+        raise FileNotFoundError(f"xy_shard_{shard_idx}.npy not found in {root_dir + f'/data/xy_shards_{tokenizer_type}_{block_size}/xy_shard_{shard_idx}.npy'}... Please prepare data properly...")
     return np.load(root_dir + f"/data/xy_shards_{tokenizer_type}_{block_size}/xy_shard_{shard_idx}.npy")
 
 

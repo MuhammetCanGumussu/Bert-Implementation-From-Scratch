@@ -47,7 +47,8 @@ def load_checkpoint(postfix: int | str) -> dict:
     """
     return torch.load(MODEL_DIR + f"/model_ckpts/BertForPretraining_{postfix}.pt")
 
-    
+
+
 
 def get_last_ckpt_idx():
     """

@@ -1,5 +1,9 @@
 """pretraining (mlm, nsp) script for BERT model (BertForPreTraining)"""
 
+# MLFLOW ile resume edememe
+# config sistemi güncellenmeli (daha kavramsal, readable olmalı, hatalar giderilmeli)
+# test edilmeyen bir sürü case var (hf weigh ile eğitim, eval denenmedi)
+
 import os
 import sys
 import time
@@ -22,89 +26,6 @@ warnings.filterwarnings("ignore")
 
 
 
-
-
-# @dataclass
-# class PreTrainBertConfig:
-#     do_eval: bool = False                   # just do eval the model (from_best_ckpt or from_huggingface) but not training (sadece block512 için çalışacak bu arada)
-#     from_best_ckpt: bool = False            # cannot be used with do_train
-#     from_huggingface: bool = False          # cannot be used with do_train
-#     resume: bool = False                    # resume training from the last step
-#     block_size: int = 256
-#     train_batch_size: int = 32              
-#     val_batch_size: int = 8
-#     grad_accum_steps: int = 1               # total batch size (we are simulating this by grad accum) -> 8x32 = 256 
-#     max_learning_rate: float = 1e-4
-#     min_learning_rate: float = max_learning_rate * 0.01
-#     lr_scheduler: str = "cosine"
-#     num_train_steps: int = 100_000
-#     num_warmup_steps: int = 10_000
-#     save_checkpoints_steps: int = 1000      # her val'da ckpt işini halledeceğim
-#     val_check_interval: int = 1000          # 1000 adımda bir validation yap
-#     device: str = "cpu"                     # cpu or cuda (or mps) bakılacak: şimdilik bunun bir etkisi olmayacak, script device'ı otomatik kendi belirleyecek
-#     max_eval_steps: int = 100               # istesem'de 100'ü aşamam gibi çünkü: 256 block_size'da son shard'ta toplam 3872 tane sample var, max eval 122'de bu aşılır, block 512'de bu 8256 sample var
-#     weight_decay: float = 0.01
-#     max_ckpt: int = 10
-#     seed: int = 13013
-#     generate_samples: bool = True   
-
-
-# yaklaşık 40 epoch eğitim yapılmış (toplam: 128,000,000,000 token)
-# 1 epoch o zaman 3,200,000,000 token'a denk gelir
-# bendeki toplam token sayısı (yani 1 epoch) -> 350,000,000
-# bu durumda original bert paper veri seti benimkinden ~10x daha büyük
-# original paper'da normal bir adım için block_size'ı 512 belirlemiş (yani hesaplamalarını ona göre yapmış, bende öyle yapacağım (vazgeçtim en alta bak))
-# buna göre original bert paperdaki bazı hyperparametreleri kendi veri setim ile uygun hale getirmek için 10'a böl.
-# 1,000,000 max_steps -> 100,000 max_steps olacak 
-# 10,000 warmup steps -> 1,000 warmup steps olacak
-# 1000 save checkpoints steps -> 100 save checkpoints steps olacak (son 10 ya da 20 ckpt kaydedilsin, bunu araştırayım) (early stop vs belki yapabilirim bilmiyorum kind of, keza reducelronplato bakabilirm)
-# ckpt mekanizması geliştirmeli (save-load) (her val aşaması sonunda galiba idk)
-# pretrain resume olayına bakmalı
-# min_lr = max_lr * 0.1
-# b_size'ı 256'ya simüle etmelisin, etmezsen yaklaşık 850mil token görülür yani ~2 epoch olmuş olur eğitim
-# böylece kendi veri setimdede 40 epoch uygulamış olacağım (aslında yaklaşık olarak 18 epoch olacak : (256 B * 256 T * 100,000 adım) / 350,000,000 tokens)
-# eğitim esnasında plotlar vs anlık görülebilmeli (idk how to)
-# %90, %10 olayını da yapacağım
-# weighted loss yapabilirim idk (yapmalı gibiyim sanırsam stat öyle diyordu! özellikle bs 512 old'da, mismatch olmaması için dataloader'ın weight'leri bulması daha iyi olaiblir (bs512'nin w leri bs256'ya göre çok daha farklı))
-# train-val set ayarlamaları, kaç adımda val, val bs vsvs ayarlanacak
-# tüm eğitim config ile ayarlansın (magic number gözükmesin)
-# eğitim sürerken tahmini kalan süreyi de basmalı
-# eğitim verbose/print olaylarını ayarla (başta gerekli bilgiler, eğitim boyuncaki bilgiler vs)
-# eğitim ilerledikçe printlerin konsol dışına çıkma ihtimali vs var nabaruk ne ederük (belki yüzdesel hale getirebiliriz)
-# keza %10 girince yeni dataloader olusturulacak bu da constructure aşamasında print yapıyor kalabilir kalmayabilri idk bak ayarla
-# 1 ckpt fazladan olsun (val'da en başarılı olan model/ckpt)
-# commit yap sonra tüm bu yorumları vs sil temiz gözüksün
-# net fonksiyonel hale geçirmeli herşeyi
-# device pretrain'de param olamaz (dev aşamasında daha iyi debug için arada kendin zorla geçirebilirsin)
-# neden xyshard512'de notNext bu kadar fazla? (bunu kanıtladım, github'ta bundan belirtmem gerek) [şimdi baktım da 256bs'de de baya aynı durum weighted loss şart olur]
-# son shardların sample sayısına bakmalı
-# BUNU CV.TXT'E DE YAZ ÖNEMLİ: bakılacak: data.py'da doc shuffle yapılmalı mı yaptım mı vs? (dikkat önemli konu bir tür class imbalance aslında, aynı anda 3 kitap okuma analojisi)
-# en son adım da da validation yapılmalı (last_step flag)
-# her val'da reset'lemeyi unutma
-# edge case: max_eval step kontrol edilmeli neden? -> modeli validate ederken val split üzerinde aynı example'ları görmememiz gerekiyor (circular sistemin olmaması gerek ya da başta hesap yap ve max_eval'ı ona göre kabul et ya da treshle idk)
-# --devamı--> çünkü modeli validate ederken aynı sample'ları görmemizin hiç bir anlamı yok (gereksiz işlem kaybı dışında) [bence circula izin vermesin, eval adım ismi "max_eval_steps" buna izin verir mantıken]
-# loss history tutulabilir, 1M adım bile olsa en fazla ramde 3mb yer kaplıyor
-# her valdan sonra modeli spesifik bir (ya da daha fazla) example üzerinde çalıştır, ve printle
-# losslar, loglar vs bir txt dosyasına appendlenebilir!
-# model eğitiminde reproductibilite kontrolü yap, seed vs ile (aynı değerler, losslar vs oluyormu)
-# tüm yorumlara bak tr-eng farketmeksizin
-# console'daki warning'lerden kurtulmaya çalış (gerekirse geçici kapat)
-# seed olayıda ckpt'de olsa mı acaba?
-# last step olaylarında sıkıntı var düzenlenecek (son adım ckpt yapılabilmeli, hali hazırda eğitimi bitmiş bir modelde pretrain dediğimizde de ckpt yapıyor (en sonu override ediyor) bu problem çözülmeli)
-# has attrib ile gelu yerine farklı actv kullanabilmeli kullanıcı
-# do_eval'ın tam anlamıyla çalışabilmesi için data.py'ı güncellemem gerek (tüm adımları hf tokenizer ile de yapabilmeli,
-# -> shard count limit belirleyebilmeli(gerçi buna gerek olmadan data.py üzerinde prepare data for do_eval parametresi yapabiliriz))
-# her validation'da best ckpt yapılmamalı (fazla vakit yiyor, her ckpt yapıldığı zaman yapılmalı bence)
-# git repo işlerine geldiğinde göreceksin: xy_shards256 klasörünü (stat dosyası) track etmişim zamanında, track edilen dosyaları gitignore etsende hala track edilmeye devam edilir unutma!
-# -> * (asterisk) kullandığın zaman '!' sembolü çalışmaya başladı!  (ÖNEMLİ)
-# mlflow autolog'u dene
-# takip edilmemesi gereken dosyaları takipten çıkarmayı da unutma!
-# cli config comb vs işleri (device kontrolü de yapılmalı)
-# run_id olayı yaptım resume ile scratch case lerini dene (resume olunca mlflow'da o run'ın devam etmesini istiyorum, scratch'de apayrı yeni bir run açılsın)
-# unutma repoda da belirt! : hf modeli sadece evaluation için var (ki onun tensorlarini aldık sadece), alıp hf modelini eğitme yada resume etme ne ise bunu yapmadım (ama yapması çok kolay dur la belki yapabilirim: tokenizer/embedding olayına bi de generation olayına dikkat edecem)
-
-
-
 # tanım: gpu'daki operasyonlara/kernel'lara mm operasyon precisionunu ayarlıyor
 # yaklaşık x2 gain/hızlı oldu 3060rtx'de. Dikkat! actv ve parametreler hala float32
 # "high" parametresi ile mm operasyonları tf32'a dönüşüyor (ismine aldanma
@@ -115,7 +36,6 @@ torch.set_float32_matmul_precision("high")
 model_cfg, pretrain_config = get_pretrain_bert_py_configs(verbose_all=True, verbose_changes=True)
 
 # dataclass objects are not subscriptable, so convert to dict (i want subscription beacause it's more readable than property access in vscode)
-model_cfg = asdict(model_cfg)
 pretrain_config = asdict(pretrain_config)
 
 if pretrain_config["generate_samples"]:
@@ -139,8 +59,8 @@ if torch.cuda.is_available():
 
 
 def do_just_evaluation_on_pretrain_tasks(model: BertForPreTraining, val_loader: DataLoaderCustom):
-
-    tokenizer = get_tokenizer(tokenizer_postfix="hf" if pretrain_config["from_huggingface"] else pretrain_config["tokenizer_type"])
+    # bakılacak: config'in doğru tokenizer vermesi lazım
+    tokenizer = get_tokenizer(custom=True if pretrain_config["tokenizer_type"] == "custom" else False)
     model.eval()
     val_loader.reset()
     fill_mask_pipeline = FillMaskPipeline(model, tokenizer, strategy="greedy")
@@ -230,6 +150,7 @@ if pretrain_config["resume"] == True:
 
 
 
+
 # train from scratch
 elif (pretrain_config["resume"]) == False:
     if len(ckpt_files) > 0:
@@ -240,6 +161,10 @@ elif (pretrain_config["resume"]) == False:
                 # delete all ckpt files
                 for file in ckpt_files:
                     os.remove("model/model_ckpts/" + file)
+
+                print("reset log file ...")
+                with open("log.txt", "w", encoding="utf-8") as f:
+                    pass
 
                 # bakılacak, daha güzel info verilecek
                 print("Training starts with {}...".format("randomly initialized" if pretrain_config["do_train_custom"] else "hf model weights"))
@@ -263,8 +188,10 @@ elif (pretrain_config["resume"]) == False:
                                   split="val", tokenizer_type=pretrain_config["tokenizer_type"], device=device)
 
 
+
+
 if pretrain_config["generate_samples"]:
-    tokenizer = get_tokenizer(tokenizer_postfix="hf" if pretrain_config["do_train_custom"] else pretrain_config["tokenizer_type"])
+    tokenizer = get_tokenizer(custom=True if pretrain_config["tokenizer_type"] == "custom" else False)
     fill_mask_pipeline = FillMaskPipeline(model, tokenizer, strategy="greedy")
     nsp_pipeline = IsNextPipeline(model, tokenizer)
 
@@ -276,7 +203,7 @@ if pretrain_config["mlflow_tracking"]:
     # every run should have the same model training whether from scratch or resume! (if mlflow tracking is enabled)
     # if resume, we need to use last ckpt run id to continue tracking consistently (we kept it in ckpt files) 
     if (pretrain_config["resume"]):
-        mlflow.start_run(run_id=mlflow_run_id)
+        mlflow.start_run(run_id=mlflow_run_id, run_name="bert_pretraining")
     else:
         # if scratch, we need to create a new run and keep its run id
         mlflow_run_id = mlflow.start_run(run_name="bert_pretraining").info.run_id
@@ -297,7 +224,7 @@ schedular_type = pretrain_config["lr_scheduler"]
 
 def get_lr(it):
     if schedular_type != "cosine":
-        raise NotImplementedError(f"schedular type {schedular_type} not implemented yet...")
+        raise NotImplementedError(f"schedular type {schedular_type} not implemented yet, only 'cosine' is supported for now...")
     # 1) linear warmup for warmup_iters steps
     if it < warmup_steps:
         return max_lr * (it+1) / warmup_steps
@@ -320,8 +247,9 @@ def get_lr(it):
 grad_accum_steps = pretrain_config["grad_accum_steps"]
 
 print("seed: ", pretrain_config["seed"])
-print("train batch size: ", train_loader.batch_size)
-print("trainblock size: ", train_loader.block_size)
+print("train batch size (micro batch size): ", train_loader.batch_size)
+print("macro batch size: ", train_loader.batch_size * grad_accum_steps)
+print("train block size: ", train_loader.block_size)
 print("val batch size: ", val_loader.batch_size)
 print("val block size: ", val_loader.block_size)
 
@@ -361,6 +289,7 @@ for step in range(last_step, max_steps):
                 val_loss_accum += model_output.loss.detach().item() / pretrain_config["max_eval_steps"]
         
         if step > last_step and pretrain_config["mlflow_tracking"]:
+            print("hello?")
             mlflow.log_metric("val_loss", val_loss_accum, step)
         
         
@@ -470,7 +399,7 @@ for step in range(last_step, max_steps):
     dt = (t1 - t0)
     tokens_processed = train_loader.batch_size * train_loader.block_size * pretrain_config["grad_accum_steps"]
     tokens_per_second = tokens_processed / dt
-
+    remaining_time = (max_steps - step) * tokens_processed / tokens_per_second / 3600.0
     if pretrain_config["mlflow_tracking"]:
         mlflow.log_metric("total_train_loss", train_loss_accum, step)
         mlflow.log_metric("lr", lr, step)
@@ -479,12 +408,12 @@ for step in range(last_step, max_steps):
         mlflow.log_metric("nsp_loss", model_output.nsp_loss.item(), step)
         mlflow.log_metric("tokens_per_second", tokens_per_second, step)
 
-    print_txt = f"step {step:5d} | total loss: {train_loss_accum:.6f} | lr: {lr:.4e} | norm: {norm:.4f} | mlm loss: {model_output.mlm_loss.item():.6f} | nsp loss: {model_output.nsp_loss.item():.6f} | dt: {dt:.2f}ms | tok/sec: {tokens_per_second:.2f} tokens/sec"
+    print_txt = f"step {step:5d} | total loss: {train_loss_accum:.6f} | lr: {lr:.4e} | norm: {norm:.4f} | mlm loss: {model_output.mlm_loss.item():.6f} | nsp loss: {model_output.nsp_loss.item():.6f} | dt: {dt:.2f}ms | tok/sec: {tokens_per_second:.2f} tokens/sec | expected remaining time: {remaining_time:.2f}h"
     
     # log to file whether or not mlflow is enabled
     with open("log.txt", "a", encoding="utf-8") as f:
-                f.write(print_txt)
-
+                f.write(print_txt + "\n")
+    #   toplam adım sayısı / birim adımda geçen süre -> kalan süre
     print(print_txt)
 
 

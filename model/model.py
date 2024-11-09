@@ -145,6 +145,7 @@ class BertLayer(nn.Module):
 class BertEmbeddings(nn.Module):
     def __init__(self, config: BertConfig):
         super().__init__()
+        self.config = config
 
         # bakılacak
         self.word_embeddings = nn.Embedding(config.vocab_size, config.hidden_size, padding_idx=0)
@@ -157,9 +158,11 @@ class BertEmbeddings(nn.Module):
 
     def forward(self, input_ids, token_type_ids, position_ids) -> torch.Tensor:
         
+        assert position_ids[-1] <= self.config.max_position_embeddings - 1, f"max block size exceeded, {position_ids[-1]} > {self.config.max_position_embeddings - 1}"
 
         # bakılacak: geçici assertion
-        assert input_ids.max().item() < self.word_embeddings.num_embeddings, f"[ERROR]: input_id_max:{input_ids.max().item()} , num_embeddings: {self.word_embeddings.num_embeddings}"
+        # assert input_ids.max().item() < self.word_embeddings.num_embeddings, f"[ERROR]: input_id_max:{input_ids.max().item()} , num_embeddings: {self.word_embeddings.num_embeddings}"
+
 
         input_embeddings = self.word_embeddings(input_ids)
         token_type_embeddings = self.token_type_embeddings(token_type_ids)
@@ -324,7 +327,7 @@ class BertForPreTraining(nn.Module):
         total_loss = None
         if labels is not None and next_sentence_label is not None:
             loss_fct_mlm = nn.CrossEntropyLoss(ignore_index = PAD_TOKEN_ID)
-            loss_fct_nsp = nn.CrossEntropyLoss(ignore_index = -100, weight=class_weights)
+            loss_fct_nsp = nn.CrossEntropyLoss(ignore_index = -100, weight=class_weights)   # -100 is default ignore_index
 
             masked_lm_loss = loss_fct_mlm(prediction_logits.view(-1, self.config.vocab_size), labels.view(-1))
             next_sentence_loss = loss_fct_nsp(seq_relationship_logits.view(-1, 2), next_sentence_label.view(-1))

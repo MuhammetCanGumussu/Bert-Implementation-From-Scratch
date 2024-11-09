@@ -1,15 +1,15 @@
 block_size: 256
-total_number_of_token: 27_164_672
-total_number_of_sample: 106_112
+total_number_of_token: 27_186_688
+total_number_of_sample: 106_198
 total_isNext_count: 38_649
-total_mask_token_count: 3_203_686
-total_replace_token_count: 399_281
-total_identity_token_count: 399_343
-total_number_of_word: 22_329_238
-total_number_of_mask_word: 2_678_244
-total_number_of_replace_word: 334_028
-total_number_of_identity_word: 334_137
-total_number_of_not_accepted_word: 108
+total_mask_token_count: 3_207_906
+total_replace_token_count: 401_409
+total_identity_token_count: 401_648
+total_number_of_word: 22_352_297
+total_number_of_mask_word: 2_682_519
+total_number_of_replace_word: 335_688
+total_number_of_identity_word: 336_008
+total_number_of_not_accepted_word: 112
 
 CONFIGS:
 -----------------------------------------------------------------------

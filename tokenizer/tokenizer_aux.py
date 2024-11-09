@@ -17,7 +17,7 @@ def get_tokenizer_file_path():
     return tokenizer_file[0]
 
 
-def get_tokenizer(custom = True):
+def get_tokenizer(custom: bool = True):
     """
         tokenizer_postfix can be: [custom_cased, custom_uncased, hf]
     """
