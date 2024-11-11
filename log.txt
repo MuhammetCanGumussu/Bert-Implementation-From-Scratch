@@ -1,163 +1,92 @@
-step     0 | total loss: 11.348253 | lr: 1.0000e-06 | norm: 7.8943 | mlm loss: 10.615571 | nsp loss: 0.636777 | dt: 21.61ms | tok/sec: 15163.67 tokens/sec | expected remaining time: 21631.15s
-step     1 | total loss: 11.297706 | lr: 2.0000e-06 | norm: 5.8203 | mlm loss: 10.597653 | nsp loss: 0.793955 | dt: 15.25ms | tok/sec: 21490.07 tokens/sec | expected remaining time: 15247.97s
-step     2 | total loss: 11.258596 | lr: 3.0000e-06 | norm: 4.6736 | mlm loss: 10.568775 | nsp loss: 0.754833 | dt: 15.21ms | tok/sec: 21538.58 tokens/sec | expected remaining time: 15198.42s
-step     3 | total loss: 11.218185 | lr: 4.0000e-06 | norm: 3.7891 | mlm loss: 10.522747 | nsp loss: 0.714460 | dt: 15.59ms | tok/sec: 21023.21 tokens/sec | expected remaining time: 15555.41s
-step     4 | total loss: 11.179986 | lr: 5.0000e-06 | norm: 5.2349 | mlm loss: 10.468018 | nsp loss: 0.734136 | dt: 15.62ms | tok/sec: 20983.05 tokens/sec | expected remaining time: 15569.56s
-step     0 | total loss: 11.353740 | lr: 1.0000e-06 | norm: 9.3773 | mlm loss: 10.583694 | nsp loss: 0.751565 | dt: 7.79ms | tok/sec: 5256.13 tokens/sec | expected remaining time: 2.17s
-step     1 | total loss: 11.294621 | lr: 2.0000e-06 | norm: 5.3603 | mlm loss: 10.551977 | nsp loss: 0.753045 | dt: 1.92ms | tok/sec: 21363.38 tokens/sec | expected remaining time: 0.53s
-step     2 | total loss: 11.270126 | lr: 3.0000e-06 | norm: 4.1368 | mlm loss: 10.564074 | nsp loss: 0.688232 | dt: 1.91ms | tok/sec: 21393.70 tokens/sec | expected remaining time: 0.53s
-step     3 | total loss: 11.223615 | lr: 4.0000e-06 | norm: 4.2488 | mlm loss: 10.503721 | nsp loss: 0.700974 | dt: 1.91ms | tok/sec: 21408.16 tokens/sec | expected remaining time: 0.53s
-step     4 | total loss: 11.174167 | lr: 5.0000e-06 | norm: 4.6129 | mlm loss: 10.451623 | nsp loss: 0.668507 | dt: 1.91ms | tok/sec: 21403.05 tokens/sec | expected remaining time: 0.53s
-step     5 | total loss: 11.117599 | lr: 6.0000e-06 | norm: 4.4827 | mlm loss: 10.424230 | nsp loss: 0.680407 | dt: 2.08ms | tok/sec: 19720.72 tokens/sec | expected remaining time: 0.57s
-step     6 | total loss: 11.044801 | lr: 7.0000e-06 | norm: 4.8307 | mlm loss: 10.333166 | nsp loss: 0.672696 | dt: 1.92ms | tok/sec: 21329.34 tokens/sec | expected remaining time: 0.53s
-step     7 | total loss: 11.003950 | lr: 8.0000e-06 | norm: 5.7373 | mlm loss: 10.298701 | nsp loss: 0.738310 | dt: 2.02ms | tok/sec: 20247.00 tokens/sec | expected remaining time: 0.56s
-step     8 | total loss: 10.903343 | lr: 9.0000e-06 | norm: 5.9318 | mlm loss: 10.196875 | nsp loss: 0.720548 | dt: 1.92ms | tok/sec: 21284.94 tokens/sec | expected remaining time: 0.53s
-step     9 | total loss: 10.822723 | lr: 1.0000e-05 | norm: 3.6559 | mlm loss: 10.165592 | nsp loss: 0.724092 | dt: 1.92ms | tok/sec: 21307.55 tokens/sec | expected remaining time: 0.53s
-step     0 | total loss: 11.353740 | lr: 1.0000e-06 | norm: 9.3773 | mlm loss: 10.583694 | nsp loss: 0.751565 | dt: 7.82ms | tok/sec: 5239.91 tokens/sec | expected remaining time: 2.17hours
-step     1 | total loss: 11.294621 | lr: 2.0000e-06 | norm: 5.3603 | mlm loss: 10.551977 | nsp loss: 0.753045 | dt: 1.92ms | tok/sec: 21377.51 tokens/sec | expected remaining time: 0.53hours
-step     2 | total loss: 11.270126 | lr: 3.0000e-06 | norm: 4.1368 | mlm loss: 10.564074 | nsp loss: 0.688232 | dt: 1.92ms | tok/sec: 21388.19 tokens/sec | expected remaining time: 0.53hours
-step     3 | total loss: 11.223615 | lr: 4.0000e-06 | norm: 4.2488 | mlm loss: 10.503721 | nsp loss: 0.700974 | dt: 1.91ms | tok/sec: 21395.72 tokens/sec | expected remaining time: 0.53hours
-step     4 | total loss: 11.174167 | lr: 5.0000e-06 | norm: 4.6129 | mlm loss: 10.451623 | nsp loss: 0.668507 | dt: 1.92ms | tok/sec: 21352.04 tokens/sec | expected remaining time: 0.53hours
-step     0 | total loss: 11.353740 | lr: 1.0000e-06 | norm: 9.3773 | mlm loss: 10.583694 | nsp loss: 0.751565 | dt: 7.82ms | tok/sec: 5240.81 tokens/sec | expected remaining time: 2.17h
-step     1 | total loss: 11.294621 | lr: 2.0000e-06 | norm: 5.3603 | mlm loss: 10.551977 | nsp loss: 0.753045 | dt: 1.92ms | tok/sec: 21326.83 tokens/sec | expected remaining time: 0.53h
-step     2 | total loss: 11.270126 | lr: 3.0000e-06 | norm: 4.1368 | mlm loss: 10.564074 | nsp loss: 0.688232 | dt: 1.92ms | tok/sec: 21353.08 tokens/sec | expected remaining time: 0.53h
-step     3 | total loss: 11.223615 | lr: 4.0000e-06 | norm: 4.2488 | mlm loss: 10.503721 | nsp loss: 0.700974 | dt: 1.92ms | tok/sec: 21359.19 tokens/sec | expected remaining time: 0.53h
-step     4 | total loss: 11.174167 | lr: 5.0000e-06 | norm: 4.6129 | mlm loss: 10.451623 | nsp loss: 0.668507 | dt: 1.92ms | tok/sec: 21321.26 tokens/sec | expected remaining time: 0.53h
-step     5 | total loss: 11.117599 | lr: 6.0000e-06 | norm: 4.4827 | mlm loss: 10.424230 | nsp loss: 0.680407 | dt: 1.92ms | tok/sec: 21282.40 tokens/sec | expected remaining time: 0.53h
-step     6 | total loss: 11.044801 | lr: 7.0000e-06 | norm: 4.8307 | mlm loss: 10.333166 | nsp loss: 0.672696 | dt: 1.92ms | tok/sec: 21319.66 tokens/sec | expected remaining time: 0.53h
-step     7 | total loss: 11.003950 | lr: 8.0000e-06 | norm: 5.7373 | mlm loss: 10.298701 | nsp loss: 0.738310 | dt: 1.92ms | tok/sec: 21298.50 tokens/sec | expected remaining time: 0.53h
-step     8 | total loss: 10.903343 | lr: 9.0000e-06 | norm: 5.9318 | mlm loss: 10.196875 | nsp loss: 0.720548 | dt: 1.93ms | tok/sec: 21255.48 tokens/sec | expected remaining time: 0.53h
-step     9 | total loss: 10.822723 | lr: 1.0000e-05 | norm: 3.6559 | mlm loss: 10.165592 | nsp loss: 0.724092 | dt: 1.92ms | tok/sec: 21304.14 tokens/sec | expected remaining time: 0.53h
-step    10 | total loss: 10.795461 | lr: 1.1000e-05 | norm: 5.3485 | mlm loss: 10.081114 | nsp loss: 0.749064 | dt: 1.93ms | tok/sec: 21270.98 tokens/sec | expected remaining time: 0.53h
-step    11 | total loss: 10.727623 | lr: 1.2000e-05 | norm: 5.6794 | mlm loss: 10.054220 | nsp loss: 0.779047 | dt: 1.92ms | tok/sec: 21311.27 tokens/sec | expected remaining time: 0.53h
-step    12 | total loss: 10.694273 | lr: 1.3000e-05 | norm: 4.8911 | mlm loss: 9.962042 | nsp loss: 0.702658 | dt: 1.92ms | tok/sec: 21307.64 tokens/sec | expected remaining time: 0.53h
-step    13 | total loss: 10.609022 | lr: 1.4000e-05 | norm: 2.8086 | mlm loss: 9.893815 | nsp loss: 0.685996 | dt: 1.95ms | tok/sec: 20957.38 tokens/sec | expected remaining time: 0.54h
-step    14 | total loss: 10.542999 | lr: 1.5000e-05 | norm: 2.7466 | mlm loss: 9.860526 | nsp loss: 0.733229 | dt: 1.93ms | tok/sec: 21234.22 tokens/sec | expected remaining time: 0.53h
-step    15 | total loss: 10.506592 | lr: 1.6000e-05 | norm: 3.0933 | mlm loss: 9.850822 | nsp loss: 0.626155 | dt: 1.93ms | tok/sec: 21270.60 tokens/sec | expected remaining time: 0.53h
-step    16 | total loss: 10.491694 | lr: 1.7000e-05 | norm: 4.7284 | mlm loss: 9.803724 | nsp loss: 0.746937 | dt: 1.95ms | tok/sec: 21013.69 tokens/sec | expected remaining time: 0.53h
-step    17 | total loss: 10.439322 | lr: 1.8000e-05 | norm: 3.4726 | mlm loss: 9.646994 | nsp loss: 0.744032 | dt: 1.93ms | tok/sec: 21261.05 tokens/sec | expected remaining time: 0.53h
-step    18 | total loss: 10.380230 | lr: 1.9000e-05 | norm: 2.3992 | mlm loss: 9.740801 | nsp loss: 0.687472 | dt: 1.93ms | tok/sec: 21221.27 tokens/sec | expected remaining time: 0.53h
-step    19 | total loss: 10.390497 | lr: 2.0000e-05 | norm: 5.3075 | mlm loss: 9.623755 | nsp loss: 0.756695 | dt: 1.93ms | tok/sec: 21244.04 tokens/sec | expected remaining time: 0.53h
-step    20 | total loss: 10.417441 | lr: 2.1000e-05 | norm: 6.0380 | mlm loss: 9.624178 | nsp loss: 0.715172 | dt: 1.96ms | tok/sec: 20911.14 tokens/sec | expected remaining time: 0.53h
-step    21 | total loss: 10.298089 | lr: 2.2000e-05 | norm: 2.4081 | mlm loss: 9.494921 | nsp loss: 0.718403 | dt: 1.92ms | tok/sec: 21281.14 tokens/sec | expected remaining time: 0.52h
-step    22 | total loss: 10.320688 | lr: 2.3000e-05 | norm: 2.0953 | mlm loss: 9.554752 | nsp loss: 0.677255 | dt: 1.92ms | tok/sec: 21308.12 tokens/sec | expected remaining time: 0.52h
-step    23 | total loss: 10.317683 | lr: 2.4000e-05 | norm: 2.1640 | mlm loss: 9.589524 | nsp loss: 0.679358 | dt: 1.93ms | tok/sec: 21254.46 tokens/sec | expected remaining time: 0.52h
-step    24 | total loss: 10.213837 | lr: 2.5000e-05 | norm: 3.8442 | mlm loss: 9.524611 | nsp loss: 0.745855 | dt: 1.92ms | tok/sec: 21309.04 tokens/sec | expected remaining time: 0.52h
-step    25 | total loss: 10.208053 | lr: 2.6000e-05 | norm: 1.9769 | mlm loss: 9.501356 | nsp loss: 0.702431 | dt: 1.92ms | tok/sec: 21296.86 tokens/sec | expected remaining time: 0.52h
-step    26 | total loss: 10.177770 | lr: 2.7000e-05 | norm: 2.3558 | mlm loss: 9.522535 | nsp loss: 0.697596 | dt: 1.92ms | tok/sec: 21286.57 tokens/sec | expected remaining time: 0.52h
-step    27 | total loss: 10.175899 | lr: 2.8000e-05 | norm: 2.4383 | mlm loss: 9.442027 | nsp loss: 0.678521 | dt: 2.06ms | tok/sec: 19874.39 tokens/sec | expected remaining time: 0.56h
-step    28 | total loss: 10.151825 | lr: 2.9000e-05 | norm: 1.9649 | mlm loss: 9.442311 | nsp loss: 0.703157 | dt: 2.23ms | tok/sec: 18337.03 tokens/sec | expected remaining time: 0.60h
-step    29 | total loss: 10.094263 | lr: 3.0000e-05 | norm: 2.5918 | mlm loss: 9.357407 | nsp loss: 0.695344 | dt: 2.00ms | tok/sec: 20502.05 tokens/sec | expected remaining time: 0.54h
-step    30 | total loss: 10.090075 | lr: 3.1000e-05 | norm: 2.3186 | mlm loss: 9.435200 | nsp loss: 0.678104 | dt: 2.04ms | tok/sec: 20081.73 tokens/sec | expected remaining time: 0.55h
-step    31 | total loss: 10.090652 | lr: 3.2000e-05 | norm: 3.1758 | mlm loss: 9.367114 | nsp loss: 0.725852 | dt: 2.03ms | tok/sec: 20169.34 tokens/sec | expected remaining time: 0.55h
-step    32 | total loss: 10.089810 | lr: 3.3000e-05 | norm: 2.4567 | mlm loss: 9.317472 | nsp loss: 0.696908 | dt: 2.00ms | tok/sec: 20506.18 tokens/sec | expected remaining time: 0.54h
-step    33 | total loss: 10.022258 | lr: 3.4000e-05 | norm: 4.0926 | mlm loss: 9.299635 | nsp loss: 0.709854 | dt: 2.03ms | tok/sec: 20224.20 tokens/sec | expected remaining time: 0.54h
-step    34 | total loss: 9.990403 | lr: 3.5000e-05 | norm: 1.8039 | mlm loss: 9.298355 | nsp loss: 0.644029 | dt: 2.03ms | tok/sec: 20181.16 tokens/sec | expected remaining time: 0.55h
-step    35 | total loss: 9.904519 | lr: 3.6000e-05 | norm: 2.4549 | mlm loss: 9.250360 | nsp loss: 0.675762 | dt: 1.98ms | tok/sec: 20726.33 tokens/sec | expected remaining time: 0.53h
-step    36 | total loss: 9.904095 | lr: 3.7000e-05 | norm: 1.7304 | mlm loss: 9.283323 | nsp loss: 0.698547 | dt: 2.00ms | tok/sec: 20435.11 tokens/sec | expected remaining time: 0.54h
-step    37 | total loss: 9.884406 | lr: 3.8000e-05 | norm: 1.8525 | mlm loss: 9.318700 | nsp loss: 0.676722 | dt: 2.09ms | tok/sec: 19579.32 tokens/sec | expected remaining time: 0.56h
-step    38 | total loss: 9.901011 | lr: 3.9000e-05 | norm: 3.1321 | mlm loss: 9.199134 | nsp loss: 0.747139 | dt: 1.97ms | tok/sec: 20779.04 tokens/sec | expected remaining time: 0.53h
-step    39 | total loss: 9.850279 | lr: 4.0000e-05 | norm: 2.4450 | mlm loss: 9.087141 | nsp loss: 0.703441 | dt: 1.95ms | tok/sec: 21018.07 tokens/sec | expected remaining time: 0.52h
-step    40 | total loss: 9.812325 | lr: 4.1000e-05 | norm: 1.7420 | mlm loss: 9.245863 | nsp loss: 0.686958 | dt: 1.94ms | tok/sec: 21126.99 tokens/sec | expected remaining time: 0.52h
-step    41 | total loss: 9.827673 | lr: 4.2000e-05 | norm: 2.4328 | mlm loss: 9.092850 | nsp loss: 0.687137 | dt: 1.92ms | tok/sec: 21279.18 tokens/sec | expected remaining time: 0.51h
-step    42 | total loss: 9.767984 | lr: 4.3000e-05 | norm: 2.6117 | mlm loss: 9.098450 | nsp loss: 0.680376 | dt: 1.92ms | tok/sec: 21295.90 tokens/sec | expected remaining time: 0.51h
-step    43 | total loss: 9.776640 | lr: 4.4000e-05 | norm: 1.5225 | mlm loss: 9.179977 | nsp loss: 0.695583 | dt: 1.93ms | tok/sec: 21176.21 tokens/sec | expected remaining time: 0.51h
-step    44 | total loss: 9.719672 | lr: 4.5000e-05 | norm: 2.5980 | mlm loss: 9.073689 | nsp loss: 0.695687 | dt: 2.13ms | tok/sec: 19218.90 tokens/sec | expected remaining time: 0.57h
-step    45 | total loss: 9.650668 | lr: 4.6000e-05 | norm: 2.6993 | mlm loss: 8.842189 | nsp loss: 0.697864 | dt: 2.09ms | tok/sec: 19610.96 tokens/sec | expected remaining time: 0.55h
-step    46 | total loss: 9.635236 | lr: 4.7000e-05 | norm: 2.3805 | mlm loss: 8.832744 | nsp loss: 0.682909 | dt: 2.00ms | tok/sec: 20436.48 tokens/sec | expected remaining time: 0.53h
-step    47 | total loss: 9.582170 | lr: 4.8000e-05 | norm: 1.9141 | mlm loss: 8.922509 | nsp loss: 0.682574 | dt: 1.92ms | tok/sec: 21300.32 tokens/sec | expected remaining time: 0.51h
-step    48 | total loss: 9.599205 | lr: 4.9000e-05 | norm: 1.4686 | mlm loss: 8.904608 | nsp loss: 0.700271 | dt: 1.92ms | tok/sec: 21282.68 tokens/sec | expected remaining time: 0.51h
-step    49 | total loss: 9.619642 | lr: 5.0000e-05 | norm: 2.1127 | mlm loss: 8.987967 | nsp loss: 0.678568 | dt: 1.92ms | tok/sec: 21298.01 tokens/sec | expected remaining time: 0.51h
-step    50 | total loss: 9.566350 | lr: 5.1000e-05 | norm: 1.5317 | mlm loss: 8.752708 | nsp loss: 0.702719 | dt: 11.34ms | tok/sec: 3612.12 tokens/sec | expected remaining time: 3.00h
-step    51 | total loss: 9.587304 | lr: 5.2000e-05 | norm: 1.9233 | mlm loss: 8.954584 | nsp loss: 0.681116 | dt: 1.92ms | tok/sec: 21355.30 tokens/sec | expected remaining time: 0.51h
-step    52 | total loss: 9.458695 | lr: 5.3000e-05 | norm: 1.5095 | mlm loss: 8.786716 | nsp loss: 0.648114 | dt: 1.92ms | tok/sec: 21370.65 tokens/sec | expected remaining time: 0.51h
-step    53 | total loss: 9.452730 | lr: 5.4000e-05 | norm: 3.1964 | mlm loss: 8.741835 | nsp loss: 0.772814 | dt: 1.92ms | tok/sec: 21326.00 tokens/sec | expected remaining time: 0.51h
-step    54 | total loss: 9.530600 | lr: 5.5000e-05 | norm: 4.0675 | mlm loss: 8.888066 | nsp loss: 0.716457 | dt: 1.92ms | tok/sec: 21358.07 tokens/sec | expected remaining time: 0.50h
-step    55 | total loss: 9.514957 | lr: 5.6000e-05 | norm: 5.1851 | mlm loss: 8.764871 | nsp loss: 0.790180 | dt: 1.92ms | tok/sec: 21337.16 tokens/sec | expected remaining time: 0.50h
-step    56 | total loss: 9.412865 | lr: 5.7000e-05 | norm: 1.6595 | mlm loss: 8.561869 | nsp loss: 0.695980 | dt: 1.92ms | tok/sec: 21371.91 tokens/sec | expected remaining time: 0.50h
-step    57 | total loss: 9.357618 | lr: 5.8000e-05 | norm: 1.7954 | mlm loss: 8.667663 | nsp loss: 0.687929 | dt: 1.92ms | tok/sec: 21362.60 tokens/sec | expected remaining time: 0.50h
-step    58 | total loss: 9.315245 | lr: 5.9000e-05 | norm: 1.4321 | mlm loss: 8.756392 | nsp loss: 0.669642 | dt: 2.01ms | tok/sec: 20369.12 tokens/sec | expected remaining time: 0.53h
-step    59 | total loss: 9.301723 | lr: 6.0000e-05 | norm: 1.5635 | mlm loss: 8.547132 | nsp loss: 0.688499 | dt: 2.16ms | tok/sec: 18956.74 tokens/sec | expected remaining time: 0.57h
-step    60 | total loss: 9.263338 | lr: 6.1000e-05 | norm: 2.4057 | mlm loss: 8.524768 | nsp loss: 0.659198 | dt: 2.18ms | tok/sec: 18811.72 tokens/sec | expected remaining time: 0.57h
-step    61 | total loss: 9.331514 | lr: 6.2000e-05 | norm: 3.5051 | mlm loss: 8.589155 | nsp loss: 0.794926 | dt: 2.07ms | tok/sec: 19809.31 tokens/sec | expected remaining time: 0.54h
-step    62 | total loss: 9.313074 | lr: 6.3000e-05 | norm: 3.2084 | mlm loss: 8.667843 | nsp loss: 0.688795 | dt: 1.96ms | tok/sec: 20898.64 tokens/sec | expected remaining time: 0.51h
-step    63 | total loss: 9.295601 | lr: 6.4000e-05 | norm: 2.9593 | mlm loss: 8.545552 | nsp loss: 0.682004 | dt: 1.93ms | tok/sec: 21256.82 tokens/sec | expected remaining time: 0.50h
-step    64 | total loss: 9.217468 | lr: 6.5000e-05 | norm: 1.2042 | mlm loss: 8.519670 | nsp loss: 0.666007 | dt: 1.92ms | tok/sec: 21295.69 tokens/sec | expected remaining time: 0.50h
-step    65 | total loss: 9.279020 | lr: 6.6000e-05 | norm: 2.4236 | mlm loss: 8.524857 | nsp loss: 0.718333 | dt: 1.93ms | tok/sec: 21244.18 tokens/sec | expected remaining time: 0.50h
-step    66 | total loss: 9.128765 | lr: 6.7000e-05 | norm: 1.8178 | mlm loss: 8.506380 | nsp loss: 0.681351 | dt: 1.96ms | tok/sec: 20912.46 tokens/sec | expected remaining time: 0.51h
-step    67 | total loss: 9.163589 | lr: 6.8000e-05 | norm: 1.8877 | mlm loss: 8.502007 | nsp loss: 0.719623 | dt: 1.93ms | tok/sec: 21196.75 tokens/sec | expected remaining time: 0.50h
-step    68 | total loss: 9.093730 | lr: 6.9000e-05 | norm: 1.4706 | mlm loss: 8.350207 | nsp loss: 0.676607 | dt: 1.93ms | tok/sec: 21248.50 tokens/sec | expected remaining time: 0.50h
-step    69 | total loss: 9.151526 | lr: 7.0000e-05 | norm: 3.7431 | mlm loss: 8.359338 | nsp loss: 0.718398 | dt: 1.92ms | tok/sec: 21286.17 tokens/sec | expected remaining time: 0.50h
-step    70 | total loss: 9.043763 | lr: 7.1000e-05 | norm: 3.1147 | mlm loss: 8.388680 | nsp loss: 0.714908 | dt: 1.92ms | tok/sec: 21278.83 tokens/sec | expected remaining time: 0.50h
-step    71 | total loss: 9.069692 | lr: 7.2000e-05 | norm: 1.0441 | mlm loss: 8.455517 | nsp loss: 0.673348 | dt: 1.92ms | tok/sec: 21291.04 tokens/sec | expected remaining time: 0.50h
-step    72 | total loss: 9.093659 | lr: 7.3000e-05 | norm: 1.7918 | mlm loss: 8.339137 | nsp loss: 0.648532 | dt: 1.92ms | tok/sec: 21302.39 tokens/sec | expected remaining time: 0.50h
-step    73 | total loss: 9.081861 | lr: 7.4000e-05 | norm: 1.8003 | mlm loss: 8.482800 | nsp loss: 0.695142 | dt: 1.93ms | tok/sec: 21260.24 tokens/sec | expected remaining time: 0.50h
-step    74 | total loss: 9.006004 | lr: 7.5000e-05 | norm: 1.5647 | mlm loss: 8.388056 | nsp loss: 0.650436 | dt: 1.92ms | tok/sec: 21288.87 tokens/sec | expected remaining time: 0.50h
-step    75 | total loss: 8.991441 | lr: 7.6000e-05 | norm: 2.3044 | mlm loss: 8.286389 | nsp loss: 0.709646 | dt: 1.92ms | tok/sec: 21285.10 tokens/sec | expected remaining time: 0.49h
-step    76 | total loss: 9.017110 | lr: 7.7000e-05 | norm: 3.6254 | mlm loss: 8.326458 | nsp loss: 0.610132 | dt: 1.93ms | tok/sec: 21258.83 tokens/sec | expected remaining time: 0.50h
-step    77 | total loss: 9.005967 | lr: 7.8000e-05 | norm: 3.3287 | mlm loss: 8.466701 | nsp loss: 0.760728 | dt: 1.92ms | tok/sec: 21295.51 tokens/sec | expected remaining time: 0.49h
-step    78 | total loss: 8.967255 | lr: 7.9000e-05 | norm: 1.6473 | mlm loss: 8.141312 | nsp loss: 0.709665 | dt: 1.93ms | tok/sec: 21256.45 tokens/sec | expected remaining time: 0.49h
-step    79 | total loss: 9.010278 | lr: 8.0000e-05 | norm: 3.8810 | mlm loss: 8.211250 | nsp loss: 0.650686 | dt: 1.92ms | tok/sec: 21306.52 tokens/sec | expected remaining time: 0.49h
-step    80 | total loss: 9.067947 | lr: 8.1000e-05 | norm: 4.7598 | mlm loss: 8.351606 | nsp loss: 0.740278 | dt: 1.92ms | tok/sec: 21293.76 tokens/sec | expected remaining time: 0.49h
-step    81 | total loss: 8.948613 | lr: 8.2000e-05 | norm: 3.7351 | mlm loss: 8.315162 | nsp loss: 0.750026 | dt: 1.93ms | tok/sec: 21266.38 tokens/sec | expected remaining time: 0.49h
-step    82 | total loss: 9.003983 | lr: 8.3000e-05 | norm: 3.7151 | mlm loss: 8.267848 | nsp loss: 0.667425 | dt: 1.92ms | tok/sec: 21296.87 tokens/sec | expected remaining time: 0.49h
-step    83 | total loss: 8.955641 | lr: 8.4000e-05 | norm: 2.3171 | mlm loss: 8.235535 | nsp loss: 0.689354 | dt: 1.93ms | tok/sec: 21270.57 tokens/sec | expected remaining time: 0.49h
-step    84 | total loss: 8.964968 | lr: 8.5000e-05 | norm: 2.3806 | mlm loss: 8.339280 | nsp loss: 0.696351 | dt: 1.92ms | tok/sec: 21293.60 tokens/sec | expected remaining time: 0.49h
-step    85 | total loss: 8.979621 | lr: 8.6000e-05 | norm: 3.7022 | mlm loss: 8.290257 | nsp loss: 0.674485 | dt: 1.92ms | tok/sec: 21287.30 tokens/sec | expected remaining time: 0.49h
-step    86 | total loss: 8.948980 | lr: 8.7000e-05 | norm: 1.1765 | mlm loss: 8.311245 | nsp loss: 0.642478 | dt: 1.93ms | tok/sec: 21264.14 tokens/sec | expected remaining time: 0.49h
-step    87 | total loss: 9.009339 | lr: 8.8000e-05 | norm: 0.7564 | mlm loss: 8.199494 | nsp loss: 0.655072 | dt: 1.92ms | tok/sec: 21290.58 tokens/sec | expected remaining time: 0.49h
-step    88 | total loss: 8.954335 | lr: 8.9000e-05 | norm: 1.8398 | mlm loss: 8.322491 | nsp loss: 0.690749 | dt: 1.93ms | tok/sec: 21266.57 tokens/sec | expected remaining time: 0.49h
-step    89 | total loss: 9.017100 | lr: 9.0000e-05 | norm: 1.6759 | mlm loss: 8.201259 | nsp loss: 0.637090 | dt: 1.92ms | tok/sec: 21287.09 tokens/sec | expected remaining time: 0.49h
-step    90 | total loss: 8.931286 | lr: 9.1000e-05 | norm: 1.0323 | mlm loss: 8.431901 | nsp loss: 0.603045 | dt: 2.21ms | tok/sec: 18500.63 tokens/sec | expected remaining time: 0.56h
-step    91 | total loss: 8.895037 | lr: 9.2000e-05 | norm: 1.0424 | mlm loss: 8.175148 | nsp loss: 0.620780 | dt: 2.06ms | tok/sec: 19922.20 tokens/sec | expected remaining time: 0.52h
-step    92 | total loss: 8.853943 | lr: 9.3000e-05 | norm: 0.9622 | mlm loss: 8.143972 | nsp loss: 0.681347 | dt: 2.06ms | tok/sec: 19931.47 tokens/sec | expected remaining time: 0.52h
-step    93 | total loss: 8.904234 | lr: 9.4000e-05 | norm: 1.3912 | mlm loss: 8.113878 | nsp loss: 0.617338 | dt: 2.05ms | tok/sec: 19957.70 tokens/sec | expected remaining time: 0.52h
-step    94 | total loss: 8.984761 | lr: 9.5000e-05 | norm: 0.9452 | mlm loss: 8.377336 | nsp loss: 0.698409 | dt: 2.12ms | tok/sec: 19280.87 tokens/sec | expected remaining time: 0.54h
-step    95 | total loss: 8.852052 | lr: 9.6000e-05 | norm: 1.0933 | mlm loss: 8.341457 | nsp loss: 0.644508 | dt: 1.99ms | tok/sec: 20590.73 tokens/sec | expected remaining time: 0.50h
-step    96 | total loss: 8.981518 | lr: 9.7000e-05 | norm: 1.1595 | mlm loss: 8.196693 | nsp loss: 0.826763 | dt: 1.93ms | tok/sec: 21266.70 tokens/sec | expected remaining time: 0.48h
-step    97 | total loss: 8.897676 | lr: 9.8000e-05 | norm: 1.1125 | mlm loss: 8.103716 | nsp loss: 0.658898 | dt: 1.92ms | tok/sec: 21296.26 tokens/sec | expected remaining time: 0.48h
-step    98 | total loss: 8.888927 | lr: 9.9000e-05 | norm: 1.0317 | mlm loss: 8.277001 | nsp loss: 0.676218 | dt: 1.93ms | tok/sec: 21270.87 tokens/sec | expected remaining time: 0.48h
-step    99 | total loss: 8.941885 | lr: 1.0000e-04 | norm: 4.6340 | mlm loss: 8.128893 | nsp loss: 0.648330 | dt: 1.93ms | tok/sec: 21277.14 tokens/sec | expected remaining time: 0.48h
-step   100 | total loss: 8.838599 | lr: 1.0000e-04 | norm: 2.5715 | mlm loss: 8.140849 | nsp loss: 0.699231 | dt: 8.79ms | tok/sec: 4659.12 tokens/sec | expected remaining time: 2.20h
-step   101 | total loss: 8.981441 | lr: 1.0000e-04 | norm: 2.0651 | mlm loss: 8.432476 | nsp loss: 0.699765 | dt: 1.92ms | tok/sec: 21295.69 tokens/sec | expected remaining time: 0.48h
-step   102 | total loss: 8.907105 | lr: 9.9999e-05 | norm: 0.8432 | mlm loss: 8.274580 | nsp loss: 0.671737 | dt: 1.92ms | tok/sec: 21284.56 tokens/sec | expected remaining time: 0.48h
-step   103 | total loss: 8.987171 | lr: 9.9997e-05 | norm: 1.5079 | mlm loss: 8.221408 | nsp loss: 0.654452 | dt: 1.93ms | tok/sec: 21267.02 tokens/sec | expected remaining time: 0.48h
-step   104 | total loss: 8.984373 | lr: 9.9995e-05 | norm: 2.9755 | mlm loss: 8.385337 | nsp loss: 0.711865 | dt: 1.93ms | tok/sec: 21274.78 tokens/sec | expected remaining time: 0.48h
-step   105 | total loss: 8.868316 | lr: 9.9992e-05 | norm: 4.0827 | mlm loss: 8.192676 | nsp loss: 0.708580 | dt: 1.93ms | tok/sec: 21271.61 tokens/sec | expected remaining time: 0.48h
-step   106 | total loss: 8.950150 | lr: 9.9989e-05 | norm: 4.2592 | mlm loss: 8.190297 | nsp loss: 0.831113 | dt: 1.92ms | tok/sec: 21282.24 tokens/sec | expected remaining time: 0.48h
-step   107 | total loss: 8.904505 | lr: 9.9985e-05 | norm: 4.6018 | mlm loss: 8.260926 | nsp loss: 0.579991 | dt: 1.92ms | tok/sec: 21282.23 tokens/sec | expected remaining time: 0.48h
-step   108 | total loss: 8.809640 | lr: 9.9981e-05 | norm: 1.5469 | mlm loss: 8.051764 | nsp loss: 0.700410 | dt: 1.93ms | tok/sec: 21262.63 tokens/sec | expected remaining time: 0.48h
-step   109 | total loss: 8.715486 | lr: 9.9976e-05 | norm: 0.9520 | mlm loss: 8.146683 | nsp loss: 0.614260 | dt: 1.92ms | tok/sec: 21292.00 tokens/sec | expected remaining time: 0.48h
-step   110 | total loss: 8.862699 | lr: 9.9970e-05 | norm: 4.3826 | mlm loss: 8.217804 | nsp loss: 0.762207 | dt: 1.93ms | tok/sec: 21277.61 tokens/sec | expected remaining time: 0.48h
-step   111 | total loss: 8.809329 | lr: 9.9964e-05 | norm: 4.5586 | mlm loss: 8.019036 | nsp loss: 0.687838 | dt: 1.93ms | tok/sec: 21248.09 tokens/sec | expected remaining time: 0.48h
-step   112 | total loss: 8.857234 | lr: 9.9957e-05 | norm: 1.7592 | mlm loss: 8.028255 | nsp loss: 0.703070 | dt: 1.92ms | tok/sec: 21282.09 tokens/sec | expected remaining time: 0.48h
-step   113 | total loss: 8.799502 | lr: 9.9949e-05 | norm: 2.6152 | mlm loss: 8.032149 | nsp loss: 0.727833 | dt: 1.93ms | tok/sec: 21259.08 tokens/sec | expected remaining time: 0.48h
-step   114 | total loss: 8.814164 | lr: 9.9941e-05 | norm: 3.3940 | mlm loss: 8.182959 | nsp loss: 0.666513 | dt: 1.92ms | tok/sec: 21290.27 tokens/sec | expected remaining time: 0.47h
-step   115 | total loss: 8.996917 | lr: 9.9932e-05 | norm: 3.7886 | mlm loss: 8.424133 | nsp loss: 0.704760 | dt: 1.92ms | tok/sec: 21282.04 tokens/sec | expected remaining time: 0.47h
-step   116 | total loss: 8.785213 | lr: 9.9923e-05 | norm: 1.9802 | mlm loss: 8.057731 | nsp loss: 0.672736 | dt: 1.93ms | tok/sec: 21245.90 tokens/sec | expected remaining time: 0.47h
-step   117 | total loss: 8.794274 | lr: 9.9913e-05 | norm: 2.1909 | mlm loss: 8.142941 | nsp loss: 0.696664 | dt: 1.92ms | tok/sec: 21294.24 tokens/sec | expected remaining time: 0.47h
-step   118 | total loss: 8.752743 | lr: 9.9903e-05 | norm: 1.4088 | mlm loss: 8.154440 | nsp loss: 0.683841 | dt: 1.93ms | tok/sec: 21253.21 tokens/sec | expected remaining time: 0.47h
-step   119 | total loss: 8.786150 | lr: 9.9891e-05 | norm: 1.0515 | mlm loss: 7.952877 | nsp loss: 0.657177 | dt: 1.92ms | tok/sec: 21293.92 tokens/sec | expected remaining time: 0.47h
-step   120 | total loss: 8.740010 | lr: 9.9880e-05 | norm: 1.5140 | mlm loss: 8.071777 | nsp loss: 0.749641 | dt: 1.92ms | tok/sec: 21288.60 tokens/sec | expected remaining time: 0.47h
-step   121 | total loss: 8.884617 | lr: 9.9867e-05 | norm: 2.3930 | mlm loss: 8.232192 | nsp loss: 0.684347 | dt: 1.93ms | tok/sec: 21229.35 tokens/sec | expected remaining time: 0.47h
-step   122 | total loss: 8.807167 | lr: 9.9854e-05 | norm: 3.1592 | mlm loss: 8.121171 | nsp loss: 0.713961 | dt: 1.92ms | tok/sec: 21281.71 tokens/sec | expected remaining time: 0.47h
-step   123 | total loss: 8.798747 | lr: 9.9841e-05 | norm: 1.4268 | mlm loss: 8.100154 | nsp loss: 0.619926 | dt: 1.93ms | tok/sec: 21266.79 tokens/sec | expected remaining time: 0.47h
-step   124 | total loss: 8.768483 | lr: 9.9827e-05 | norm: 3.0233 | mlm loss: 8.299041 | nsp loss: 0.687051 | dt: 1.93ms | tok/sec: 21271.21 tokens/sec | expected remaining time: 0.47h
-step   125 | total loss: 8.642808 | lr: 9.9812e-05 | norm: 2.2885 | mlm loss: 8.082301 | nsp loss: 0.669992 | dt: 1.92ms | tok/sec: 21285.65 tokens/sec | expected remaining time: 0.47h
-step   126 | total loss: 8.711049 | lr: 9.9797e-05 | norm: 0.9908 | mlm loss: 8.096902 | nsp loss: 0.589306 | dt: 1.93ms | tok/sec: 21258.31 tokens/sec | expected remaining time: 0.47h
-step   127 | total loss: 8.764719 | lr: 9.9781e-05 | norm: 5.4229 | mlm loss: 8.110736 | nsp loss: 0.714032 | dt: 1.92ms | tok/sec: 21285.41 tokens/sec | expected remaining time: 0.47h
-step   128 | total loss: 8.750950 | lr: 9.9764e-05 | norm: 1.6740 | mlm loss: 7.977399 | nsp loss: 0.710249 | dt: 1.92ms | tok/sec: 21287.02 tokens/sec | expected remaining time: 0.47h
-step   129 | total loss: 8.897729 | lr: 9.9747e-05 | norm: 6.1038 | mlm loss: 8.343627 | nsp loss: 0.816909 | dt: 1.93ms | tok/sec: 21259.58 tokens/sec | expected remaining time: 0.47h
-step   130 | total loss: 8.845236 | lr: 9.9729e-05 | norm: 7.0675 | mlm loss: 8.125453 | nsp loss: 0.894237 | dt: 1.92ms | tok/sec: 21279.93 tokens/sec | expected remaining time: 0.47h
-step   131 | total loss: 8.800970 | lr: 9.9711e-05 | norm: 3.1972 | mlm loss: 8.171228 | nsp loss: 0.672620 | dt: 1.93ms | tok/sec: 21268.49 tokens/sec | expected remaining time: 0.47h
-step   132 | total loss: 8.780736 | lr: 9.9692e-05 | norm: 4.3163 | mlm loss: 8.129091 | nsp loss: 0.661828 | dt: 1.93ms | tok/sec: 21277.53 tokens/sec | expected remaining time: 0.46h
-step   133 | total loss: 8.802701 | lr: 9.9673e-05 | norm: 3.6736 | mlm loss: 8.026521 | nsp loss: 0.635224 | dt: 1.92ms | tok/sec: 21301.15 tokens/sec | expected remaining time: 0.46h
-step   134 | total loss: 8.760887 | lr: 9.9653e-05 | norm: 1.6280 | mlm loss: 8.146918 | nsp loss: 0.648069 | dt: 1.93ms | tok/sec: 21264.53 tokens/sec | expected remaining time: 0.46h
-step   135 | total loss: 8.697168 | lr: 9.9632e-05 | norm: 2.6647 | mlm loss: 7.947036 | nsp loss: 0.616735 | dt: 1.92ms | tok/sec: 21290.07 tokens/sec | expected remaining time: 0.46h
-step   136 | total loss: 8.825163 | lr: 9.9611e-05 | norm: 5.3526 | mlm loss: 7.867114 | nsp loss: 0.761207 | dt: 1.93ms | tok/sec: 21259.83 tokens/sec | expected remaining time: 0.46h
-step   137 | total loss: 8.813560 | lr: 9.9589e-05 | norm: 3.9176 | mlm loss: 8.209938 | nsp loss: 0.706671 | dt: 1.92ms | tok/sec: 21288.49 tokens/sec | expected remaining time: 0.46h
-step   138 | total loss: 8.698629 | lr: 9.9566e-05 | norm: 2.2209 | mlm loss: 8.097234 | nsp loss: 0.691411 | dt: 1.92ms | tok/sec: 21292.86 tokens/sec | expected remaining time: 0.46h
-step   139 | total loss: 8.728628 | lr: 9.9543e-05 | norm: 2.5900 | mlm loss: 7.957258 | nsp loss: 0.642120 | dt: 1.93ms | tok/sec: 21251.54 tokens/sec | expected remaining time: 0.46h
-step   140 | total loss: 8.761489 | lr: 9.9519e-05 | norm: 1.3223 | mlm loss: 7.987730 | nsp loss: 0.589621 | dt: 1.92ms | tok/sec: 21293.47 tokens/sec | expected remaining time: 0.46h
-step   141 | total loss: 8.640075 | lr: 9.9495e-05 | norm: 1.8341 | mlm loss: 8.125731 | nsp loss: 0.627286 | dt: 1.93ms | tok/sec: 21277.91 tokens/sec | expected remaining time: 0.46h
-step   142 | total loss: 8.652124 | lr: 9.9470e-05 | norm: 2.7520 | mlm loss: 7.888885 | nsp loss: 0.615423 | dt: 1.93ms | tok/sec: 21222.64 tokens/sec | expected remaining time: 0.46h
+step     0 | total loss: 11.297067 | lr: 1.0000e-04 | norm: 7.6313 | mlm loss: 10.582310 | nsp loss: 0.714757 | dt: 6.27ms | tok/sec: 1305.88 tokens/sec | remaining: 17h:25m
+step     1 | total loss: 11.969777 | lr: 2.0000e-04 | norm: 12.8604 | mlm loss: 10.111596 | nsp loss: 1.858181 | dt: 0.42ms | tok/sec: 19375.71 tokens/sec | remaining: 1h:10m
+step     2 | total loss: 11.287888 | lr: 3.0000e-04 | norm: 15.9643 | mlm loss: 9.876403 | nsp loss: 1.411485 | dt: 0.40ms | tok/sec: 20411.88 tokens/sec | remaining: 1h:6m
+step     3 | total loss: 10.513990 | lr: 4.0000e-04 | norm: 8.4364 | mlm loss: 9.579137 | nsp loss: 0.934854 | dt: 0.40ms | tok/sec: 20296.59 tokens/sec | remaining: 1h:7m
+step     4 | total loss: 10.130852 | lr: 5.0000e-04 | norm: 3.7137 | mlm loss: 9.412822 | nsp loss: 0.718030 | dt: 0.40ms | tok/sec: 20379.53 tokens/sec | remaining: 1h:6m
+step     5 | total loss: 9.995294 | lr: 6.0000e-04 | norm: 5.4683 | mlm loss: 9.261548 | nsp loss: 0.733746 | dt: 0.40ms | tok/sec: 20360.98 tokens/sec | remaining: 1h:7m
+step     6 | total loss: 9.878446 | lr: 7.0000e-04 | norm: 5.9116 | mlm loss: 9.077928 | nsp loss: 0.800518 | dt: 0.40ms | tok/sec: 20403.28 tokens/sec | remaining: 1h:6m
+step     7 | total loss: 9.694498 | lr: 8.0000e-04 | norm: 2.4703 | mlm loss: 9.008804 | nsp loss: 0.685694 | dt: 0.40ms | tok/sec: 20260.06 tokens/sec | remaining: 1h:7m
+step     8 | total loss: 9.447438 | lr: 9.0000e-04 | norm: 5.1654 | mlm loss: 8.683278 | nsp loss: 0.764160 | dt: 0.40ms | tok/sec: 20384.30 tokens/sec | remaining: 1h:6m
+step     9 | total loss: 9.295758 | lr: 1.0000e-03 | norm: 4.1748 | mlm loss: 8.561423 | nsp loss: 0.734335 | dt: 0.40ms | tok/sec: 20368.12 tokens/sec | remaining: 1h:6m
+step    10 | total loss: 9.360480 | lr: 1.1000e-03 | norm: 4.3554 | mlm loss: 8.706922 | nsp loss: 0.653558 | dt: 0.40ms | tok/sec: 20332.51 tokens/sec | remaining: 1h:7m
+step    11 | total loss: 9.675604 | lr: 1.2000e-03 | norm: 7.0573 | mlm loss: 8.782986 | nsp loss: 0.892618 | dt: 0.40ms | tok/sec: 20275.20 tokens/sec | remaining: 1h:7m
+step    12 | total loss: 9.691091 | lr: 1.3000e-03 | norm: 8.5694 | mlm loss: 8.780760 | nsp loss: 0.910330 | dt: 0.40ms | tok/sec: 20347.75 tokens/sec | remaining: 1h:7m
+step    13 | total loss: 9.549525 | lr: 1.4000e-03 | norm: 2.8718 | mlm loss: 8.932326 | nsp loss: 0.617199 | dt: 0.40ms | tok/sec: 20330.08 tokens/sec | remaining: 1h:7m
+step    14 | total loss: 9.870000 | lr: 1.5000e-03 | norm: 7.4583 | mlm loss: 8.930259 | nsp loss: 0.939741 | dt: 0.40ms | tok/sec: 20310.33 tokens/sec | remaining: 1h:7m
+step    15 | total loss: 9.357264 | lr: 1.6000e-03 | norm: 4.8731 | mlm loss: 8.593512 | nsp loss: 0.763752 | dt: 0.40ms | tok/sec: 20328.85 tokens/sec | remaining: 1h:7m
+step    16 | total loss: 9.616485 | lr: 1.7000e-03 | norm: 7.5894 | mlm loss: 8.708914 | nsp loss: 0.907570 | dt: 0.40ms | tok/sec: 20352.92 tokens/sec | remaining: 1h:6m
+step    17 | total loss: 9.957115 | lr: 1.8000e-03 | norm: 10.0742 | mlm loss: 8.846447 | nsp loss: 1.110668 | dt: 0.40ms | tok/sec: 20317.52 tokens/sec | remaining: 1h:7m
+step    18 | total loss: 9.474455 | lr: 1.9000e-03 | norm: 7.1498 | mlm loss: 8.630687 | nsp loss: 0.843768 | dt: 0.40ms | tok/sec: 20354.81 tokens/sec | remaining: 1h:6m
+step    19 | total loss: 9.629012 | lr: 2.0000e-03 | norm: 6.4701 | mlm loss: 8.860893 | nsp loss: 0.768119 | dt: 0.40ms | tok/sec: 20318.31 tokens/sec | remaining: 1h:7m
+step    20 | total loss: 9.578634 | lr: 2.1000e-03 | norm: 3.4941 | mlm loss: 8.873218 | nsp loss: 0.705417 | dt: 0.40ms | tok/sec: 20358.82 tokens/sec | remaining: 1h:6m
+step    21 | total loss: 9.538150 | lr: 2.2000e-03 | norm: 6.5975 | mlm loss: 8.755791 | nsp loss: 0.782359 | dt: 0.40ms | tok/sec: 20335.73 tokens/sec | remaining: 1h:7m
+step    22 | total loss: 9.411959 | lr: 2.3000e-03 | norm: 1.9848 | mlm loss: 8.727942 | nsp loss: 0.684017 | dt: 0.40ms | tok/sec: 20375.57 tokens/sec | remaining: 1h:6m
+step    23 | total loss: 9.707132 | lr: 2.4000e-03 | norm: 10.2344 | mlm loss: 8.786306 | nsp loss: 0.920826 | dt: 0.40ms | tok/sec: 20313.02 tokens/sec | remaining: 1h:7m
+step    24 | total loss: 9.663452 | lr: 2.5000e-03 | norm: 2.6514 | mlm loss: 8.983861 | nsp loss: 0.679592 | dt: 0.40ms | tok/sec: 20399.24 tokens/sec | remaining: 1h:6m
+step    25 | total loss: 9.484699 | lr: 2.6000e-03 | norm: 1.2330 | mlm loss: 8.793828 | nsp loss: 0.690871 | dt: 0.40ms | tok/sec: 20252.25 tokens/sec | remaining: 1h:7m
+step    26 | total loss: 9.757612 | lr: 2.7000e-03 | norm: 7.0453 | mlm loss: 8.972867 | nsp loss: 0.784745 | dt: 0.40ms | tok/sec: 20391.58 tokens/sec | remaining: 1h:6m
+step    27 | total loss: 9.683526 | lr: 2.8000e-03 | norm: 4.2973 | mlm loss: 8.953530 | nsp loss: 0.729996 | dt: 0.40ms | tok/sec: 20323.82 tokens/sec | remaining: 1h:7m
+step    28 | total loss: 9.745552 | lr: 2.9000e-03 | norm: 1.9707 | mlm loss: 9.064145 | nsp loss: 0.681407 | dt: 0.40ms | tok/sec: 20343.34 tokens/sec | remaining: 1h:6m
+step    29 | total loss: 9.586273 | lr: 3.0000e-03 | norm: 4.7662 | mlm loss: 8.839630 | nsp loss: 0.746643 | dt: 0.40ms | tok/sec: 20344.92 tokens/sec | remaining: 1h:6m
+step    30 | total loss: 9.439944 | lr: 3.1000e-03 | norm: 2.3711 | mlm loss: 8.738656 | nsp loss: 0.701288 | dt: 0.40ms | tok/sec: 20364.80 tokens/sec | remaining: 1h:6m
+step    31 | total loss: 9.817854 | lr: 3.2000e-03 | norm: 9.7343 | mlm loss: 8.841848 | nsp loss: 0.976006 | dt: 0.40ms | tok/sec: 20369.45 tokens/sec | remaining: 1h:6m
+step    32 | total loss: 10.096784 | lr: 3.3000e-03 | norm: 11.1561 | mlm loss: 9.066773 | nsp loss: 1.030011 | dt: 0.40ms | tok/sec: 20349.27 tokens/sec | remaining: 1h:6m
+step    33 | total loss: 9.544268 | lr: 3.4000e-03 | norm: 4.5060 | mlm loss: 8.801120 | nsp loss: 0.743148 | dt: 0.40ms | tok/sec: 20322.30 tokens/sec | remaining: 1h:6m
+step    34 | total loss: 9.662788 | lr: 3.5000e-03 | norm: 2.3560 | mlm loss: 8.983454 | nsp loss: 0.679335 | dt: 0.40ms | tok/sec: 20373.40 tokens/sec | remaining: 1h:6m
+step    35 | total loss: 9.564855 | lr: 3.6000e-03 | norm: 3.0093 | mlm loss: 8.851197 | nsp loss: 0.713657 | dt: 0.40ms | tok/sec: 20388.24 tokens/sec | remaining: 1h:6m
+step    36 | total loss: 9.601098 | lr: 3.7000e-03 | norm: 3.3375 | mlm loss: 8.888492 | nsp loss: 0.712606 | dt: 0.40ms | tok/sec: 20400.75 tokens/sec | remaining: 1h:6m
+step    37 | total loss: 9.531827 | lr: 3.8000e-03 | norm: 2.7455 | mlm loss: 8.828873 | nsp loss: 0.702955 | dt: 0.40ms | tok/sec: 20369.51 tokens/sec | remaining: 1h:6m
+step    38 | total loss: 9.479528 | lr: 3.9000e-03 | norm: 6.2942 | mlm loss: 8.670378 | nsp loss: 0.809151 | dt: 0.40ms | tok/sec: 20328.34 tokens/sec | remaining: 1h:6m
+step    39 | total loss: 9.644713 | lr: 4.0000e-03 | norm: 8.6794 | mlm loss: 8.784533 | nsp loss: 0.860181 | dt: 0.40ms | tok/sec: 20369.17 tokens/sec | remaining: 1h:6m
+step    40 | total loss: 9.394285 | lr: 4.1000e-03 | norm: 1.8264 | mlm loss: 8.734593 | nsp loss: 0.659691 | dt: 0.40ms | tok/sec: 20355.91 tokens/sec | remaining: 1h:6m
+step    41 | total loss: 9.912801 | lr: 4.2000e-03 | norm: 8.1829 | mlm loss: 8.995705 | nsp loss: 0.917096 | dt: 0.40ms | tok/sec: 20333.61 tokens/sec | remaining: 1h:6m
+step    42 | total loss: 10.028816 | lr: 4.3000e-03 | norm: 11.1501 | mlm loss: 8.892154 | nsp loss: 1.136662 | dt: 0.40ms | tok/sec: 20339.93 tokens/sec | remaining: 1h:6m
+step    43 | total loss: 9.724523 | lr: 4.4000e-03 | norm: 4.4604 | mlm loss: 9.017756 | nsp loss: 0.706766 | dt: 0.40ms | tok/sec: 20352.39 tokens/sec | remaining: 1h:6m
+step    44 | total loss: 9.472778 | lr: 4.5000e-03 | norm: 6.3991 | mlm loss: 8.713887 | nsp loss: 0.758891 | dt: 0.40ms | tok/sec: 20344.60 tokens/sec | remaining: 1h:6m
+step    45 | total loss: 9.732899 | lr: 4.6000e-03 | norm: 10.9463 | mlm loss: 8.828362 | nsp loss: 0.904537 | dt: 0.40ms | tok/sec: 20344.85 tokens/sec | remaining: 1h:6m
+step    46 | total loss: 9.639181 | lr: 4.7000e-03 | norm: 3.3448 | mlm loss: 8.928851 | nsp loss: 0.710330 | dt: 0.40ms | tok/sec: 20381.28 tokens/sec | remaining: 1h:6m
+step    47 | total loss: 9.423162 | lr: 4.8000e-03 | norm: 6.2591 | mlm loss: 8.651158 | nsp loss: 0.772003 | dt: 0.40ms | tok/sec: 20382.23 tokens/sec | remaining: 1h:6m
+step    48 | total loss: 9.541549 | lr: 4.9000e-03 | norm: 9.0906 | mlm loss: 8.654742 | nsp loss: 0.886807 | dt: 0.40ms | tok/sec: 20318.45 tokens/sec | remaining: 1h:6m
+step    49 | total loss: 9.395893 | lr: 5.0000e-03 | norm: 6.0367 | mlm loss: 8.632451 | nsp loss: 0.763442 | dt: 0.40ms | tok/sec: 20343.09 tokens/sec | remaining: 1h:6m
+step    50 | total loss: 9.590712 | lr: 5.1000e-03 | norm: 10.3760 | mlm loss: 8.721700 | nsp loss: 0.869012 | dt: 6.66ms | tok/sec: 1229.12 tokens/sec | remaining: 18h:25m
+step    51 | total loss: 9.689046 | lr: 5.2000e-03 | norm: 8.3010 | mlm loss: 8.846766 | nsp loss: 0.842279 | dt: 0.40ms | tok/sec: 20351.92 tokens/sec | remaining: 1h:6m
+step    52 | total loss: 9.464961 | lr: 5.3000e-03 | norm: 8.9584 | mlm loss: 8.657753 | nsp loss: 0.807208 | dt: 0.40ms | tok/sec: 20318.10 tokens/sec | remaining: 1h:6m
+step    53 | total loss: 9.588098 | lr: 5.4000e-03 | norm: 9.5553 | mlm loss: 8.729647 | nsp loss: 0.858451 | dt: 0.40ms | tok/sec: 20378.51 tokens/sec | remaining: 1h:6m
+step    54 | total loss: 9.532233 | lr: 5.5000e-03 | norm: 9.5848 | mlm loss: 8.642174 | nsp loss: 0.890059 | dt: 0.40ms | tok/sec: 20350.89 tokens/sec | remaining: 1h:6m
+step    55 | total loss: 9.264335 | lr: 5.6000e-03 | norm: 2.6917 | mlm loss: 8.651956 | nsp loss: 0.612379 | dt: 0.40ms | tok/sec: 20340.27 tokens/sec | remaining: 1h:6m
+step    56 | total loss: 9.578168 | lr: 5.7000e-03 | norm: 9.9109 | mlm loss: 8.719221 | nsp loss: 0.858947 | dt: 0.40ms | tok/sec: 20279.89 tokens/sec | remaining: 1h:6m
+step    57 | total loss: 9.297638 | lr: 5.8000e-03 | norm: 4.2636 | mlm loss: 8.608452 | nsp loss: 0.689186 | dt: 0.40ms | tok/sec: 20325.69 tokens/sec | remaining: 1h:6m
+step    58 | total loss: 9.577380 | lr: 5.9000e-03 | norm: 4.2512 | mlm loss: 8.857467 | nsp loss: 0.719914 | dt: 0.40ms | tok/sec: 20343.98 tokens/sec | remaining: 1h:6m
+step    59 | total loss: 9.415451 | lr: 6.0000e-03 | norm: 2.1928 | mlm loss: 8.719490 | nsp loss: 0.695961 | dt: 0.41ms | tok/sec: 20220.37 tokens/sec | remaining: 1h:7m
+step    60 | total loss: 9.463268 | lr: 6.1000e-03 | norm: 1.7397 | mlm loss: 8.778183 | nsp loss: 0.685085 | dt: 0.40ms | tok/sec: 20289.39 tokens/sec | remaining: 1h:6m
+step    61 | total loss: 9.208605 | lr: 6.2000e-03 | norm: 4.4831 | mlm loss: 8.478439 | nsp loss: 0.730165 | dt: 0.40ms | tok/sec: 20253.82 tokens/sec | remaining: 1h:7m
+step    62 | total loss: 9.509792 | lr: 6.3000e-03 | norm: 2.5603 | mlm loss: 8.826581 | nsp loss: 0.683211 | dt: 0.40ms | tok/sec: 20241.02 tokens/sec | remaining: 1h:7m
+step    63 | total loss: 9.481308 | lr: 6.4000e-03 | norm: 11.2687 | mlm loss: 8.611372 | nsp loss: 0.869936 | dt: 0.41ms | tok/sec: 20225.54 tokens/sec | remaining: 1h:7m
+step    64 | total loss: 9.309103 | lr: 6.5000e-03 | norm: 1.6542 | mlm loss: 8.619302 | nsp loss: 0.689801 | dt: 0.40ms | tok/sec: 20244.05 tokens/sec | remaining: 1h:7m
+step    65 | total loss: 9.505861 | lr: 6.6000e-03 | norm: 7.7366 | mlm loss: 8.684578 | nsp loss: 0.821283 | dt: 0.40ms | tok/sec: 20275.79 tokens/sec | remaining: 1h:6m
+step    66 | total loss: 9.944501 | lr: 6.7000e-03 | norm: 15.1507 | mlm loss: 8.701997 | nsp loss: 1.242504 | dt: 0.40ms | tok/sec: 20285.50 tokens/sec | remaining: 1h:6m
+step    67 | total loss: 9.421283 | lr: 6.8000e-03 | norm: 3.5399 | mlm loss: 8.711246 | nsp loss: 0.710036 | dt: 0.40ms | tok/sec: 20305.61 tokens/sec | remaining: 1h:6m
+step    68 | total loss: 9.420112 | lr: 6.9000e-03 | norm: 8.7001 | mlm loss: 8.557248 | nsp loss: 0.862863 | dt: 0.41ms | tok/sec: 20214.92 tokens/sec | remaining: 1h:7m
+step    69 | total loss: 10.146755 | lr: 7.0000e-03 | norm: 17.8173 | mlm loss: 8.724779 | nsp loss: 1.421976 | dt: 0.40ms | tok/sec: 20285.09 tokens/sec | remaining: 1h:6m
+step    70 | total loss: 9.367016 | lr: 7.1000e-03 | norm: 6.7751 | mlm loss: 8.589949 | nsp loss: 0.777067 | dt: 0.40ms | tok/sec: 20240.28 tokens/sec | remaining: 1h:6m
+step    71 | total loss: 9.588421 | lr: 7.2000e-03 | norm: 9.7889 | mlm loss: 8.719513 | nsp loss: 0.868908 | dt: 0.40ms | tok/sec: 20306.50 tokens/sec | remaining: 1h:6m
+step    72 | total loss: 9.792022 | lr: 7.3000e-03 | norm: 16.2595 | mlm loss: 8.578904 | nsp loss: 1.213117 | dt: 0.40ms | tok/sec: 20280.52 tokens/sec | remaining: 1h:6m
+step    73 | total loss: 9.673223 | lr: 7.4000e-03 | norm: 13.8652 | mlm loss: 8.732518 | nsp loss: 0.940704 | dt: 0.40ms | tok/sec: 20230.44 tokens/sec | remaining: 1h:7m
+step    74 | total loss: 9.702342 | lr: 7.5000e-03 | norm: 16.2553 | mlm loss: 8.596432 | nsp loss: 1.105911 | dt: 0.40ms | tok/sec: 20233.07 tokens/sec | remaining: 1h:6m
+step    75 | total loss: 9.432485 | lr: 7.6000e-03 | norm: 12.3301 | mlm loss: 8.407982 | nsp loss: 1.024503 | dt: 0.40ms | tok/sec: 20272.34 tokens/sec | remaining: 1h:6m
+step    76 | total loss: 9.276895 | lr: 7.7000e-03 | norm: 6.6243 | mlm loss: 8.509718 | nsp loss: 0.767177 | dt: 0.40ms | tok/sec: 20247.57 tokens/sec | remaining: 1h:6m
+step    77 | total loss: 9.836291 | lr: 7.8000e-03 | norm: 12.4181 | mlm loss: 8.862038 | nsp loss: 0.974253 | dt: 0.40ms | tok/sec: 20250.66 tokens/sec | remaining: 1h:6m
+step    78 | total loss: 9.729019 | lr: 7.9000e-03 | norm: 15.0148 | mlm loss: 8.555854 | nsp loss: 1.173166 | dt: 0.40ms | tok/sec: 20258.35 tokens/sec | remaining: 1h:6m
+step    79 | total loss: 9.608590 | lr: 8.0000e-03 | norm: 13.8670 | mlm loss: 8.653290 | nsp loss: 0.955300 | dt: 0.41ms | tok/sec: 20219.95 tokens/sec | remaining: 1h:6m
+step    80 | total loss: 9.414944 | lr: 8.1000e-03 | norm: 8.9401 | mlm loss: 8.576662 | nsp loss: 0.838282 | dt: 0.40ms | tok/sec: 20243.85 tokens/sec | remaining: 1h:6m
+step    81 | total loss: 9.631217 | lr: 8.2000e-03 | norm: 15.6694 | mlm loss: 8.434253 | nsp loss: 1.196964 | dt: 0.41ms | tok/sec: 20213.33 tokens/sec | remaining: 1h:7m
+step    82 | total loss: 9.258972 | lr: 8.3000e-03 | norm: 5.2821 | mlm loss: 8.530530 | nsp loss: 0.728443 | dt: 0.40ms | tok/sec: 20231.46 tokens/sec | remaining: 1h:6m
+step    83 | total loss: 9.516252 | lr: 8.4000e-03 | norm: 10.2159 | mlm loss: 8.632207 | nsp loss: 0.884044 | dt: 0.40ms | tok/sec: 20269.63 tokens/sec | remaining: 1h:6m
+step    84 | total loss: 9.560543 | lr: 8.5000e-03 | norm: 10.5339 | mlm loss: 8.629324 | nsp loss: 0.931219 | dt: 0.40ms | tok/sec: 20241.71 tokens/sec | remaining: 1h:6m
+step    85 | total loss: 9.561626 | lr: 8.6000e-03 | norm: 12.3911 | mlm loss: 8.646511 | nsp loss: 0.915116 | dt: 0.41ms | tok/sec: 20184.33 tokens/sec | remaining: 1h:7m
+step    86 | total loss: 9.282523 | lr: 8.7000e-03 | norm: 8.4319 | mlm loss: 8.466635 | nsp loss: 0.815889 | dt: 0.40ms | tok/sec: 20286.28 tokens/sec | remaining: 1h:6m
+step    87 | total loss: 9.911676 | lr: 8.8000e-03 | norm: 16.3741 | mlm loss: 8.662311 | nsp loss: 1.249366 | dt: 0.41ms | tok/sec: 20227.03 tokens/sec | remaining: 1h:6m
+step    88 | total loss: 9.478982 | lr: 8.9000e-03 | norm: 10.8034 | mlm loss: 8.605789 | nsp loss: 0.873193 | dt: 0.40ms | tok/sec: 20272.12 tokens/sec | remaining: 1h:6m
+step    89 | total loss: 9.077938 | lr: 9.0000e-03 | norm: 5.3231 | mlm loss: 8.389594 | nsp loss: 0.688344 | dt: 0.40ms | tok/sec: 20227.70 tokens/sec | remaining: 1h:6m
+step    90 | total loss: 9.982986 | lr: 9.1000e-03 | norm: 19.8595 | mlm loss: 8.520138 | nsp loss: 1.462848 | dt: 0.41ms | tok/sec: 20186.40 tokens/sec | remaining: 1h:7m
+step    91 | total loss: 9.128468 | lr: 9.2000e-03 | norm: 4.6345 | mlm loss: 8.432002 | nsp loss: 0.696466 | dt: 0.40ms | tok/sec: 20232.81 tokens/sec | remaining: 1h:6m

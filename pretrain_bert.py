@@ -33,10 +33,11 @@ warnings.filterwarnings("ignore")
 torch.set_float32_matmul_precision("high")
 
 # create training config (BAKILACAK: şimdilik bu ikisi default configler!)
-model_cfg, pretrain_config = get_pretrain_bert_py_configs(verbose_all=True, verbose_changes=True)
+model_cfg, pretrain_config = get_pretrain_bert_py_configs(verbose=True)
 
-# dataclass objects are not subscriptable, so convert to dict (i want subscription beacause it's more readable than property access in vscode)
-pretrain_config = asdict(pretrain_config)
+
+
+
 
 if pretrain_config["generate_samples"]:
     samples_for_mlm_generation = ["Merhaba [MASK] efendi nasıl gidiyor?",
@@ -98,6 +99,7 @@ if pretrain_config["do_eval_from_huggingface"] == True or pretrain_config["do_ev
         ckpt_dict = load_checkpoint(postfix="best")
         model = BertForPreTraining(ckpt_dict["model_config"])
         model.load_state_dict(ckpt_dict["model_state_dict"])
+    print(f"model is being evaluated...\n")
     model.to(device)
     model.eval()
     do_just_evaluation_on_pretrain_tasks(model, val_loader)
@@ -151,8 +153,8 @@ if pretrain_config["resume"] == True:
 
 
 
-# train from scratch
-elif (pretrain_config["resume"]) == False:
+# train from scratch (from randomly initialized or huggingface weights)
+else: 
     if len(ckpt_files) > 0:
         while True:
             response = input("Ckpt files are already exist. They will be overwritten by 'train from scratch', are you sure? (Y/N): ").strip().lower()
@@ -202,11 +204,12 @@ if pretrain_config["mlflow_tracking"]:
     mlflow.set_experiment("bert_implementation_tr")
     # every run should have the same model training whether from scratch or resume! (if mlflow tracking is enabled)
     # if resume, we need to use last ckpt run id to continue tracking consistently (we kept it in ckpt files) 
-    if (pretrain_config["resume"]):
-        mlflow.start_run(run_id=mlflow_run_id, run_name="bert_pretraining")
+    if pretrain_config["resume"]:
+        mlflow_run_id = mlflow.start_run(run_name=f"bert_pretraining_resume_{mlflow_run_id}").info.run_id
     else:
         # if scratch, we need to create a new run and keep its run id
         mlflow_run_id = mlflow.start_run(run_name="bert_pretraining").info.run_id
+    
     mlflow.log_params(pretrain_config)
     mlflow.log_params(asdict(model.config))
 else:
@@ -261,6 +264,7 @@ max_steps += 1
 train_loss_accum = 0.0
 val_loss_accum = 0.0
 
+sys.exit(0)
 # training loop
 for step in range(last_step, max_steps):  
     t0 = time.time()
@@ -289,12 +293,9 @@ for step in range(last_step, max_steps):
                 val_loss_accum += model_output.loss.detach().item() / pretrain_config["max_eval_steps"]
         
         if step > last_step and pretrain_config["mlflow_tracking"]:
-            print("hello?")
             mlflow.log_metric("val_loss", val_loss_accum, step)
         
         
-        
-
         
 
         # if step > last_step and val_loss_accum < best_val_loss:
@@ -329,8 +330,6 @@ for step in range(last_step, max_steps):
         model.train()
         
         
-
-
 
     # save ckpt every save_checkpoints_steps
     if step > last_step and step % pretrain_config["save_checkpoints_steps"] == 0 or last_step_flag:
@@ -399,7 +398,10 @@ for step in range(last_step, max_steps):
     dt = (t1 - t0)
     tokens_processed = train_loader.batch_size * train_loader.block_size * pretrain_config["grad_accum_steps"]
     tokens_per_second = tokens_processed / dt
-    remaining_time = (max_steps - step) * tokens_processed / tokens_per_second / 3600.0
+    remaining_s = (max_steps - step) * tokens_processed / tokens_per_second 
+    remaining_m = (remaining_s % 3600) // 60.0
+    remaining_h = remaining_s // 3600.0
+    
     if pretrain_config["mlflow_tracking"]:
         mlflow.log_metric("total_train_loss", train_loss_accum, step)
         mlflow.log_metric("lr", lr, step)
@@ -408,7 +410,7 @@ for step in range(last_step, max_steps):
         mlflow.log_metric("nsp_loss", model_output.nsp_loss.item(), step)
         mlflow.log_metric("tokens_per_second", tokens_per_second, step)
 
-    print_txt = f"step {step:5d} | total loss: {train_loss_accum:.6f} | lr: {lr:.4e} | norm: {norm:.4f} | mlm loss: {model_output.mlm_loss.item():.6f} | nsp loss: {model_output.nsp_loss.item():.6f} | dt: {dt:.2f}ms | tok/sec: {tokens_per_second:.2f} tokens/sec | expected remaining time: {remaining_time:.2f}h"
+    print_txt = f"step {step:5d} | total loss: {train_loss_accum:.6f} | lr: {lr:.4e} | norm: {norm:.4f} | mlm loss: {model_output.mlm_loss.item():.6f} | nsp loss: {model_output.nsp_loss.item():.6f} | dt: {dt:.2f}ms | tok/sec: {tokens_per_second:.2f} tokens/sec | remaining: {remaining_h:.0f}h:{remaining_m:.0f}m"
     
     # log to file whether or not mlflow is enabled
     with open("log.txt", "a", encoding="utf-8") as f:

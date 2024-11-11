@@ -180,3 +180,640 @@ Text: ['Bu nsp olayı bir garip oldu. Sanki kablolar ters bağlandı.', 'Bir şe
 Text: ["çoğunuz yaş itibariyle tanımaz ama istanbul'un en iyi belediye başkanı justinianus'tur.", 'Samsun Ayvacık belediyesi ne yapmak nereye varmak istemektedir!'] Predictions ----> isNext: 0.510, notNext: 0.490
 
 ---------------------------------------
+
+[Step:0] MLM GENERATION EXAMPLES:
+---------------------------------------
+Text: Merhaba [MASK] efendi nasıl gidiyor? ----> Top 5 Predictions: {'token_str': ['##ès', 'uygulandığı', '##ija', '##osman', 'Sanayi'], 'score': ['0.0002', '0.0002', '0.0003', '0.0003', '0.0002']}
+Text: ışınlanma teknolojisini [MASK] Can  bulmuştur. Muhammet Can bu buluş ile büyük alkış topladı ----> Top 5 Predictions: {'token_str': ['motivasyon', '##ija', 'у', '##ès', '##osman'], 'score': ['0.0003', '0.0003', '0.0002', '0.0002', '0.0003']}
+
+[Step:0] NSP GENERATION EXAMPLES:
+---------------------------------------
+Text: ['Çocuk sahibi çift sayısında inanılmaz bir artış var.', 'Uzaya ilk Bekiroğ Reis çıkmıştır'] Predictions ----> isNext: 0.601, notNext: 0.399
+Text: ['Bu nsp olayı bir garip oldu. Sanki kablolar ters bağlandı.', 'Bir şekilde kabloları ayarlamak gerekli'] Predictions ----> isNext: 0.643, notNext: 0.357
+Text: ["çoğunuz yaş itibariyle tanımaz ama istanbul'un en iyi belediye başkanı justinianus'tur.", 'Samsun Ayvacık belediyesi ne yapmak nereye varmak istemektedir!'] Predictions ----> isNext: 0.642, notNext: 0.358
+
+---------------------------------------
+
+[Step:0] MLM GENERATION EXAMPLES:
+---------------------------------------
+Text: Merhaba [MASK] efendi nasıl gidiyor? ----> Top 5 Predictions: {'token_str': ['##ès', 'uygulandığı', '##ija', '##osman', 'Sanayi'], 'score': ['0.0002', '0.0002', '0.0003', '0.0003', '0.0002']}
+Text: ışınlanma teknolojisini [MASK] Can  bulmuştur. Muhammet Can bu buluş ile büyük alkış topladı ----> Top 5 Predictions: {'token_str': ['motivasyon', '##ija', 'у', '##ès', '##osman'], 'score': ['0.0003', '0.0003', '0.0002', '0.0002', '0.0003']}
+
+[Step:0] NSP GENERATION EXAMPLES:
+---------------------------------------
+Text: ['Çocuk sahibi çift sayısında inanılmaz bir artış var.', 'Uzaya ilk Bekiroğ Reis çıkmıştır'] Predictions ----> isNext: 0.601, notNext: 0.399
+Text: ['Bu nsp olayı bir garip oldu. Sanki kablolar ters bağlandı.', 'Bir şekilde kabloları ayarlamak gerekli'] Predictions ----> isNext: 0.643, notNext: 0.357
+Text: ["çoğunuz yaş itibariyle tanımaz ama istanbul'un en iyi belediye başkanı justinianus'tur.", 'Samsun Ayvacık belediyesi ne yapmak nereye varmak istemektedir!'] Predictions ----> isNext: 0.642, notNext: 0.358
+
+---------------------------------------
+
+[Step:0] MLM GENERATION EXAMPLES:
+---------------------------------------
+Text: Merhaba [MASK] efendi nasıl gidiyor? ----> Top 5 Predictions: {'token_str': ['##ès', 'uygulandığı', '##ija', '##osman', 'Sanayi'], 'score': ['0.0002', '0.0002', '0.0003', '0.0003', '0.0002']}
+Text: ışınlanma teknolojisini [MASK] Can  bulmuştur. Muhammet Can bu buluş ile büyük alkış topladı ----> Top 5 Predictions: {'token_str': ['motivasyon', '##ija', 'у', '##ès', '##osman'], 'score': ['0.0003', '0.0003', '0.0002', '0.0002', '0.0003']}
+
+[Step:0] NSP GENERATION EXAMPLES:
+---------------------------------------
+Text: ['Çocuk sahibi çift sayısında inanılmaz bir artış var.', 'Uzaya ilk Bekiroğ Reis çıkmıştır'] Predictions ----> isNext: 0.601, notNext: 0.399
+Text: ['Bu nsp olayı bir garip oldu. Sanki kablolar ters bağlandı.', 'Bir şekilde kabloları ayarlamak gerekli'] Predictions ----> isNext: 0.643, notNext: 0.357
+Text: ["çoğunuz yaş itibariyle tanımaz ama istanbul'un en iyi belediye başkanı justinianus'tur.", 'Samsun Ayvacık belediyesi ne yapmak nereye varmak istemektedir!'] Predictions ----> isNext: 0.642, notNext: 0.358
+
+---------------------------------------
+
+[Step:0] MLM GENERATION EXAMPLES:
+---------------------------------------
+Text: Merhaba [MASK] efendi nasıl gidiyor? ----> Top 5 Predictions: {'token_str': ['##ès', 'uygulandığı', '##ija', '##osman', 'Sanayi'], 'score': ['0.0002', '0.0002', '0.0003', '0.0003', '0.0002']}
+Text: ışınlanma teknolojisini [MASK] Can  bulmuştur. Muhammet Can bu buluş ile büyük alkış topladı ----> Top 5 Predictions: {'token_str': ['motivasyon', '##ija', 'у', '##ès', '##osman'], 'score': ['0.0003', '0.0003', '0.0002', '0.0002', '0.0003']}
+
+[Step:0] NSP GENERATION EXAMPLES:
+---------------------------------------
+Text: ['Çocuk sahibi çift sayısında inanılmaz bir artış var.', 'Uzaya ilk Bekiroğ Reis çıkmıştır'] Predictions ----> isNext: 0.601, notNext: 0.399
+Text: ['Bu nsp olayı bir garip oldu. Sanki kablolar ters bağlandı.', 'Bir şekilde kabloları ayarlamak gerekli'] Predictions ----> isNext: 0.643, notNext: 0.357
+Text: ["çoğunuz yaş itibariyle tanımaz ama istanbul'un en iyi belediye başkanı justinianus'tur.", 'Samsun Ayvacık belediyesi ne yapmak nereye varmak istemektedir!'] Predictions ----> isNext: 0.642, notNext: 0.358
+
+---------------------------------------
+
+[Step:0] MLM GENERATION EXAMPLES:
+---------------------------------------
+Text: Merhaba [MASK] efendi nasıl gidiyor? ----> Top 5 Predictions: {'token_str': ['##ès', 'uygulandığı', '##ija', '##osman', 'Sanayi'], 'score': ['0.0002', '0.0002', '0.0003', '0.0003', '0.0002']}
+Text: ışınlanma teknolojisini [MASK] Can  bulmuştur. Muhammet Can bu buluş ile büyük alkış topladı ----> Top 5 Predictions: {'token_str': ['motivasyon', '##ija', 'у', '##ès', '##osman'], 'score': ['0.0003', '0.0003', '0.0002', '0.0002', '0.0003']}
+
+[Step:0] NSP GENERATION EXAMPLES:
+---------------------------------------
+Text: ['Çocuk sahibi çift sayısında inanılmaz bir artış var.', 'Uzaya ilk Bekiroğ Reis çıkmıştır'] Predictions ----> isNext: 0.601, notNext: 0.399
+Text: ['Bu nsp olayı bir garip oldu. Sanki kablolar ters bağlandı.', 'Bir şekilde kabloları ayarlamak gerekli'] Predictions ----> isNext: 0.643, notNext: 0.357
+Text: ["çoğunuz yaş itibariyle tanımaz ama istanbul'un en iyi belediye başkanı justinianus'tur.", 'Samsun Ayvacık belediyesi ne yapmak nereye varmak istemektedir!'] Predictions ----> isNext: 0.642, notNext: 0.358
+
+---------------------------------------
+
+[Step:0] MLM GENERATION EXAMPLES:
+---------------------------------------
+Text: Merhaba [MASK] efendi nasıl gidiyor? ----> Top 5 Predictions: {'token_str': ['##ès', 'uygulandığı', '##ija', '##osman', 'Sanayi'], 'score': ['0.0002', '0.0002', '0.0003', '0.0003', '0.0002']}
+Text: ışınlanma teknolojisini [MASK] Can  bulmuştur. Muhammet Can bu buluş ile büyük alkış topladı ----> Top 5 Predictions: {'token_str': ['motivasyon', '##ija', 'у', '##ès', '##osman'], 'score': ['0.0003', '0.0003', '0.0002', '0.0002', '0.0003']}
+
+[Step:0] NSP GENERATION EXAMPLES:
+---------------------------------------
+Text: ['Çocuk sahibi çift sayısında inanılmaz bir artış var.', 'Uzaya ilk Bekiroğ Reis çıkmıştır'] Predictions ----> isNext: 0.601, notNext: 0.399
+Text: ['Bu nsp olayı bir garip oldu. Sanki kablolar ters bağlandı.', 'Bir şekilde kabloları ayarlamak gerekli'] Predictions ----> isNext: 0.643, notNext: 0.357
+Text: ["çoğunuz yaş itibariyle tanımaz ama istanbul'un en iyi belediye başkanı justinianus'tur.", 'Samsun Ayvacık belediyesi ne yapmak nereye varmak istemektedir!'] Predictions ----> isNext: 0.642, notNext: 0.358
+
+---------------------------------------
+
+[Step:0] MLM GENERATION EXAMPLES:
+---------------------------------------
+Text: Merhaba [MASK] efendi nasıl gidiyor? ----> Top 5 Predictions: {'token_str': ['##ès', 'uygulandığı', '##ija', '##osman', 'Sanayi'], 'score': ['0.0002', '0.0002', '0.0003', '0.0003', '0.0002']}
+Text: ışınlanma teknolojisini [MASK] Can  bulmuştur. Muhammet Can bu buluş ile büyük alkış topladı ----> Top 5 Predictions: {'token_str': ['motivasyon', '##ija', 'у', '##ès', '##osman'], 'score': ['0.0003', '0.0003', '0.0002', '0.0002', '0.0003']}
+
+[Step:0] NSP GENERATION EXAMPLES:
+---------------------------------------
+Text: ['Çocuk sahibi çift sayısında inanılmaz bir artış var.', 'Uzaya ilk Bekiroğ Reis çıkmıştır'] Predictions ----> isNext: 0.601, notNext: 0.399
+Text: ['Bu nsp olayı bir garip oldu. Sanki kablolar ters bağlandı.', 'Bir şekilde kabloları ayarlamak gerekli'] Predictions ----> isNext: 0.643, notNext: 0.357
+Text: ["çoğunuz yaş itibariyle tanımaz ama istanbul'un en iyi belediye başkanı justinianus'tur.", 'Samsun Ayvacık belediyesi ne yapmak nereye varmak istemektedir!'] Predictions ----> isNext: 0.642, notNext: 0.358
+
+---------------------------------------
+
+[Step:0] MLM GENERATION EXAMPLES:
+---------------------------------------
+Text: Merhaba [MASK] efendi nasıl gidiyor? ----> Top 5 Predictions: {'token_str': ['##ès', 'uygulandığı', '##ija', '##osman', 'Sanayi'], 'score': ['0.0002', '0.0002', '0.0003', '0.0003', '0.0002']}
+Text: ışınlanma teknolojisini [MASK] Can  bulmuştur. Muhammet Can bu buluş ile büyük alkış topladı ----> Top 5 Predictions: {'token_str': ['motivasyon', '##ija', 'у', '##ès', '##osman'], 'score': ['0.0003', '0.0003', '0.0002', '0.0002', '0.0003']}
+
+[Step:0] NSP GENERATION EXAMPLES:
+---------------------------------------
+Text: ['Çocuk sahibi çift sayısında inanılmaz bir artış var.', 'Uzaya ilk Bekiroğ Reis çıkmıştır'] Predictions ----> isNext: 0.601, notNext: 0.399
+Text: ['Bu nsp olayı bir garip oldu. Sanki kablolar ters bağlandı.', 'Bir şekilde kabloları ayarlamak gerekli'] Predictions ----> isNext: 0.643, notNext: 0.357
+Text: ["çoğunuz yaş itibariyle tanımaz ama istanbul'un en iyi belediye başkanı justinianus'tur.", 'Samsun Ayvacık belediyesi ne yapmak nereye varmak istemektedir!'] Predictions ----> isNext: 0.642, notNext: 0.358
+
+---------------------------------------
+
+[Step:0] MLM GENERATION EXAMPLES:
+---------------------------------------
+Text: Merhaba [MASK] efendi nasıl gidiyor? ----> Top 5 Predictions: {'token_str': ['##ès', 'uygulandığı', '##ija', '##osman', 'Sanayi'], 'score': ['0.0002', '0.0002', '0.0003', '0.0003', '0.0002']}
+Text: ışınlanma teknolojisini [MASK] Can  bulmuştur. Muhammet Can bu buluş ile büyük alkış topladı ----> Top 5 Predictions: {'token_str': ['motivasyon', '##ija', 'у', '##ès', '##osman'], 'score': ['0.0003', '0.0003', '0.0002', '0.0002', '0.0003']}
+
+[Step:0] NSP GENERATION EXAMPLES:
+---------------------------------------
+Text: ['Çocuk sahibi çift sayısında inanılmaz bir artış var.', 'Uzaya ilk Bekiroğ Reis çıkmıştır'] Predictions ----> isNext: 0.601, notNext: 0.399
+Text: ['Bu nsp olayı bir garip oldu. Sanki kablolar ters bağlandı.', 'Bir şekilde kabloları ayarlamak gerekli'] Predictions ----> isNext: 0.643, notNext: 0.357
+Text: ["çoğunuz yaş itibariyle tanımaz ama istanbul'un en iyi belediye başkanı justinianus'tur.", 'Samsun Ayvacık belediyesi ne yapmak nereye varmak istemektedir!'] Predictions ----> isNext: 0.642, notNext: 0.358
+
+---------------------------------------
+
+[Step:0] MLM GENERATION EXAMPLES:
+---------------------------------------
+Text: Merhaba [MASK] efendi nasıl gidiyor? ----> Top 5 Predictions: {'token_str': ['##ès', 'uygulandığı', '##ija', '##osman', 'Sanayi'], 'score': ['0.0002', '0.0002', '0.0003', '0.0003', '0.0002']}
+Text: ışınlanma teknolojisini [MASK] Can  bulmuştur. Muhammet Can bu buluş ile büyük alkış topladı ----> Top 5 Predictions: {'token_str': ['motivasyon', '##ija', 'у', '##ès', '##osman'], 'score': ['0.0003', '0.0003', '0.0002', '0.0002', '0.0003']}
+
+[Step:0] NSP GENERATION EXAMPLES:
+---------------------------------------
+Text: ['Çocuk sahibi çift sayısında inanılmaz bir artış var.', 'Uzaya ilk Bekiroğ Reis çıkmıştır'] Predictions ----> isNext: 0.601, notNext: 0.399
+Text: ['Bu nsp olayı bir garip oldu. Sanki kablolar ters bağlandı.', 'Bir şekilde kabloları ayarlamak gerekli'] Predictions ----> isNext: 0.643, notNext: 0.357
+Text: ["çoğunuz yaş itibariyle tanımaz ama istanbul'un en iyi belediye başkanı justinianus'tur.", 'Samsun Ayvacık belediyesi ne yapmak nereye varmak istemektedir!'] Predictions ----> isNext: 0.642, notNext: 0.358
+
+---------------------------------------
+
+[Step:0] MLM GENERATION EXAMPLES:
+---------------------------------------
+Text: Merhaba [MASK] efendi nasıl gidiyor? ----> Top 5 Predictions: {'token_str': ['##ès', 'uygulandığı', '##ija', '##osman', 'Sanayi'], 'score': ['0.0002', '0.0002', '0.0003', '0.0003', '0.0002']}
+Text: ışınlanma teknolojisini [MASK] Can  bulmuştur. Muhammet Can bu buluş ile büyük alkış topladı ----> Top 5 Predictions: {'token_str': ['motivasyon', '##ija', 'у', '##ès', '##osman'], 'score': ['0.0003', '0.0003', '0.0002', '0.0002', '0.0003']}
+
+[Step:0] NSP GENERATION EXAMPLES:
+---------------------------------------
+Text: ['Çocuk sahibi çift sayısında inanılmaz bir artış var.', 'Uzaya ilk Bekiroğ Reis çıkmıştır'] Predictions ----> isNext: 0.601, notNext: 0.399
+Text: ['Bu nsp olayı bir garip oldu. Sanki kablolar ters bağlandı.', 'Bir şekilde kabloları ayarlamak gerekli'] Predictions ----> isNext: 0.643, notNext: 0.357
+Text: ["çoğunuz yaş itibariyle tanımaz ama istanbul'un en iyi belediye başkanı justinianus'tur.", 'Samsun Ayvacık belediyesi ne yapmak nereye varmak istemektedir!'] Predictions ----> isNext: 0.642, notNext: 0.358
+
+---------------------------------------
+
+[Step:50] MLM GENERATION EXAMPLES:
+---------------------------------------
+Text: Merhaba [MASK] efendi nasıl gidiyor? ----> Top 5 Predictions: {'token_str': ["'", 've', '1', '.', ','], 'score': ['0.0086', '0.0038', '0.0043', '0.0220', '0.0144']}
+Text: ışınlanma teknolojisini [MASK] Can  bulmuştur. Muhammet Can bu buluş ile büyük alkış topladı ----> Top 5 Predictions: {'token_str': ['ve', "'", ',', '.', '1'], 'score': ['0.0038', '0.0086', '0.0144', '0.0218', '0.0043']}
+
+[Step:50] NSP GENERATION EXAMPLES:
+---------------------------------------
+Text: ['Çocuk sahibi çift sayısında inanılmaz bir artış var.', 'Uzaya ilk Bekiroğ Reis çıkmıştır'] Predictions ----> isNext: 0.565, notNext: 0.435
+Text: ['Bu nsp olayı bir garip oldu. Sanki kablolar ters bağlandı.', 'Bir şekilde kabloları ayarlamak gerekli'] Predictions ----> isNext: 0.559, notNext: 0.441
+Text: ["çoğunuz yaş itibariyle tanımaz ama istanbul'un en iyi belediye başkanı justinianus'tur.", 'Samsun Ayvacık belediyesi ne yapmak nereye varmak istemektedir!'] Predictions ----> isNext: 0.559, notNext: 0.441
+
+---------------------------------------
+
+[Step:100] MLM GENERATION EXAMPLES:
+---------------------------------------
+Text: Merhaba [MASK] efendi nasıl gidiyor? ----> Top 5 Predictions: {'token_str': ["'", ',', '.', '1', 've'], 'score': ['0.0186', '0.0218', '0.0387', '0.0131', '0.0115']}
+Text: ışınlanma teknolojisini [MASK] Can  bulmuştur. Muhammet Can bu buluş ile büyük alkış topladı ----> Top 5 Predictions: {'token_str': [',', '.', "'", 've', '1'], 'score': ['0.0219', '0.0376', '0.0187', '0.0110', '0.0134']}
+
+[Step:100] NSP GENERATION EXAMPLES:
+---------------------------------------
+Text: ['Çocuk sahibi çift sayısında inanılmaz bir artış var.', 'Uzaya ilk Bekiroğ Reis çıkmıştır'] Predictions ----> isNext: 0.499, notNext: 0.501
+Text: ['Bu nsp olayı bir garip oldu. Sanki kablolar ters bağlandı.', 'Bir şekilde kabloları ayarlamak gerekli'] Predictions ----> isNext: 0.531, notNext: 0.469
+Text: ["çoğunuz yaş itibariyle tanımaz ama istanbul'un en iyi belediye başkanı justinianus'tur.", 'Samsun Ayvacık belediyesi ne yapmak nereye varmak istemektedir!'] Predictions ----> isNext: 0.529, notNext: 0.471
+
+---------------------------------------
+
+[Step:150] MLM GENERATION EXAMPLES:
+---------------------------------------
+Text: Merhaba [MASK] efendi nasıl gidiyor? ----> Top 5 Predictions: {'token_str': ['.', ',', 've', "'", 'bir'], 'score': ['0.0310', '0.0209', '0.0119', '0.0089', '0.0079']}
+Text: ışınlanma teknolojisini [MASK] Can  bulmuştur. Muhammet Can bu buluş ile büyük alkış topladı ----> Top 5 Predictions: {'token_str': [',', 'bir', '.', "'", 've'], 'score': ['0.0199', '0.0085', '0.0334', '0.0101', '0.0121']}
+
+[Step:150] NSP GENERATION EXAMPLES:
+---------------------------------------
+Text: ['Çocuk sahibi çift sayısında inanılmaz bir artış var.', 'Uzaya ilk Bekiroğ Reis çıkmıştır'] Predictions ----> isNext: 0.169, notNext: 0.831
+Text: ['Bu nsp olayı bir garip oldu. Sanki kablolar ters bağlandı.', 'Bir şekilde kabloları ayarlamak gerekli'] Predictions ----> isNext: 0.193, notNext: 0.807
+Text: ["çoğunuz yaş itibariyle tanımaz ama istanbul'un en iyi belediye başkanı justinianus'tur.", 'Samsun Ayvacık belediyesi ne yapmak nereye varmak istemektedir!'] Predictions ----> isNext: 0.192, notNext: 0.808
+
+---------------------------------------
+
+[Step:200] MLM GENERATION EXAMPLES:
+---------------------------------------
+Text: Merhaba [MASK] efendi nasıl gidiyor? ----> Top 5 Predictions: {'token_str': ["'", '.', ',', '1', 've'], 'score': ['0.0100', '0.0231', '0.0258', '0.0128', '0.0131']}
+Text: ışınlanma teknolojisini [MASK] Can  bulmuştur. Muhammet Can bu buluş ile büyük alkış topladı ----> Top 5 Predictions: {'token_str': [',', 've', '1', '.', "'"], 'score': ['0.0253', '0.0122', '0.0153', '0.0236', '0.0104']}
+
+[Step:200] NSP GENERATION EXAMPLES:
+---------------------------------------
+Text: ['Çocuk sahibi çift sayısında inanılmaz bir artış var.', 'Uzaya ilk Bekiroğ Reis çıkmıştır'] Predictions ----> isNext: 0.274, notNext: 0.726
+Text: ['Bu nsp olayı bir garip oldu. Sanki kablolar ters bağlandı.', 'Bir şekilde kabloları ayarlamak gerekli'] Predictions ----> isNext: 0.478, notNext: 0.522
+Text: ["çoğunuz yaş itibariyle tanımaz ama istanbul'un en iyi belediye başkanı justinianus'tur.", 'Samsun Ayvacık belediyesi ne yapmak nereye varmak istemektedir!'] Predictions ----> isNext: 0.530, notNext: 0.470
+
+---------------------------------------
+
+[Step:250] MLM GENERATION EXAMPLES:
+---------------------------------------
+Text: Merhaba [MASK] efendi nasıl gidiyor? ----> Top 5 Predictions: {'token_str': ['.', "'", ',', '"', 've'], 'score': ['0.0208', '0.0094', '0.0204', '0.0081', '0.0098']}
+Text: ışınlanma teknolojisini [MASK] Can  bulmuştur. Muhammet Can bu buluş ile büyük alkış topladı ----> Top 5 Predictions: {'token_str': ['.', "'", ',', '##n', 've'], 'score': ['0.0227', '0.0103', '0.0181', '0.0069', '0.0099']}
+
+[Step:250] NSP GENERATION EXAMPLES:
+---------------------------------------
+Text: ['Çocuk sahibi çift sayısında inanılmaz bir artış var.', 'Uzaya ilk Bekiroğ Reis çıkmıştır'] Predictions ----> isNext: 0.190, notNext: 0.810
+Text: ['Bu nsp olayı bir garip oldu. Sanki kablolar ters bağlandı.', 'Bir şekilde kabloları ayarlamak gerekli'] Predictions ----> isNext: 0.261, notNext: 0.739
+Text: ["çoğunuz yaş itibariyle tanımaz ama istanbul'un en iyi belediye başkanı justinianus'tur.", 'Samsun Ayvacık belediyesi ne yapmak nereye varmak istemektedir!'] Predictions ----> isNext: 0.208, notNext: 0.792
+
+---------------------------------------
+
+[Step:300] MLM GENERATION EXAMPLES:
+---------------------------------------
+Text: Merhaba [MASK] efendi nasıl gidiyor? ----> Top 5 Predictions: {'token_str': [',', '.', 've', '"', 'bir'], 'score': ['0.0401', '0.0239', '0.0109', '0.0076', '0.0068']}
+Text: ışınlanma teknolojisini [MASK] Can  bulmuştur. Muhammet Can bu buluş ile büyük alkış topladı ----> Top 5 Predictions: {'token_str': [',', '.', 've', '1', 'bir'], 'score': ['0.0343', '0.0264', '0.0110', '0.0083', '0.0073']}
+
+[Step:300] NSP GENERATION EXAMPLES:
+---------------------------------------
+Text: ['Çocuk sahibi çift sayısında inanılmaz bir artış var.', 'Uzaya ilk Bekiroğ Reis çıkmıştır'] Predictions ----> isNext: 0.324, notNext: 0.676
+Text: ['Bu nsp olayı bir garip oldu. Sanki kablolar ters bağlandı.', 'Bir şekilde kabloları ayarlamak gerekli'] Predictions ----> isNext: 0.285, notNext: 0.715
+Text: ["çoğunuz yaş itibariyle tanımaz ama istanbul'un en iyi belediye başkanı justinianus'tur.", 'Samsun Ayvacık belediyesi ne yapmak nereye varmak istemektedir!'] Predictions ----> isNext: 0.330, notNext: 0.670
+
+---------------------------------------
+
+[Step:350] MLM GENERATION EXAMPLES:
+---------------------------------------
+Text: Merhaba [MASK] efendi nasıl gidiyor? ----> Top 5 Predictions: {'token_str': ['.', 've', '##n', 'bir', ','], 'score': ['0.0266', '0.0106', '0.0072', '0.0072', '0.0248']}
+Text: ışınlanma teknolojisini [MASK] Can  bulmuştur. Muhammet Can bu buluş ile büyük alkış topladı ----> Top 5 Predictions: {'token_str': ['.', 'bir', '(', ',', 've'], 'score': ['0.0282', '0.0080', '0.0089', '0.0210', '0.0106']}
+
+[Step:350] NSP GENERATION EXAMPLES:
+---------------------------------------
+Text: ['Çocuk sahibi çift sayısında inanılmaz bir artış var.', 'Uzaya ilk Bekiroğ Reis çıkmıştır'] Predictions ----> isNext: 0.239, notNext: 0.761
+Text: ['Bu nsp olayı bir garip oldu. Sanki kablolar ters bağlandı.', 'Bir şekilde kabloları ayarlamak gerekli'] Predictions ----> isNext: 0.203, notNext: 0.797
+Text: ["çoğunuz yaş itibariyle tanımaz ama istanbul'un en iyi belediye başkanı justinianus'tur.", 'Samsun Ayvacık belediyesi ne yapmak nereye varmak istemektedir!'] Predictions ----> isNext: 0.178, notNext: 0.822
+
+---------------------------------------
+
+[Step:400] MLM GENERATION EXAMPLES:
+---------------------------------------
+Text: Merhaba [MASK] efendi nasıl gidiyor? ----> Top 5 Predictions: {'token_str': ['.', ',', 'bir', 've', '##n'], 'score': ['0.0218', '0.0146', '0.0075', '0.0107', '0.0074']}
+Text: ışınlanma teknolojisini [MASK] Can  bulmuştur. Muhammet Can bu buluş ile büyük alkış topladı ----> Top 5 Predictions: {'token_str': [',', '.', 've', 'bir', '('], 'score': ['0.0135', '0.0248', '0.0113', '0.0080', '0.0084']}
+
+[Step:400] NSP GENERATION EXAMPLES:
+---------------------------------------
+Text: ['Çocuk sahibi çift sayısında inanılmaz bir artış var.', 'Uzaya ilk Bekiroğ Reis çıkmıştır'] Predictions ----> isNext: 0.678, notNext: 0.322
+Text: ['Bu nsp olayı bir garip oldu. Sanki kablolar ters bağlandı.', 'Bir şekilde kabloları ayarlamak gerekli'] Predictions ----> isNext: 0.216, notNext: 0.784
+Text: ["çoğunuz yaş itibariyle tanımaz ama istanbul'un en iyi belediye başkanı justinianus'tur.", 'Samsun Ayvacık belediyesi ne yapmak nereye varmak istemektedir!'] Predictions ----> isNext: 0.279, notNext: 0.721
+
+---------------------------------------
+
+[Step:450] MLM GENERATION EXAMPLES:
+---------------------------------------
+Text: Merhaba [MASK] efendi nasıl gidiyor? ----> Top 5 Predictions: {'token_str': [',', 've', '.', '(', 'bir'], 'score': ['0.0229', '0.0132', '0.0258', '0.0069', '0.0065']}
+Text: ışınlanma teknolojisini [MASK] Can  bulmuştur. Muhammet Can bu buluş ile büyük alkış topladı ----> Top 5 Predictions: {'token_str': [',', '.', '(', 've', '9'], 'score': ['0.0205', '0.0294', '0.0112', '0.0125', '0.0076']}
+
+[Step:450] NSP GENERATION EXAMPLES:
+---------------------------------------
+Text: ['Çocuk sahibi çift sayısında inanılmaz bir artış var.', 'Uzaya ilk Bekiroğ Reis çıkmıştır'] Predictions ----> isNext: 0.267, notNext: 0.733
+Text: ['Bu nsp olayı bir garip oldu. Sanki kablolar ters bağlandı.', 'Bir şekilde kabloları ayarlamak gerekli'] Predictions ----> isNext: 0.080, notNext: 0.920
+Text: ["çoğunuz yaş itibariyle tanımaz ama istanbul'un en iyi belediye başkanı justinianus'tur.", 'Samsun Ayvacık belediyesi ne yapmak nereye varmak istemektedir!'] Predictions ----> isNext: 0.103, notNext: 0.897
+
+---------------------------------------
+
+[Step:500] MLM GENERATION EXAMPLES:
+---------------------------------------
+Text: Merhaba [MASK] efendi nasıl gidiyor? ----> Top 5 Predictions: {'token_str': ['.', 've', ',', 'bir', '('], 'score': ['0.0281', '0.0130', '0.0305', '0.0080', '0.0063']}
+Text: ışınlanma teknolojisini [MASK] Can  bulmuştur. Muhammet Can bu buluş ile büyük alkış topladı ----> Top 5 Predictions: {'token_str': ['ve', '.', ',', 'bir', '('], 'score': ['0.0134', '0.0323', '0.0314', '0.0089', '0.0091']}
+
+[Step:500] NSP GENERATION EXAMPLES:
+---------------------------------------
+Text: ['Çocuk sahibi çift sayısında inanılmaz bir artış var.', 'Uzaya ilk Bekiroğ Reis çıkmıştır'] Predictions ----> isNext: 0.509, notNext: 0.491
+Text: ['Bu nsp olayı bir garip oldu. Sanki kablolar ters bağlandı.', 'Bir şekilde kabloları ayarlamak gerekli'] Predictions ----> isNext: 0.147, notNext: 0.853
+Text: ["çoğunuz yaş itibariyle tanımaz ama istanbul'un en iyi belediye başkanı justinianus'tur.", 'Samsun Ayvacık belediyesi ne yapmak nereye varmak istemektedir!'] Predictions ----> isNext: 0.200, notNext: 0.800
+
+---------------------------------------
+
+[Step:550] MLM GENERATION EXAMPLES:
+---------------------------------------
+Text: Merhaba [MASK] efendi nasıl gidiyor? ----> Top 5 Predictions: {'token_str': ['.', ',', 've', '(', 'bir'], 'score': ['0.0261', '0.0264', '0.0121', '0.0077', '0.0087']}
+Text: ışınlanma teknolojisini [MASK] Can  bulmuştur. Muhammet Can bu buluş ile büyük alkış topladı ----> Top 5 Predictions: {'token_str': ['.', 've', ',', 'bir', '('], 'score': ['0.0288', '0.0119', '0.0221', '0.0091', '0.0108']}
+
+[Step:550] NSP GENERATION EXAMPLES:
+---------------------------------------
+Text: ['Çocuk sahibi çift sayısında inanılmaz bir artış var.', 'Uzaya ilk Bekiroğ Reis çıkmıştır'] Predictions ----> isNext: 0.481, notNext: 0.519
+Text: ['Bu nsp olayı bir garip oldu. Sanki kablolar ters bağlandı.', 'Bir şekilde kabloları ayarlamak gerekli'] Predictions ----> isNext: 0.253, notNext: 0.747
+Text: ["çoğunuz yaş itibariyle tanımaz ama istanbul'un en iyi belediye başkanı justinianus'tur.", 'Samsun Ayvacık belediyesi ne yapmak nereye varmak istemektedir!'] Predictions ----> isNext: 0.157, notNext: 0.843
+
+---------------------------------------
+
+[Step:600] MLM GENERATION EXAMPLES:
+---------------------------------------
+Text: Merhaba [MASK] efendi nasıl gidiyor? ----> Top 5 Predictions: {'token_str': ['.', ',', 'bir', '(', 've'], 'score': ['0.0275', '0.0201', '0.0078', '0.0068', '0.0110']}
+Text: ışınlanma teknolojisini [MASK] Can  bulmuştur. Muhammet Can bu buluş ile büyük alkış topladı ----> Top 5 Predictions: {'token_str': [',', 've', '.', '(', 'bir'], 'score': ['0.0158', '0.0111', '0.0299', '0.0096', '0.0085']}
+
+[Step:600] NSP GENERATION EXAMPLES:
+---------------------------------------
+Text: ['Çocuk sahibi çift sayısında inanılmaz bir artış var.', 'Uzaya ilk Bekiroğ Reis çıkmıştır'] Predictions ----> isNext: 0.412, notNext: 0.588
+Text: ['Bu nsp olayı bir garip oldu. Sanki kablolar ters bağlandı.', 'Bir şekilde kabloları ayarlamak gerekli'] Predictions ----> isNext: 0.256, notNext: 0.744
+Text: ["çoğunuz yaş itibariyle tanımaz ama istanbul'un en iyi belediye başkanı justinianus'tur.", 'Samsun Ayvacık belediyesi ne yapmak nereye varmak istemektedir!'] Predictions ----> isNext: 0.265, notNext: 0.735
+
+---------------------------------------
+
+[Step:650] MLM GENERATION EXAMPLES:
+---------------------------------------
+Text: Merhaba [MASK] efendi nasıl gidiyor? ----> Top 5 Predictions: {'token_str': [',', '.', 'bir', 've', '('], 'score': ['0.0250', '0.0273', '0.0083', '0.0123', '0.0069']}
+Text: ışınlanma teknolojisini [MASK] Can  bulmuştur. Muhammet Can bu buluş ile büyük alkış topladı ----> Top 5 Predictions: {'token_str': ['(', '.', ',', 've', 'bir'], 'score': ['0.0100', '0.0298', '0.0195', '0.0131', '0.0093']}
+
+[Step:650] NSP GENERATION EXAMPLES:
+---------------------------------------
+Text: ['Çocuk sahibi çift sayısında inanılmaz bir artış var.', 'Uzaya ilk Bekiroğ Reis çıkmıştır'] Predictions ----> isNext: 0.639, notNext: 0.361
+Text: ['Bu nsp olayı bir garip oldu. Sanki kablolar ters bağlandı.', 'Bir şekilde kabloları ayarlamak gerekli'] Predictions ----> isNext: 0.319, notNext: 0.681
+Text: ["çoğunuz yaş itibariyle tanımaz ama istanbul'un en iyi belediye başkanı justinianus'tur.", 'Samsun Ayvacık belediyesi ne yapmak nereye varmak istemektedir!'] Predictions ----> isNext: 0.351, notNext: 0.649
+
+---------------------------------------
+
+[Step:700] MLM GENERATION EXAMPLES:
+---------------------------------------
+Text: Merhaba [MASK] efendi nasıl gidiyor? ----> Top 5 Predictions: {'token_str': ['bir', ',', '.', '##n', 've'], 'score': ['0.0083', '0.0226', '0.0307', '0.0067', '0.0106']}
+Text: ışınlanma teknolojisini [MASK] Can  bulmuştur. Muhammet Can bu buluş ile büyük alkış topladı ----> Top 5 Predictions: {'token_str': ['.', ',', 've', '(', 'bir'], 'score': ['0.0340', '0.0169', '0.0117', '0.0082', '0.0095']}
+
+[Step:700] NSP GENERATION EXAMPLES:
+---------------------------------------
+Text: ['Çocuk sahibi çift sayısında inanılmaz bir artış var.', 'Uzaya ilk Bekiroğ Reis çıkmıştır'] Predictions ----> isNext: 0.506, notNext: 0.494
+Text: ['Bu nsp olayı bir garip oldu. Sanki kablolar ters bağlandı.', 'Bir şekilde kabloları ayarlamak gerekli'] Predictions ----> isNext: 0.074, notNext: 0.926
+Text: ["çoğunuz yaş itibariyle tanımaz ama istanbul'un en iyi belediye başkanı justinianus'tur.", 'Samsun Ayvacık belediyesi ne yapmak nereye varmak istemektedir!'] Predictions ----> isNext: 0.063, notNext: 0.937
+
+---------------------------------------
+
+[Step:750] MLM GENERATION EXAMPLES:
+---------------------------------------
+Text: Merhaba [MASK] efendi nasıl gidiyor? ----> Top 5 Predictions: {'token_str': [',', '.', 've', 'bir', '('], 'score': ['0.0255', '0.0275', '0.0135', '0.0089', '0.0063']}
+Text: ışınlanma teknolojisini [MASK] Can  bulmuştur. Muhammet Can bu buluş ile büyük alkış topladı ----> Top 5 Predictions: {'token_str': ['(', '.', 've', 'bir', ','], 'score': ['0.0092', '0.0307', '0.0144', '0.0098', '0.0187']}
+
+[Step:750] NSP GENERATION EXAMPLES:
+---------------------------------------
+Text: ['Çocuk sahibi çift sayısında inanılmaz bir artış var.', 'Uzaya ilk Bekiroğ Reis çıkmıştır'] Predictions ----> isNext: 0.455, notNext: 0.545
+Text: ['Bu nsp olayı bir garip oldu. Sanki kablolar ters bağlandı.', 'Bir şekilde kabloları ayarlamak gerekli'] Predictions ----> isNext: 0.117, notNext: 0.883
+Text: ["çoğunuz yaş itibariyle tanımaz ama istanbul'un en iyi belediye başkanı justinianus'tur.", 'Samsun Ayvacık belediyesi ne yapmak nereye varmak istemektedir!'] Predictions ----> isNext: 0.086, notNext: 0.914
+
+---------------------------------------
+
+[Step:800] MLM GENERATION EXAMPLES:
+---------------------------------------
+Text: Merhaba [MASK] efendi nasıl gidiyor? ----> Top 5 Predictions: {'token_str': ['(', ',', '.', 've', 'bir'], 'score': ['0.0063', '0.0244', '0.0293', '0.0125', '0.0079']}
+Text: ışınlanma teknolojisini [MASK] Can  bulmuştur. Muhammet Can bu buluş ile büyük alkış topladı ----> Top 5 Predictions: {'token_str': ['(', '.', ',', 'bir', 've'], 'score': ['0.0096', '0.0331', '0.0187', '0.0087', '0.0136']}
+
+[Step:800] NSP GENERATION EXAMPLES:
+---------------------------------------
+Text: ['Çocuk sahibi çift sayısında inanılmaz bir artış var.', 'Uzaya ilk Bekiroğ Reis çıkmıştır'] Predictions ----> isNext: 0.546, notNext: 0.454
+Text: ['Bu nsp olayı bir garip oldu. Sanki kablolar ters bağlandı.', 'Bir şekilde kabloları ayarlamak gerekli'] Predictions ----> isNext: 0.185, notNext: 0.815
+Text: ["çoğunuz yaş itibariyle tanımaz ama istanbul'un en iyi belediye başkanı justinianus'tur.", 'Samsun Ayvacık belediyesi ne yapmak nereye varmak istemektedir!'] Predictions ----> isNext: 0.174, notNext: 0.826
+
+---------------------------------------
+
+[Step:850] MLM GENERATION EXAMPLES:
+---------------------------------------
+Text: Merhaba [MASK] efendi nasıl gidiyor? ----> Top 5 Predictions: {'token_str': [',', '.', 've', 'bir', '##n'], 'score': ['0.0260', '0.0306', '0.0127', '0.0095', '0.0063']}
+Text: ışınlanma teknolojisini [MASK] Can  bulmuştur. Muhammet Can bu buluş ile büyük alkış topladı ----> Top 5 Predictions: {'token_str': ['(', 'bir', ',', 've', '.'], 'score': ['0.0090', '0.0106', '0.0196', '0.0140', '0.0350']}
+
+[Step:850] NSP GENERATION EXAMPLES:
+---------------------------------------
+Text: ['Çocuk sahibi çift sayısında inanılmaz bir artış var.', 'Uzaya ilk Bekiroğ Reis çıkmıştır'] Predictions ----> isNext: 0.594, notNext: 0.406
+Text: ['Bu nsp olayı bir garip oldu. Sanki kablolar ters bağlandı.', 'Bir şekilde kabloları ayarlamak gerekli'] Predictions ----> isNext: 0.130, notNext: 0.870
+Text: ["çoğunuz yaş itibariyle tanımaz ama istanbul'un en iyi belediye başkanı justinianus'tur.", 'Samsun Ayvacık belediyesi ne yapmak nereye varmak istemektedir!'] Predictions ----> isNext: 0.076, notNext: 0.924
+
+---------------------------------------
+
+[Step:900] MLM GENERATION EXAMPLES:
+---------------------------------------
+Text: Merhaba [MASK] efendi nasıl gidiyor? ----> Top 5 Predictions: {'token_str': [',', '.', 've', 'bir', '##n'], 'score': ['0.0221', '0.0281', '0.0105', '0.0078', '0.0064']}
+Text: ışınlanma teknolojisini [MASK] Can  bulmuştur. Muhammet Can bu buluş ile büyük alkış topladı ----> Top 5 Predictions: {'token_str': ['(', ',', 'bir', '.', 've'], 'score': ['0.0094', '0.0165', '0.0090', '0.0317', '0.0116']}
+
+[Step:900] NSP GENERATION EXAMPLES:
+---------------------------------------
+Text: ['Çocuk sahibi çift sayısında inanılmaz bir artış var.', 'Uzaya ilk Bekiroğ Reis çıkmıştır'] Predictions ----> isNext: 0.502, notNext: 0.498
+Text: ['Bu nsp olayı bir garip oldu. Sanki kablolar ters bağlandı.', 'Bir şekilde kabloları ayarlamak gerekli'] Predictions ----> isNext: 0.134, notNext: 0.866
+Text: ["çoğunuz yaş itibariyle tanımaz ama istanbul'un en iyi belediye başkanı justinianus'tur.", 'Samsun Ayvacık belediyesi ne yapmak nereye varmak istemektedir!'] Predictions ----> isNext: 0.090, notNext: 0.910
+
+---------------------------------------
+
+[Step:950] MLM GENERATION EXAMPLES:
+---------------------------------------
+Text: Merhaba [MASK] efendi nasıl gidiyor? ----> Top 5 Predictions: {'token_str': [',', '.', 've', 'bir', '('], 'score': ['0.0242', '0.0281', '0.0112', '0.0071', '0.0061']}
+Text: ışınlanma teknolojisini [MASK] Can  bulmuştur. Muhammet Can bu buluş ile büyük alkış topladı ----> Top 5 Predictions: {'token_str': ['.', ',', 'bir', 've', '('], 'score': ['0.0325', '0.0181', '0.0082', '0.0127', '0.0097']}
+
+[Step:950] NSP GENERATION EXAMPLES:
+---------------------------------------
+Text: ['Çocuk sahibi çift sayısında inanılmaz bir artış var.', 'Uzaya ilk Bekiroğ Reis çıkmıştır'] Predictions ----> isNext: 0.726, notNext: 0.274
+Text: ['Bu nsp olayı bir garip oldu. Sanki kablolar ters bağlandı.', 'Bir şekilde kabloları ayarlamak gerekli'] Predictions ----> isNext: 0.159, notNext: 0.841
+Text: ["çoğunuz yaş itibariyle tanımaz ama istanbul'un en iyi belediye başkanı justinianus'tur.", 'Samsun Ayvacık belediyesi ne yapmak nereye varmak istemektedir!'] Predictions ----> isNext: 0.106, notNext: 0.894
+
+---------------------------------------
+
+[Step:1000] MLM GENERATION EXAMPLES:
+---------------------------------------
+Text: Merhaba [MASK] efendi nasıl gidiyor? ----> Top 5 Predictions: {'token_str': ['.', ',', 've', 'bir', '('], 'score': ['0.0274', '0.0244', '0.0109', '0.0073', '0.0064']}
+Text: ışınlanma teknolojisini [MASK] Can  bulmuştur. Muhammet Can bu buluş ile büyük alkış topladı ----> Top 5 Predictions: {'token_str': [',', '(', 've', 'bir', '.'], 'score': ['0.0185', '0.0101', '0.0123', '0.0083', '0.0317']}
+
+[Step:1000] NSP GENERATION EXAMPLES:
+---------------------------------------
+Text: ['Çocuk sahibi çift sayısında inanılmaz bir artış var.', 'Uzaya ilk Bekiroğ Reis çıkmıştır'] Predictions ----> isNext: 0.672, notNext: 0.328
+Text: ['Bu nsp olayı bir garip oldu. Sanki kablolar ters bağlandı.', 'Bir şekilde kabloları ayarlamak gerekli'] Predictions ----> isNext: 0.126, notNext: 0.874
+Text: ["çoğunuz yaş itibariyle tanımaz ama istanbul'un en iyi belediye başkanı justinianus'tur.", 'Samsun Ayvacık belediyesi ne yapmak nereye varmak istemektedir!'] Predictions ----> isNext: 0.090, notNext: 0.910
+
+---------------------------------------
+
+[Step:0] MLM GENERATION EXAMPLES:
+---------------------------------------
+Text: Merhaba [MASK] efendi nasıl gidiyor? ----> Top 5 Predictions: {'token_str': ['##ès', 'uygulandığı', '##ija', '##osman', 'Sanayi'], 'score': ['0.0002', '0.0002', '0.0003', '0.0003', '0.0002']}
+Text: ışınlanma teknolojisini [MASK] Can  bulmuştur. Muhammet Can bu buluş ile büyük alkış topladı ----> Top 5 Predictions: {'token_str': ['motivasyon', '##ija', 'у', '##ès', '##osman'], 'score': ['0.0003', '0.0003', '0.0002', '0.0002', '0.0003']}
+
+[Step:0] NSP GENERATION EXAMPLES:
+---------------------------------------
+Text: ['Çocuk sahibi çift sayısında inanılmaz bir artış var.', 'Uzaya ilk Bekiroğ Reis çıkmıştır'] Predictions ----> isNext: 0.601, notNext: 0.399
+Text: ['Bu nsp olayı bir garip oldu. Sanki kablolar ters bağlandı.', 'Bir şekilde kabloları ayarlamak gerekli'] Predictions ----> isNext: 0.643, notNext: 0.357
+Text: ["çoğunuz yaş itibariyle tanımaz ama istanbul'un en iyi belediye başkanı justinianus'tur.", 'Samsun Ayvacık belediyesi ne yapmak nereye varmak istemektedir!'] Predictions ----> isNext: 0.642, notNext: 0.358
+
+---------------------------------------
+
+[Step:50] MLM GENERATION EXAMPLES:
+---------------------------------------
+Text: Merhaba [MASK] efendi nasıl gidiyor? ----> Top 5 Predictions: {'token_str': ["'", 've', '1', '.', ','], 'score': ['0.0058', '0.0022', '0.0024', '0.0174', '0.0122']}
+Text: ışınlanma teknolojisini [MASK] Can  bulmuştur. Muhammet Can bu buluş ile büyük alkış topladı ----> Top 5 Predictions: {'token_str': ['ve', "'", ',', '.', '1'], 'score': ['0.0022', '0.0059', '0.0123', '0.0170', '0.0025']}
+
+[Step:50] NSP GENERATION EXAMPLES:
+---------------------------------------
+Text: ['Çocuk sahibi çift sayısında inanılmaz bir artış var.', 'Uzaya ilk Bekiroğ Reis çıkmıştır'] Predictions ----> isNext: 0.559, notNext: 0.441
+Text: ['Bu nsp olayı bir garip oldu. Sanki kablolar ters bağlandı.', 'Bir şekilde kabloları ayarlamak gerekli'] Predictions ----> isNext: 0.556, notNext: 0.444
+Text: ["çoğunuz yaş itibariyle tanımaz ama istanbul'un en iyi belediye başkanı justinianus'tur.", 'Samsun Ayvacık belediyesi ne yapmak nereye varmak istemektedir!'] Predictions ----> isNext: 0.556, notNext: 0.444
+
+---------------------------------------
+
+[Step:100] MLM GENERATION EXAMPLES:
+---------------------------------------
+Text: Merhaba [MASK] efendi nasıl gidiyor? ----> Top 5 Predictions: {'token_str': ["'", ',', '.', '1', '0'], 'score': ['0.0139', '0.0164', '0.0297', '0.0087', '0.0082']}
+Text: ışınlanma teknolojisini [MASK] Can  bulmuştur. Muhammet Can bu buluş ile büyük alkış topladı ----> Top 5 Predictions: {'token_str': [',', '.', "'", '0', '1'], 'score': ['0.0164', '0.0287', '0.0141', '0.0084', '0.0090']}
+
+[Step:100] NSP GENERATION EXAMPLES:
+---------------------------------------
+Text: ['Çocuk sahibi çift sayısında inanılmaz bir artış var.', 'Uzaya ilk Bekiroğ Reis çıkmıştır'] Predictions ----> isNext: 0.418, notNext: 0.582
+Text: ['Bu nsp olayı bir garip oldu. Sanki kablolar ters bağlandı.', 'Bir şekilde kabloları ayarlamak gerekli'] Predictions ----> isNext: 0.485, notNext: 0.515
+Text: ["çoğunuz yaş itibariyle tanımaz ama istanbul'un en iyi belediye başkanı justinianus'tur.", 'Samsun Ayvacık belediyesi ne yapmak nereye varmak istemektedir!'] Predictions ----> isNext: 0.488, notNext: 0.512
+
+---------------------------------------
+
+[Step:150] MLM GENERATION EXAMPLES:
+---------------------------------------
+Text: Merhaba [MASK] efendi nasıl gidiyor? ----> Top 5 Predictions: {'token_str': [',', '.', 've', "'", '"'], 'score': ['0.0331', '0.0253', '0.0142', '0.0125', '0.0112']}
+Text: ışınlanma teknolojisini [MASK] Can  bulmuştur. Muhammet Can bu buluş ile büyük alkış topladı ----> Top 5 Predictions: {'token_str': ['.', '"', ',', 've', "'"], 'score': ['0.0289', '0.0104', '0.0302', '0.0136', '0.0142']}
+
+[Step:150] NSP GENERATION EXAMPLES:
+---------------------------------------
+Text: ['Çocuk sahibi çift sayısında inanılmaz bir artış var.', 'Uzaya ilk Bekiroğ Reis çıkmıştır'] Predictions ----> isNext: 0.201, notNext: 0.799
+Text: ['Bu nsp olayı bir garip oldu. Sanki kablolar ters bağlandı.', 'Bir şekilde kabloları ayarlamak gerekli'] Predictions ----> isNext: 0.258, notNext: 0.742
+Text: ["çoğunuz yaş itibariyle tanımaz ama istanbul'un en iyi belediye başkanı justinianus'tur.", 'Samsun Ayvacık belediyesi ne yapmak nereye varmak istemektedir!'] Predictions ----> isNext: 0.273, notNext: 0.727
+
+---------------------------------------
+
+[Step:200] MLM GENERATION EXAMPLES:
+---------------------------------------
+Text: Merhaba [MASK] efendi nasıl gidiyor? ----> Top 5 Predictions: {'token_str': [',', '"', '.', "'", 've'], 'score': ['0.0266', '0.0072', '0.0277', '0.0099', '0.0115']}
+Text: ışınlanma teknolojisini [MASK] Can  bulmuştur. Muhammet Can bu buluş ile büyük alkış topladı ----> Top 5 Predictions: {'token_str': ['.', "'", 've', ',', '"'], 'score': ['0.0304', '0.0115', '0.0117', '0.0272', '0.0065']}
+
+[Step:200] NSP GENERATION EXAMPLES:
+---------------------------------------
+Text: ['Çocuk sahibi çift sayısında inanılmaz bir artış var.', 'Uzaya ilk Bekiroğ Reis çıkmıştır'] Predictions ----> isNext: 0.079, notNext: 0.921
+Text: ['Bu nsp olayı bir garip oldu. Sanki kablolar ters bağlandı.', 'Bir şekilde kabloları ayarlamak gerekli'] Predictions ----> isNext: 0.097, notNext: 0.903
+Text: ["çoğunuz yaş itibariyle tanımaz ama istanbul'un en iyi belediye başkanı justinianus'tur.", 'Samsun Ayvacık belediyesi ne yapmak nereye varmak istemektedir!'] Predictions ----> isNext: 0.089, notNext: 0.911
+
+---------------------------------------
+
+[Step:0] MLM GENERATION EXAMPLES:
+---------------------------------------
+Text: Merhaba [MASK] efendi nasıl gidiyor? ----> Top 5 Predictions: {'token_str': ['##ès', 'uygulandığı', '##ija', '##osman', 'Sanayi'], 'score': ['0.0002', '0.0002', '0.0003', '0.0003', '0.0002']}
+Text: ışınlanma teknolojisini [MASK] Can  bulmuştur. Muhammet Can bu buluş ile büyük alkış topladı ----> Top 5 Predictions: {'token_str': ['motivasyon', '##ija', 'у', '##ès', '##osman'], 'score': ['0.0003', '0.0003', '0.0002', '0.0002', '0.0003']}
+
+[Step:0] NSP GENERATION EXAMPLES:
+---------------------------------------
+Text: ['Çocuk sahibi çift sayısında inanılmaz bir artış var.', 'Uzaya ilk Bekiroğ Reis çıkmıştır'] Predictions ----> isNext: 0.601, notNext: 0.399
+Text: ['Bu nsp olayı bir garip oldu. Sanki kablolar ters bağlandı.', 'Bir şekilde kabloları ayarlamak gerekli'] Predictions ----> isNext: 0.643, notNext: 0.357
+Text: ["çoğunuz yaş itibariyle tanımaz ama istanbul'un en iyi belediye başkanı justinianus'tur.", 'Samsun Ayvacık belediyesi ne yapmak nereye varmak istemektedir!'] Predictions ----> isNext: 0.642, notNext: 0.358
+
+---------------------------------------
+
+[Step:50] MLM GENERATION EXAMPLES:
+---------------------------------------
+Text: Merhaba [MASK] efendi nasıl gidiyor? ----> Top 5 Predictions: {'token_str': ["'", '.', ',', 've', '1'], 'score': ['0.0013', '0.0081', '0.0059', '0.0003', '0.0004']}
+Text: ışınlanma teknolojisini [MASK] Can  bulmuştur. Muhammet Can bu buluş ile büyük alkış topladı ----> Top 5 Predictions: {'token_str': ['ve', "'", ',', '.', '1'], 'score': ['0.0003', '0.0014', '0.0065', '0.0073', '0.0004']}
+
+[Step:50] NSP GENERATION EXAMPLES:
+---------------------------------------
+Text: ['Çocuk sahibi çift sayısında inanılmaz bir artış var.', 'Uzaya ilk Bekiroğ Reis çıkmıştır'] Predictions ----> isNext: 0.440, notNext: 0.560
+Text: ['Bu nsp olayı bir garip oldu. Sanki kablolar ters bağlandı.', 'Bir şekilde kabloları ayarlamak gerekli'] Predictions ----> isNext: 0.461, notNext: 0.539
+Text: ["çoğunuz yaş itibariyle tanımaz ama istanbul'un en iyi belediye başkanı justinianus'tur.", 'Samsun Ayvacık belediyesi ne yapmak nereye varmak istemektedir!'] Predictions ----> isNext: 0.455, notNext: 0.545
+
+---------------------------------------
+
+[Step:0] MLM GENERATION EXAMPLES:
+---------------------------------------
+Text: Merhaba [MASK] efendi nasıl gidiyor? ----> Top 5 Predictions: {'token_str': ['##ès', 'uygulandığı', '##ija', '##osman', 'Sanayi'], 'score': ['0.0002', '0.0002', '0.0003', '0.0003', '0.0002']}
+Text: ışınlanma teknolojisini [MASK] Can  bulmuştur. Muhammet Can bu buluş ile büyük alkış topladı ----> Top 5 Predictions: {'token_str': ['motivasyon', '##ija', 'у', '##ès', '##osman'], 'score': ['0.0003', '0.0003', '0.0002', '0.0002', '0.0003']}
+
+[Step:0] NSP GENERATION EXAMPLES:
+---------------------------------------
+Text: ['Çocuk sahibi çift sayısında inanılmaz bir artış var.', 'Uzaya ilk Bekiroğ Reis çıkmıştır'] Predictions ----> isNext: 0.601, notNext: 0.399
+Text: ['Bu nsp olayı bir garip oldu. Sanki kablolar ters bağlandı.', 'Bir şekilde kabloları ayarlamak gerekli'] Predictions ----> isNext: 0.643, notNext: 0.357
+Text: ["çoğunuz yaş itibariyle tanımaz ama istanbul'un en iyi belediye başkanı justinianus'tur.", 'Samsun Ayvacık belediyesi ne yapmak nereye varmak istemektedir!'] Predictions ----> isNext: 0.642, notNext: 0.358
+
+---------------------------------------
+
+[Step:50] MLM GENERATION EXAMPLES:
+---------------------------------------
+Text: Merhaba [MASK] efendi nasıl gidiyor? ----> Top 5 Predictions: {'token_str': ["'", '.', 've', ',', '1'], 'score': ['0.0045', '0.0161', '0.0011', '0.0103', '0.0013']}
+Text: ışınlanma teknolojisini [MASK] Can  bulmuştur. Muhammet Can bu buluş ile büyük alkış topladı ----> Top 5 Predictions: {'token_str': ['ve', "'", ',', '.', '1'], 'score': ['0.0011', '0.0047', '0.0104', '0.0153', '0.0013']}
+
+[Step:50] NSP GENERATION EXAMPLES:
+---------------------------------------
+Text: ['Çocuk sahibi çift sayısında inanılmaz bir artış var.', 'Uzaya ilk Bekiroğ Reis çıkmıştır'] Predictions ----> isNext: 0.483, notNext: 0.517
+Text: ['Bu nsp olayı bir garip oldu. Sanki kablolar ters bağlandı.', 'Bir şekilde kabloları ayarlamak gerekli'] Predictions ----> isNext: 0.483, notNext: 0.517
+Text: ["çoğunuz yaş itibariyle tanımaz ama istanbul'un en iyi belediye başkanı justinianus'tur.", 'Samsun Ayvacık belediyesi ne yapmak nereye varmak istemektedir!'] Predictions ----> isNext: 0.483, notNext: 0.517
+
+---------------------------------------
+
+[Step:100] MLM GENERATION EXAMPLES:
+---------------------------------------
+Text: Merhaba [MASK] efendi nasıl gidiyor? ----> Top 5 Predictions: {'token_str': [',', "'", '.', 've', '1'], 'score': ['0.0113', '0.0077', '0.0170', '0.0028', '0.0026']}
+Text: ışınlanma teknolojisini [MASK] Can  bulmuştur. Muhammet Can bu buluş ile büyük alkış topladı ----> Top 5 Predictions: {'token_str': [',', '.', "'", '1', 've'], 'score': ['0.0114', '0.0164', '0.0078', '0.0027', '0.0027']}
+
+[Step:100] NSP GENERATION EXAMPLES:
+---------------------------------------
+Text: ['Çocuk sahibi çift sayısında inanılmaz bir artış var.', 'Uzaya ilk Bekiroğ Reis çıkmıştır'] Predictions ----> isNext: 0.404, notNext: 0.596
+Text: ['Bu nsp olayı bir garip oldu. Sanki kablolar ters bağlandı.', 'Bir şekilde kabloları ayarlamak gerekli'] Predictions ----> isNext: 0.397, notNext: 0.603
+Text: ["çoğunuz yaş itibariyle tanımaz ama istanbul'un en iyi belediye başkanı justinianus'tur.", 'Samsun Ayvacık belediyesi ne yapmak nereye varmak istemektedir!'] Predictions ----> isNext: 0.397, notNext: 0.603
+
+---------------------------------------
+
+[Step:150] MLM GENERATION EXAMPLES:
+---------------------------------------
+Text: Merhaba [MASK] efendi nasıl gidiyor? ----> Top 5 Predictions: {'token_str': ['.', ',', "'", 've', '1'], 'score': ['0.0230', '0.0140', '0.0088', '0.0046', '0.0044']}
+Text: ışınlanma teknolojisini [MASK] Can  bulmuştur. Muhammet Can bu buluş ile büyük alkış topladı ----> Top 5 Predictions: {'token_str': [',', 've', '.', '1', "'"], 'score': ['0.0140', '0.0045', '0.0222', '0.0045', '0.0090']}
+
+[Step:150] NSP GENERATION EXAMPLES:
+---------------------------------------
+Text: ['Çocuk sahibi çift sayısında inanılmaz bir artış var.', 'Uzaya ilk Bekiroğ Reis çıkmıştır'] Predictions ----> isNext: 0.380, notNext: 0.620
+Text: ['Bu nsp olayı bir garip oldu. Sanki kablolar ters bağlandı.', 'Bir şekilde kabloları ayarlamak gerekli'] Predictions ----> isNext: 0.479, notNext: 0.521
+Text: ["çoğunuz yaş itibariyle tanımaz ama istanbul'un en iyi belediye başkanı justinianus'tur.", 'Samsun Ayvacık belediyesi ne yapmak nereye varmak istemektedir!'] Predictions ----> isNext: 0.478, notNext: 0.522
+
+---------------------------------------
+
+[Step:0] MLM GENERATION EXAMPLES:
+---------------------------------------
+Text: Merhaba [MASK] efendi nasıl gidiyor? ----> Top 5 Predictions: {'token_str': ['##ès', 'uygulandığı', '##ija', '##osman', 'Sanayi'], 'score': ['0.0002', '0.0002', '0.0003', '0.0003', '0.0002']}
+Text: ışınlanma teknolojisini [MASK] Can  bulmuştur. Muhammet Can bu buluş ile büyük alkış topladı ----> Top 5 Predictions: {'token_str': ['motivasyon', '##ija', 'у', '##ès', '##osman'], 'score': ['0.0003', '0.0003', '0.0002', '0.0002', '0.0003']}
+
+[Step:0] NSP GENERATION EXAMPLES:
+---------------------------------------
+Text: ['Çocuk sahibi çift sayısında inanılmaz bir artış var.', 'Uzaya ilk Bekiroğ Reis çıkmıştır'] Predictions ----> isNext: 0.601, notNext: 0.399
+Text: ['Bu nsp olayı bir garip oldu. Sanki kablolar ters bağlandı.', 'Bir şekilde kabloları ayarlamak gerekli'] Predictions ----> isNext: 0.643, notNext: 0.357
+Text: ["çoğunuz yaş itibariyle tanımaz ama istanbul'un en iyi belediye başkanı justinianus'tur.", 'Samsun Ayvacık belediyesi ne yapmak nereye varmak istemektedir!'] Predictions ----> isNext: 0.642, notNext: 0.358
+
+---------------------------------------
+
+[Step:0] MLM GENERATION EXAMPLES:
+---------------------------------------
+Text: Merhaba [MASK] efendi nasıl gidiyor? ----> Top 5 Predictions: {'token_str': ['##ès', 'uygulandığı', '##ija', '##osman', 'Sanayi'], 'score': ['0.0002', '0.0002', '0.0003', '0.0003', '0.0002']}
+Text: ışınlanma teknolojisini [MASK] Can  bulmuştur. Muhammet Can bu buluş ile büyük alkış topladı ----> Top 5 Predictions: {'token_str': ['motivasyon', '##ija', 'у', '##ès', '##osman'], 'score': ['0.0003', '0.0003', '0.0002', '0.0002', '0.0003']}
+
+[Step:0] NSP GENERATION EXAMPLES:
+---------------------------------------
+Text: ['Çocuk sahibi çift sayısında inanılmaz bir artış var.', 'Uzaya ilk Bekiroğ Reis çıkmıştır'] Predictions ----> isNext: 0.601, notNext: 0.399
+Text: ['Bu nsp olayı bir garip oldu. Sanki kablolar ters bağlandı.', 'Bir şekilde kabloları ayarlamak gerekli'] Predictions ----> isNext: 0.643, notNext: 0.357
+Text: ["çoğunuz yaş itibariyle tanımaz ama istanbul'un en iyi belediye başkanı justinianus'tur.", 'Samsun Ayvacık belediyesi ne yapmak nereye varmak istemektedir!'] Predictions ----> isNext: 0.642, notNext: 0.358
+
+---------------------------------------
+
+[Step:0] MLM GENERATION EXAMPLES:
+---------------------------------------
+Text: Merhaba [MASK] efendi nasıl gidiyor? ----> Top 5 Predictions: {'token_str': ['##ès', 'uygulandığı', '##ija', '##osman', 'Sanayi'], 'score': ['0.0002', '0.0002', '0.0003', '0.0003', '0.0002']}
+Text: ışınlanma teknolojisini [MASK] Can  bulmuştur. Muhammet Can bu buluş ile büyük alkış topladı ----> Top 5 Predictions: {'token_str': ['motivasyon', '##ija', 'у', '##ès', '##osman'], 'score': ['0.0003', '0.0003', '0.0002', '0.0002', '0.0003']}
+
+[Step:0] NSP GENERATION EXAMPLES:
+---------------------------------------
+Text: ['Çocuk sahibi çift sayısında inanılmaz bir artış var.', 'Uzaya ilk Bekiroğ Reis çıkmıştır'] Predictions ----> isNext: 0.601, notNext: 0.399
+Text: ['Bu nsp olayı bir garip oldu. Sanki kablolar ters bağlandı.', 'Bir şekilde kabloları ayarlamak gerekli'] Predictions ----> isNext: 0.643, notNext: 0.357
+Text: ["çoğunuz yaş itibariyle tanımaz ama istanbul'un en iyi belediye başkanı justinianus'tur.", 'Samsun Ayvacık belediyesi ne yapmak nereye varmak istemektedir!'] Predictions ----> isNext: 0.642, notNext: 0.358
+
+---------------------------------------
+
+[Step:50] MLM GENERATION EXAMPLES:
+---------------------------------------
+Text: Merhaba [MASK] efendi nasıl gidiyor? ----> Top 5 Predictions: {'token_str': ["'", 've', '1', '.', ','], 'score': ['0.0172', '0.0136', '0.0144', '0.0346', '0.0189']}
+Text: ışınlanma teknolojisini [MASK] Can  bulmuştur. Muhammet Can bu buluş ile büyük alkış topladı ----> Top 5 Predictions: {'token_str': ['ve', "'", ',', '1', '.'], 'score': ['0.0136', '0.0172', '0.0189', '0.0144', '0.0346']}
+
+[Step:50] NSP GENERATION EXAMPLES:
+---------------------------------------
+Text: ['Çocuk sahibi çift sayısında inanılmaz bir artış var.', 'Uzaya ilk Bekiroğ Reis çıkmıştır'] Predictions ----> isNext: 0.543, notNext: 0.457
+Text: ['Bu nsp olayı bir garip oldu. Sanki kablolar ters bağlandı.', 'Bir şekilde kabloları ayarlamak gerekli'] Predictions ----> isNext: 0.543, notNext: 0.457
+Text: ["çoğunuz yaş itibariyle tanımaz ama istanbul'un en iyi belediye başkanı justinianus'tur.", 'Samsun Ayvacık belediyesi ne yapmak nereye varmak istemektedir!'] Predictions ----> isNext: 0.543, notNext: 0.457
+
+---------------------------------------
+
+[Step:100] MLM GENERATION EXAMPLES:
+---------------------------------------
+Text: Merhaba [MASK] efendi nasıl gidiyor? ----> Top 5 Predictions: {'token_str': ["'", ',', '1', '.', '0'], 'score': ['0.0157', '0.0206', '0.0119', '0.0255', '0.0110']}
+Text: ışınlanma teknolojisini [MASK] Can  bulmuştur. Muhammet Can bu buluş ile büyük alkış topladı ----> Top 5 Predictions: {'token_str': [',', "'", '.', '0', '1'], 'score': ['0.0206', '0.0157', '0.0255', '0.0110', '0.0119']}
+
+[Step:100] NSP GENERATION EXAMPLES:
+---------------------------------------
+Text: ['Çocuk sahibi çift sayısında inanılmaz bir artış var.', 'Uzaya ilk Bekiroğ Reis çıkmıştır'] Predictions ----> isNext: 0.391, notNext: 0.609
+Text: ['Bu nsp olayı bir garip oldu. Sanki kablolar ters bağlandı.', 'Bir şekilde kabloları ayarlamak gerekli'] Predictions ----> isNext: 0.391, notNext: 0.609
+Text: ["çoğunuz yaş itibariyle tanımaz ama istanbul'un en iyi belediye başkanı justinianus'tur.", 'Samsun Ayvacık belediyesi ne yapmak nereye varmak istemektedir!'] Predictions ----> isNext: 0.391, notNext: 0.609
+
+---------------------------------------
+
+[Step:0] MLM GENERATION EXAMPLES:
+---------------------------------------
+Text: Merhaba [MASK] efendi nasıl gidiyor? ----> Top 5 Predictions: {'token_str': ['##ès', 'uygulandığı', '##ija', '##osman', 'Sanayi'], 'score': ['0.0002', '0.0002', '0.0003', '0.0003', '0.0002']}
+Text: ışınlanma teknolojisini [MASK] Can  bulmuştur. Muhammet Can bu buluş ile büyük alkış topladı ----> Top 5 Predictions: {'token_str': ['motivasyon', '##ija', 'у', '##ès', '##osman'], 'score': ['0.0003', '0.0003', '0.0002', '0.0002', '0.0003']}
+
+[Step:0] NSP GENERATION EXAMPLES:
+---------------------------------------
+Text: ['Çocuk sahibi çift sayısında inanılmaz bir artış var.', 'Uzaya ilk Bekiroğ Reis çıkmıştır'] Predictions ----> isNext: 0.601, notNext: 0.399
+Text: ['Bu nsp olayı bir garip oldu. Sanki kablolar ters bağlandı.', 'Bir şekilde kabloları ayarlamak gerekli'] Predictions ----> isNext: 0.643, notNext: 0.357
+Text: ["çoğunuz yaş itibariyle tanımaz ama istanbul'un en iyi belediye başkanı justinianus'tur.", 'Samsun Ayvacık belediyesi ne yapmak nereye varmak istemektedir!'] Predictions ----> isNext: 0.642, notNext: 0.358
+
+---------------------------------------
+
+[Step:50] MLM GENERATION EXAMPLES:
+---------------------------------------
+Text: Merhaba [MASK] efendi nasıl gidiyor? ----> Top 5 Predictions: {'token_str': [',', "'", '.', '0', 've'], 'score': ['0.0169', '0.0144', '0.0295', '0.0101', '0.0109']}
+Text: ışınlanma teknolojisini [MASK] Can  bulmuştur. Muhammet Can bu buluş ile büyük alkış topladı ----> Top 5 Predictions: {'token_str': ['0', '.', ',', "'", 've'], 'score': ['0.0101', '0.0295', '0.0169', '0.0144', '0.0109']}
+
+[Step:50] NSP GENERATION EXAMPLES:
+---------------------------------------
+Text: ['Çocuk sahibi çift sayısında inanılmaz bir artış var.', 'Uzaya ilk Bekiroğ Reis çıkmıştır'] Predictions ----> isNext: 0.310, notNext: 0.690
+Text: ['Bu nsp olayı bir garip oldu. Sanki kablolar ters bağlandı.', 'Bir şekilde kabloları ayarlamak gerekli'] Predictions ----> isNext: 0.310, notNext: 0.690
+Text: ["çoğunuz yaş itibariyle tanımaz ama istanbul'un en iyi belediye başkanı justinianus'tur.", 'Samsun Ayvacık belediyesi ne yapmak nereye varmak istemektedir!'] Predictions ----> isNext: 0.310, notNext: 0.690
+
+---------------------------------------
