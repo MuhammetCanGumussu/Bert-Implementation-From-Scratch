@@ -3,10 +3,6 @@
 import os
 import sys
 
-# add root directory to sys path
-root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) if root_dir not in sys.path else None
-
 from tokenizers import (
     decoders,
     models,
@@ -15,6 +11,11 @@ from tokenizers import (
     trainers,
     Tokenizer,
 )
+
+# add root directory to sys path
+root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) if root_dir not in sys.path else None
+
 
 from data.data_aux import get_merged_files
 from config import get_train_tokenizer_py_config

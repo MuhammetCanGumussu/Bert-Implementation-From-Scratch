@@ -20,7 +20,6 @@ class BertOutput(nn.Module):
     def __init__(self, config: BertConfig):
         super().__init__()
 
-        # bakılacak
         self.dense = nn.Linear(config.intermediate_size, config.hidden_size)
         self.LayerNorm = nn.LayerNorm(config.hidden_size, eps=config.layer_norm_eps)
         self.dropout = nn.Dropout(config.hidden_dropout_prob)
@@ -37,7 +36,6 @@ class BertIntermediate(nn.Module):
     def __init__(self, config: BertConfig):
         super().__init__()
 
-        # bakılacak
         self.dense = nn.Linear(config.hidden_size, config.intermediate_size)
         self.intermediate_act_fn = nn.GELU()
         
@@ -53,7 +51,6 @@ class BertSelfOutput(nn.Module):
     def __init__(self, config: BertConfig):
         super().__init__()
 
-        # bakılacak
         self.dense = nn.Linear(config.hidden_size, config.hidden_size)
         self.LayerNorm = nn.LayerNorm(config.hidden_size, eps=config.layer_norm_eps)
         self.dropout = nn.Dropout(config.hidden_dropout_prob)
@@ -76,7 +73,6 @@ class BertSelfAttention(nn.Module):
                 f"heads ({config.num_attention_heads})"
             )
 
-        # bakılacak
         self.num_attention_heads = config.num_attention_heads
         self.attention_head_size = config.hidden_size // config.num_attention_heads
         self.all_head_size = self.num_attention_heads * self.attention_head_size
@@ -111,7 +107,6 @@ class BertAttention(nn.Module):
     def __init__(self, config: BertConfig):
         super().__init__()
 
-        # bakılacak
         self.self = BertSelfAttention(config)
         self.output = BertSelfOutput(config)
 
@@ -128,7 +123,6 @@ class BertLayer(nn.Module):
     def __init__(self, config: BertConfig):
         super().__init__()
 
-        # bakılacak
         self.attention = BertAttention(config)
         self.intermediate = BertIntermediate(config)
         self.output = BertOutput(config)
@@ -147,7 +141,6 @@ class BertEmbeddings(nn.Module):
         super().__init__()
         self.config = config
 
-        # bakılacak
         self.word_embeddings = nn.Embedding(config.vocab_size, config.hidden_size, padding_idx=0)
         self.position_embeddings = nn.Embedding(config.max_position_embeddings, config.hidden_size)
         self.token_type_embeddings = nn.Embedding(config.type_vocab_size, config.hidden_size)
@@ -159,10 +152,6 @@ class BertEmbeddings(nn.Module):
     def forward(self, input_ids, token_type_ids, position_ids) -> torch.Tensor:
         
         assert position_ids[-1] <= self.config.max_position_embeddings - 1, f"max block size exceeded, {position_ids[-1]} > {self.config.max_position_embeddings - 1}"
-
-        # bakılacak: geçici assertion
-        # assert input_ids.max().item() < self.word_embeddings.num_embeddings, f"[ERROR]: input_id_max:{input_ids.max().item()} , num_embeddings: {self.word_embeddings.num_embeddings}"
-
 
         input_embeddings = self.word_embeddings(input_ids)
         token_type_embeddings = self.token_type_embeddings(token_type_ids)
@@ -178,7 +167,6 @@ class BertEmbeddings(nn.Module):
 class BertEncoder(nn.Module):
     def __init__(self, config: BertConfig):
         super().__init__()
-        # bakılacak
         self.layer = nn.ModuleList([BertLayer(config) for _ in range(config.num_hidden_layers)])
     
     def forward(self, hidden_states, attention_mask) -> torch.Tensor:
@@ -208,7 +196,6 @@ class BertPredictionHeadTransform(nn.Module):
     def __init__(self, config: BertConfig):
         super().__init__()
 
-        # bakılacak
         self.dense = nn.Linear(config.hidden_size, config.hidden_size)
         self.transform_act_fn = nn.GELU()
         self.LayerNorm = nn.LayerNorm(config.hidden_size, eps=config.layer_norm_eps)
@@ -225,11 +212,9 @@ class BertLMPredictionHead(nn.Module):
     def __init__(self, config: BertConfig):
         super().__init__()
 
-        # bakılacak
         self.transform = BertPredictionHeadTransform(config)
         self.decoder = nn.Linear(config.hidden_size, config.vocab_size, bias=False) 
         self.bias = nn.Parameter(torch.zeros(config.vocab_size))
-        # bakılacak: bunu ekstradan koydum, config'de classfier dropout var idi, ancak hf imp'de bunu görmedim (ya da kaçırdım)
         self.dropout = nn.Dropout(config.classifier_dropout)
 
         # decoder.bias is False means it is None
@@ -300,7 +285,6 @@ class BertForPreTraining(nn.Module):
         super().__init__()
         self.config = config
 
-        # bakılacak
         self.bert = BertModel(config)
         self.cls = BertPreTrainingHeads(config)
 
@@ -348,8 +332,6 @@ class BertForPreTraining(nn.Module):
             seq_relationship_logits=seq_relationship_logits,
         )
 
-            
-    # bakılacak: save % load checkpoint mekanizması yapılacak
 
     def _init_weights(self, module):
         """Initialize the weights"""
