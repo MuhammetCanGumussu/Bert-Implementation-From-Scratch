@@ -8,6 +8,7 @@
 
 import os
 import sys
+import re
 import random
 import multiprocessing as mp
 from typing import List, Tuple
@@ -102,7 +103,7 @@ def delete_subtitles_from_docs(docs):
 
     return new_docs
 
-def split_titles_and_docs(content):
+def split_titles_and_docs_trwiki_67(content):
     """
     Splits given content into titles and documents.
 
@@ -151,7 +152,7 @@ def get_docs_df() -> pd.DataFrame:
     print(f"[INFO] Docs dataframe is being created...")
 
     merged_content = get_merged_files()
-    _, docs = split_titles_and_docs(merged_content)
+    _, docs = split_titles_and_docs_trwiki_67(merged_content)
 
     del merged_content
 
@@ -165,75 +166,55 @@ def get_docs_df() -> pd.DataFrame:
 
 
 
-def create_doc_shards(docs_df):
-    """
-    Splits a DataFrame of documents into smaller shards and saves them as JSON files.
-
-    This function divides the given DataFrame `docs_df` into multiple shards, each containing
-    num_shards = len(docs_df) // NUM_OF_DOCS_PER_SHARD
-    a specified number of documents. The shards are saved as JSON files in the `doc_shards` directory.
-
-    Parameters
-    ----------
-    docs_df : pd.DataFrame
-        A DataFrame containing documents to be split into shards.
-
-    Notes
-    -----
-    - The number of documents per shard is determined by the global config `NUM_OF_DOCS_PER_SHARD`.
-    - If the total number of documents is not evenly divisible by `NUM_OF_DOCS_PER_SHARD`, an extra
-      shard is created to accommodate the remaining documents.
-    - If the expected number of shard files already exists in the `doc_shards` directory, the function
-      exits early without creating new shards.
-    """
-    
-    num_shards = num_shards + 1 if len(docs_df) % NUM_OF_DOCS_PER_SHARD else num_shards
-    extra_shard_len = len(docs_df) % NUM_OF_DOCS_PER_SHARD if len(docs_df) % NUM_OF_DOCS_PER_SHARD else 0
-
-    doc_shards_dir = root_dir + "/data/doc_shards"
-    os.makedirs(doc_shards_dir, exist_ok=True)
-
-    last_shard_idx = get_last_shard_idx(doc_shards_dir) + 1
-
-    if last_shard_idx == num_shards:
-        print(f"[INFO] Expected number of doc shard files are already exists...")
-        return
-    
-    print(f"[INFO] Creating doc shard files, starts from 0...")
-
-    if extra_shard_len:
-        print(f"[INFO] Extra shard needed. Number of doc will be placed in extra shard: {extra_shard_len}")
-
-    
-    df_start_idx = 0
-    df_end_idx = NUM_OF_DOCS_PER_SHARD
-
-
-
-    with tqdm.tqdm(total=num_shards, desc="Doc shards are being created") as pbar:
-        for last_shard_idx in range(0, num_shards):
-
-            # last iteration (extra shard)
-            if last_shard_idx == num_shards - 1:
-                df_end_idx = df_start_idx + extra_shard_len
-
-                assert df_end_idx == len(docs_df), f"df_end_idx: {df_end_idx}, len(docs_df): {len(docs_df)}"
-                assert (df_end_idx - df_start_idx) == extra_shard_len
-
-                docs_df.iloc[df_start_idx:df_end_idx].to_json(doc_shards_dir + f"/doc_shard_{last_shard_idx}.json",
-                                                          orient="records",
-                                                          lines=True,
-                                                          force_ascii=False)
-                pbar.update()
-                break
-
-            docs_df.iloc[df_start_idx:df_end_idx].to_json(doc_shards_dir + f"/doc_shard_{last_shard_idx}.json",
-                                                          orient="records",
-                                                          lines=True,
-                                                          force_ascii=False)
-            df_start_idx = df_end_idx
-            df_end_idx += NUM_OF_DOCS_PER_SHARD
-            pbar.update()
+#def create_doc_shards(docs_df):
+#
+#    num_shards = num_shards + 1 if len(docs_df) % NUM_OF_DOCS_PER_SHARD else num_shards
+#    extra_shard_len = len(docs_df) % NUM_OF_DOCS_PER_SHARD if len(docs_df) % NUM_OF_DOCS_PER_SHARD else 0
+#
+#    doc_shards_dir = root_dir + "/data/doc_shards"
+#    os.makedirs(doc_shards_dir, exist_ok=True)
+#
+#    last_shard_idx = get_last_shard_idx(doc_shards_dir) + 1
+#
+#    if last_shard_idx == num_shards:
+#        print(f"[INFO] Expected number of doc shard files are already exists...")
+#        return
+#    
+#    print(f"[INFO] Creating doc shard files, starts from 0...")
+#
+#    if extra_shard_len:
+#        print(f"[INFO] Extra shard needed. Number of doc will be placed in extra shard: {extra_shard_len}")
+#
+#    
+#    df_start_idx = 0
+#    df_end_idx = NUM_OF_DOCS_PER_SHARD
+#
+#
+#
+#    with tqdm.tqdm(total=num_shards, desc="Doc shards are being created") as pbar:
+#        for last_shard_idx in range(0, num_shards):
+#
+#            # last iteration (extra shard)
+#            if last_shard_idx == num_shards - 1:
+#                df_end_idx = df_start_idx + extra_shard_len
+#
+#                assert df_end_idx == len(docs_df), f"df_end_idx: {df_end_idx}, len(docs_df): {len(docs_df)}"
+#                assert (df_end_idx - df_start_idx) == extra_shard_len
+#
+#                docs_df.iloc[df_start_idx:df_end_idx].to_json(doc_shards_dir + f"/doc_shard_{last_shard_idx}.json",
+#                                                          orient="records",
+#                                                          lines=True,
+#                                                          force_ascii=False)
+#                pbar.update()
+#                break
+#
+#            docs_df.iloc[df_start_idx:df_end_idx].to_json(doc_shards_dir + f"/doc_shard_{last_shard_idx}.json",
+#                                                          orient="records",
+#                                                          lines=True,
+#                                                          force_ascii=False)
+#            df_start_idx = df_end_idx
+#            df_end_idx += NUM_OF_DOCS_PER_SHARD
+#            pbar.update()
 
 
 
@@ -946,18 +927,133 @@ def create_xy_shards() -> None:
 
 
 
+def create_doc_shards(raw_dir:str):
+    """
+    Creates document shards from text files in the specified raw directory.
+
+    This function reads text files from the given `raw_dir`, processes them into documents,
+    and saves the documents as JSON files in the "doc_shards" directory. It supports custom
+    splitting for specific file patterns (for trwiki-67 files it uses diffrent pattern to split documents,
+    but in general it splits by empty lines) and handles leftover documents by carrying them over
+    to the next shard.
+
+    Args:
+        raw_dir (str): The directory containing raw text files. The directory should exist
+                       and contain text files to be processed.
+
+    Raises:
+        FileNotFoundError: If the `raw_dir` does not exist or is empty.
+        ValueError: If an unknown file type is encountered during processing.
+    """
+    if os.path.exists(raw_dir) == False:
+        raise FileNotFoundError(f"Raw directory {raw_dir} does not exist. Please create raw directory and put txt files in it first...")
+    
+    files = os.listdir(raw_dir)
+    
+    if len(files) == 0:
+        raise FileNotFoundError(f"Raw directory {raw_dir} is empty.")
+
+    doc_shards_dir = root_dir + "/data/doc_shards"
+
+    if not os.path.exists(doc_shards_dir):
+        os.makedirs(doc_shards_dir, exist_ok=True)
+
+    elif len(os.listdir(doc_shards_dir)) > 0:
+        print(f"[INFO] Doc shards already exists (There are {len(os.listdir(doc_shards_dir))} doc shards). Skipping doc shards creation...")
+        return
+    
+    print(f"[INFO] Creating doc shards...")
+
+    
+    previous_leftover = []
+    shard_idx = 0
+
+    print("[INFO] Splitting files into docs...")
+
+    # iterate over files in raw dir
+    for file in files:
+        last_file_flag = True if file == files[-1] else False
+        
+        print(f"[INFO] Creating doc shards from {file}...")
+        with open(raw_dir + "/" + file, mode="r", encoding="utf-8") as f:
+            file_str = f.read()
+
+        
+        docs = []
+        if file.startswith("trwiki-67"):
+            
+            _, docs = split_titles_and_docs_trwiki_67(file_str)
+            docs = delete_subtitles_from_docs(docs)
+
+        elif file.endswith(".txt"):
+            titles_and_docs = [each.strip() for each in file_str.split("\n\n")][1:]
+            #for i in range(0, len(titles_and_docs), 2):
+            #    docs.append(titles_and_docs[i].strip())
+            #    docs = delete_subtitles_from_docs(docs)
+            docs = titles_and_docs[::2]
+            docs = delete_subtitles_from_docs(docs) 
+            #for i in tqdm.tqdm(range(0, len(titles_and_docs), 2), desc="Splitting..."):
+            #    docs.append(titles_and_docs[i].strip())  
+            #    docs = delete_subtitles_from_docs(docs)  
+
+        else:
+            raise ValueError(f"Unknown file type: {file}")
+        
+        # suffle docs list
+        random.shuffle(docs)
+
+        # let's convert to pandas dataframe
+        docs = pd.DataFrame(docs, columns=["doc"])
+        if len(previous_leftover) > 0:
+            docs = pd.concat([previous_leftover, docs])
+            previous_leftover = []   # reset
+
+        num_shards = len(docs) // NUM_OF_DOCS_PER_SHARD
+        df_start_idx = 0 
+        df_end_idx = NUM_OF_DOCS_PER_SHARD
+        
+
+
+        with tqdm.tqdm(total=num_shards, desc=f"Doc shards are being created...") as pbar:
+            while df_end_idx <= len(docs):
+                
+                docs.iloc[df_start_idx:df_end_idx].to_json(doc_shards_dir + f"/doc_shard_{shard_idx}.json",
+                                                          orient="records",
+                                                          lines=True,
+                                                          force_ascii=False)
+
+                shard_idx += 1
+                df_start_idx = df_end_idx
+                df_end_idx += NUM_OF_DOCS_PER_SHARD
+                pbar.update()
+
+            # if the head of window is inside of docs (the end of window is out of docs already)
+            if df_start_idx < len(docs):
+                previous_leftover = docs.iloc[df_start_idx:]
+
+
+        if last_file_flag and len(previous_leftover) > 0:
+            previous_leftover.to_json(doc_shards_dir + f"/doc_shard_{shard_idx}.json",
+                                      orient="records",
+                                      lines=True,
+                                      force_ascii=False)
+            
+
+
+
+
+
+
+
+
 if __name__ == "__main__":
 
     print(f"[INFO] Number of processes: {NUM_PROCESSES}")
 
     appy_seed()
 
-    docs_df = get_docs_df()
-
-    create_doc_shards(docs_df)
-
-    # free resource
-    del docs_df
+    create_doc_shards(raw_dir=root_dir + "/data/raw")
+    sys.exit()
 
     create_ab_shards()
 
