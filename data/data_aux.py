@@ -4,7 +4,7 @@ import os
 import torch
 import numpy as np
 import pandas as pd
-from typing import Tuple, Type, Optional
+from typing import Tuple, Optional
 from dataclasses import dataclass, asdict
 
 from tokenizer.tokenizer_aux import get_tokenizer

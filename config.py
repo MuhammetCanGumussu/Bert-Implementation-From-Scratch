@@ -195,7 +195,7 @@ class RandomWordSetConfig:
     max_word_limit_for_token_group: int = field(default=5_000, metadata={"description": "Max word limit for token group"})
     min_freq_for_words: int = field(default=150, metadata={"description": "Min freq for words"})
     random_sample: bool = field(default=False, metadata={"description": "Randomly sample words (not directly most frequent ones)"})
-    use_number_of_line: int = field(default=None, metadata={"description": "Use specified number of lines for training (if None then use all lines)"})
+    use_number_of_line: int = field(default=None, metadata={"description": "Use specified number of lines for training (if None then use all lines) use small number, otherwise it will take a long time!"})
     tokenizer_type: str = field(default="custom", metadata={"description": "Tokenizer type, random_word_set.json prepared/tokenized with. choices: [custom, hf]"})
 
 

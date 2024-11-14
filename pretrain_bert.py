@@ -158,8 +158,10 @@ else:
                 for file in ckpt_files:
                     os.remove("model/model_ckpts/" + file)
 
-                print("reset log file ...")
+                print("reset log files (log.txt and generated_samples.txt) ...")
                 with open("log.txt", "w", encoding="utf-8") as f:
+                    pass
+                with open("generated_samples.txt", "w", encoding="utf-8") as f:
                     pass
 
                 print("Training starts with {}...".format("randomly initialized" if pretrain_config["do_train_custom"] else "hf model weights"))

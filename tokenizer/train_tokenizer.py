@@ -48,8 +48,8 @@ def main():
     tokenizer.normalizer = normalizers.Sequence(normalizer_list)
 
     tokenizer.pre_tokenizer = pre_tokenizers.Sequence([pre_tokenizers.WhitespaceSplit(), 
-                                               pre_tokenizers.Digits(individual_digits=True),
-                                               pre_tokenizers.Punctuation()])
+                                                       pre_tokenizers.Digits(individual_digits=True),
+                                                       pre_tokenizers.Punctuation()])
 
     special_tokens = ["[PAD]", "[UNK]", "[CLS]", "[SEP]", "[MASK]"]
 
