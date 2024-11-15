@@ -36,10 +36,10 @@ else:
 
 
 # prepare_data.py configs
-BLOCK_SIZE = cfg.block_size                                 # default: 256
-NUM_OF_DOCS_PER_SHARD = cfg.num_of_docs_per_shard           # default: 4_000
+BLOCK_SIZE = cfg.block_size                                 # default: 128
+NUM_OF_DOCS_PER_SHARD = cfg.num_of_docs_per_shard           # default: 8_000
 NUM_TOKENS_PER_SHARD = cfg.num_tokens_per_shard             # default: 10_000_000
-OVERLAP = cfg.overlap                                       # default: 128  [suggestion: make block_size//2]
+OVERLAP = cfg.overlap                                       # default: 64  [suggestion: make block_size//2]
 EDGE_BUFFER = cfg.edge_buffer                               # default: 10
 SEED = cfg.seed                                             # default: 13013
 RATE_OF_UNTOUCHED_WORDS = cfg.rate_of_untouched_words       # default: 0.85
@@ -1036,7 +1036,6 @@ if __name__ == "__main__":
     appy_seed()
 
     create_doc_shards(raw_dir=root_dir + "/data/raw")
-    sys.exit()
 
     create_ab_shards()
 

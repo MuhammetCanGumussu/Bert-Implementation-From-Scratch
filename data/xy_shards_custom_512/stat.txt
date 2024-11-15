@@ -1,20 +1,20 @@
 block_size: 512
-total_number_of_token: 29_896_704
-total_number_of_sample: 58_392
-total_isNext_count: 14_415
-total_mask_token_count: 3_555_543
-total_replace_token_count: 444_374
-total_identity_token_count: 443_802
-total_number_of_word: 24_719_164
-total_number_of_mask_word: 2_964_232
-total_number_of_replace_word: 370_544
-total_number_of_identity_word: 371_124
-total_number_of_not_accepted_word: 133
+total_number_of_token: 390_735_872
+total_number_of_sample: 763_156
+total_isNext_count: 188_130
+total_mask_token_count: 46_514_758
+total_replace_token_count: 5_799_890
+total_identity_token_count: 5_811_113
+total_number_of_word: 317_944_319
+total_number_of_mask_word: 38_160_581
+total_number_of_replace_word: 4_768_435
+total_number_of_identity_word: 4_769_394
+total_number_of_not_accepted_word: 2_123
 
 CONFIGS:
 -----------------------------------------------------------------------
 block_size: 512
-num_of_docs_per_shard: 4000
+num_of_docs_per_shard: 8000
 num_tokens_per_shard: 10000000
 overlap: 256
 edge_buffer: 10

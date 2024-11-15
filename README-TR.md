@@ -115,10 +115,10 @@ python train_tokenizer.py --vocab_size=32000 --cased=True ...
 ```python
 @dataclass
 class DataConfig:
-    block_size: int = field(default=256, metadata={"description": "Block size"})
-    num_of_docs_per_shard: int = field(default=4_000, metadata={"description": "Number of docs per shard (for doc_shards and ab_shards creation)"})
+    block_size: int = field(default=128, metadata={"description": "Block size"})
+    num_of_docs_per_shard: int = field(default=8_000, metadata={"description": "Number of docs per shard (for doc_shards and ab_shards creation)"})
     num_tokens_per_shard: int = field(default=10_000_000, metadata={"description": "Number of tokens per shard (for xy_shards creation)"})
-    overlap: int = field(default=128, metadata={"description": "Overlap, how much overlap between windows when ab samples are generated (suggestion: make half of the block size)"})
+    overlap: int = field(default=64, metadata={"description": "Overlap, how much overlap between windows when ab samples are generated (suggestion: make half of the block size)"})
     edge_buffer: int = field(default=10, metadata={"description": "prevents the use of a and b seperators near window ends by this many tokens (makes a and b more similar length-wise) (for ab_shards creation)"})
     seed: int = field(default=13013, metadata={"description": "Seed, for reproducibility"})
     rate_of_untouched_words: float = field(default=0.85, metadata={"description": "Rate of untouched words, these are not gonna replaced by [mask, identity, replaced] tokens"})
@@ -146,7 +146,7 @@ class RandomWordSetConfig:
     tokenizer_type: str = field(default="custom", metadata={"description": "Tokenizer type, random_word_set.json prepared/tokenized with. choices: [custom, hf]"})
 ```
 ```sh
-python prepare_random_word_set.py --block_size=512 --seed=1881 --tokenizer_type=hf --use_number_of_line=10000 ...
+python prepare_random_word_set.py --block_size=512 --seed=1881 --tokenizer_type=hf --use_number_of_line=100000 ...
 ```
 
 
@@ -178,18 +178,18 @@ class PreTrainBertConfig:
     do_eval_from_huggingface: bool = field(default=False, metadata={"description": "Just evaluate the model from_huggingface but not training."})
     resume: bool = field(default=False, metadata={"description": "Resume training from the last step"})
     stage1_ratio: float = field(default=0.9, metadata={"description": "Ratio of stage1 (e.g. 0.9 means use block_size_s1 and train_batch_size_s1 until the end of %90 training then switch to stage2)"})
-    block_size_s1: int = field(default=256, metadata={"description": "Block size for stage1"})
+    block_size_s1: int = field(default=128, metadata={"description": "Block size for stage1"})
     block_size_s2: int = field(default=512, metadata={"description": "Block size for stage2"})
-    train_batch_size_s1: int = field(default=32, metadata={"description": "Training batch size for stage1"})
+    train_batch_size_s1: int = field(default=64, metadata={"description": "Training batch size for stage1"})
     train_batch_size_s2: int = field(default=16, metadata={"description": "Training batch size for stage2"})
     val_block_size: int = field(default=512, metadata={"description": "Validation block size"})
     val_batch_size: int = field(default=8, metadata={"description": "Validation batch size"})
     grad_accum_steps: int = field(default=1, metadata={"description": "Gradient accumulation steps (micro steps)"})
-    max_learning_rate: float = field(default=1e-2, metadata={"description": "Maximum learning rate"})
-    min_learning_rate: float = field(default=1e-2 * 0.001, metadata={"description": "Minimum learning rate"})
+    max_learning_rate: float = field(default=1e-4, metadata={"description": "Maximum learning rate"})
+    min_learning_rate: float = field(default=1e-4 * 0.001, metadata={"description": "Minimum learning rate"})
     lr_scheduler: str = field(default="cosine", metadata={"description": "Learning rate scheduler choices: [linear, cosine]"})
-    num_train_steps: int = field(default=10_000, metadata={"description": "Number of training steps"}) 
-    num_warmup_steps: int = field(default=100, metadata={"description": "Number of warmup steps"})
+    num_train_steps: int = field(default=100_000, metadata={"description": "Number of training steps"}) 
+    num_warmup_steps: int = field(default=5_000, metadata={"description": "Number of warmup steps"})
     save_checkpoints_steps: int = field(default=50, metadata={"description": "Save checkpoints steps"})
     val_check_steps: int = field(default=50, metadata={"description": "Validation check steps"})
     device: str = field(default="cuda", metadata={"description": "Device choices: [cpu, cuda, mps]"})
